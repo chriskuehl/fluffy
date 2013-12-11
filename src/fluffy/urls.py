@@ -4,4 +4,5 @@ urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'fluffy.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
+	url(r'^$', 'fluffy.views.index', name='index')
 )
