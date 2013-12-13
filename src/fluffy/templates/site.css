@@ -1,5 +1,5 @@
 body {
-	background-color: #005178;
+	background-color: #225378;
 	font-family: "Open Sans", Helvetica, Arial, sans-serif;
 }
 
@@ -9,9 +9,10 @@ body {
 	margin: 30px auto;
 	padding: 20px;
 
+	border: solid 4px #CCC;
 	border-radius: 5px;
 
-	background-color: #ACF0F2;
+	background-color: #EEE;
 }
 
 h1, h2, h3, h4, h5, p {
@@ -25,13 +26,11 @@ h1 {
 	font-family: "Josefin Slab", "Open Sans", Helvetica, Arial, sans-serif;
 	
 	margin-bottom: 15px;
-	color: #1695A3;
 }
 
 #fileHolder {
+	border: solid 1px #222;
 	padding: 15px;
-	background-color: #F3FFE2;
-	border-radius: 3px;
 }
 
 #files {
@@ -39,14 +38,14 @@ h1 {
 }
 
 #dropZone {
-	border: dashed 4px #EB7F00;
+	border: dashed 4px #AAA;
 	padding: 35px 20px;
 
 	text-align: center;
 	font-size: 26px;
 	font-weight: bold;
 
-	color: #EB7F00;
+	color: #CCC;
 
 	margin-bottom: 10px;
 }
@@ -56,8 +55,8 @@ h1 {
 	cursor: pointer;
 	border-radius: 3px;
 	
-	background-color: #EB7F00;
-	color: white;
+	background-color: #DDD;
+	color: #222;
 
 	padding: 10px;
 
