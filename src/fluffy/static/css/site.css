@@ -6,7 +6,7 @@ body {
 #container {
 	width: 580px;
 
-	margin: 30px auto;
+	margin: 100px auto;
 	padding: 20px;
 
 	border-radius: 5px;
@@ -35,7 +35,41 @@ h1 {
 }
 
 #files {
-	
+	margin-bottom: 15px;
+}
+
+#files li {
+	background-color: #FFE6B3;
+	margin-bottom: 10px;
+
+	position: relative;
+	height: 42px;
+}
+
+#files li img {
+	position: absolute;
+	left: 5px;
+	top: 5px;
+}
+
+#files li .title {
+	position: absolute;
+	left: 40px;
+	top: 14px;
+}
+
+#files li .remove {
+	position: absolute;
+	right: 8px;
+	top: 8px;
+	bottom: 8px;
+
+	display: block;
+	padding: 0px 10px;
+	padding-top: 5px;
+	cursor: pointer;
+
+	background-color: #FFD694;
 }
 
 #dropZone {

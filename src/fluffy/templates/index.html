@@ -8,7 +8,7 @@
 		<title>fluffy.cc</title>
 
 		<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
-		<link rel="stylesheet" href="{% static "css/site.css" %}" />
+		<link rel="stylesheet" href="{% static "css/reset.css" %}" />
 		<link rel="stylesheet" href="{% static "css/site.css" %}" />
 		<script src="site.js"></script>
 	</head>
@@ -19,6 +19,11 @@
 				<h1>fluffy.cc</h1>
 				<div id="fileHolder">
 					<ul id="files">
+						<li>
+							<img src="{% static "img/mime/small/png.png" %}" />
+							<div class="title">something.png</div>
+							<a class="remove">&times;</a>
+						</li>
 					</ul>
 
 					<div id="dropZone">drop files here</div>
