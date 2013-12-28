@@ -97,3 +97,7 @@ h1 {
 
 	text-align: center;
 }
+
+#selectFileInput {
+	display: none;
+}

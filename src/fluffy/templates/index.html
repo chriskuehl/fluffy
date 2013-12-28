@@ -10,7 +10,9 @@
 		<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
 		<link rel="stylesheet" href="{% static "css/reset.css" %}" />
 		<link rel="stylesheet" href="{% static "css/site.css" %}" />
-		<script src="site.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+		<script src="{% static "js/site.js" %}"></script>
+		<script src="{% static "js/home.js" %}"></script>
 	</head>
 
 	<body>
@@ -28,6 +30,7 @@
 
 					<div id="dropZone">drop files here</div>
 					<a id="selectFile">Browse</a>
+					<input type="file" id="selectFileInput" />
 				</div>
 			</div>
 		</div>
