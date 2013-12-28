@@ -83,6 +83,14 @@ h1 {
 	color: #EB7F00;
 
 	margin-bottom: 10px;
+
+	background-color: #F3FFE2;
+
+	-webkit-transition: background-color 100ms linear;
+	-moz-transition: background-color 100ms linear;
+	-o-transition: background-color 100ms linear;
+	-ms-transition: background-color 100ms linear;
+	transition: background-color 100ms linear;
 }
 
 #selectFile {
