@@ -73,6 +73,8 @@ h1 {
 }
 
 #dropZone {
+	position: relative;
+
 	border: dashed 4px #EB7F00;
 	padding: 35px 20px;
 
@@ -93,6 +95,14 @@ h1 {
 	transition: background-color 100ms linear;
 }
 
+#dropZone input {
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+}
+
 #selectFile {
 	display: block;
 	cursor: pointer;
@@ -106,6 +116,6 @@ h1 {
 	text-align: center;
 }
 
-#selectFileInput {
+#uploadForm input, .hiddenFileInput {
 	display: none;
 }
