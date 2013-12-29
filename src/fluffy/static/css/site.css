@@ -116,6 +116,6 @@ h1 {
 	text-align: center;
 }
 
-#uploadForm input, .hiddenFileInput {
+.hiddenFileInput {
 	display: none;
 }
