@@ -65,8 +65,7 @@ function upload() {
 
 			req.upload.addEventListener("progress", function(e) {
 				if (e.lengthComputable) {
-					var percent = e.loaded / e.total;
-					console.log(e.loaded + "\t" + e.total + "\t" + percent);
+					updateProgress(e.loaded, e.total);
 				}
 			}, false);
 
@@ -76,6 +75,32 @@ function upload() {
 		success: function(data) {
 			console.log("returned: " + data);
 		}
+	});
+}
+
+/**
+ * Updates progress based on the number of bytes uploaded.
+ *
+ * Progress is displayed per-file even though we only have the current number
+ * of bytes uploaded and the total to be uploaded (and don't actually know
+ * which files have been or are being uploaded). It looks better, though, and
+ * still gives an accurate representation of overall progress.
+ */
+function updateProgress(bytes, totalBytes) {
+	var fileList = $("#files");
+
+	fileList.children().each(function() {
+		var row = $(this);
+		var size = row.data("file").size;
+		var progress = 0;
+
+		if (bytes > 0) {
+			progress = Math.min(1, bytes / size);
+			bytes -= size;
+		}
+
+		var progressInt = Math.floor(100 * progress);
+		row.find(".progress").css("width", progressInt + "%");
 	});
 }
 
@@ -143,6 +168,7 @@ function fileAlreadyQueued(file) {
  */
 function displayFile(file) {
 	var li = $("<li />");
+	li.data("file", file);
 
 	var progress = $("<div />");
 	progress.addClass("progress");
