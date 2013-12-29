@@ -7,7 +7,9 @@ var ICON_EXTENSIONS = [
 
 var fileIndex = 0;
 var allFiles = [];
+
 var uploading = false;
+var uploadSamples = [];
 
 $(document).ready(function() {
 	// browse button
@@ -117,12 +119,47 @@ function updateProgress(bytes, totalBytes) {
 		percent = 0;
 	}
 
+	var uploadRate = calculateUploadRate(bytes);
 	var bull = String.fromCharCode(8226); // bullet character
 
-	line1 = cur + " / " + total + " (" + percent + "%)";
-	line2 = "80 kB/s " + bull + " 3 seconds remaining";
+	var line1 = cur + " / " + total + " (" + percent + "%)";
+	var line2 = "";
+
+	if (uploadRate) {
+		var humanUploadRate = getHumanSize(uploadRate) + "/s";
+		var secondsRemaining = (totalBytes - bytes) / uploadRate;
+		var timeRemaining = getHumanTime(secondsRemaining);
+
+		line2 = humanUploadRate + " " + bull + " " + timeRemaining + " remaining"
+	}
 
 	$("#statusText").html(htmlEncode(line1) + "<br />" + htmlEncode(line2));
+}
+
+/**
+ * Estimate the current upload rate based on history of progress snapshots
+ * collected in the past SAMPLE_PERIOD milliseconds.
+ *
+ * @param bytes - current number of bytes uploaded
+ * @return upload rate in bytes/sec OR null (if we can't estimate yet)
+ */
+var SAMPLE_PERIOD = 15 * 1000; // time to keep samples, in milliseconds
+var REQUIRED_SAMPLES = 5; // # of samples required to make an estimate
+
+function calculateUploadRate(bytes) {
+	var now = new Date().getTime();
+	uploadSamples.push([bytes, now]);
+
+	// get rid of old samples
+	while (uploadSamples[0][1] < (now - SAMPLE_PERIOD)) {
+		uploadSamples.shift();
+	}
+
+	if (uploadSamples.length < REQUIRED_SAMPLES) {
+		return null;
+	}
+
+	return 1000 * ((bytes - uploadSamples[0][0]) / (now - uploadSamples[0][1]));
 }
 
 /**
@@ -135,6 +172,50 @@ function updateProgress(bytes, totalBytes) {
  */
 function htmlEncode(value) {
 	return $("<div />").text(value).html();
+}
+
+/**
+ * Convert a seconds count into a human-readable time string like
+ * "3 minutes, 7 seconds".
+ *
+ * For readability, only one lower unit is used, i.e. you can have "X minutes,
+ * Y seconds" or "X hours, Y minutes", but never "X hours, Y minutes, Z
+ * seconds".
+ *
+ * @param seconds
+ * @return human-readable time
+ */
+var ONE_HOUR = 3600;
+var ONE_MINUTE = 60;
+
+function getHumanTime(seconds) {
+	var units = ["hour", "minute", "second"];
+	var times = [
+		Math.floor(seconds / ONE_HOUR),
+		Math.floor(seconds / ONE_MINUTE) % 60,
+		Math.floor(seconds) % 60
+	];
+
+	// cut off any zero times at the start
+	while (times.length > 1 && times[0] == 0) {
+		units.shift();
+		times.shift();
+	}
+
+	var plural = function(time) {
+		return time == 1 ? "" : "s";
+	};
+
+	var str = "";
+
+	for (var i = 0; i < Math.min(2, times.length); i ++) {
+		var time = times[i];
+		var unit = units[i];
+
+		str += time + " " + unit + plural(time) + ", ";
+	}
+
+	return str.substring(0, str.length - 2);
 }
 
 /**
