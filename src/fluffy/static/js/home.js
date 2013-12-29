@@ -45,8 +45,8 @@ function upload() {
 	// update UI
 	var uploadButton = $("#upload");
 	uploadButton.text("Cancel Upload");
-	uploadButton.css("margin-bottom", "0px");
 
+	$("#statusText").show();
 	$("#selectFiles").slideUp(200);
 	$(".remove").fadeOut(200);
 
@@ -85,8 +85,13 @@ function upload() {
  * of bytes uploaded and the total to be uploaded (and don't actually know
  * which files have been or are being uploaded). It looks better, though, and
  * still gives an accurate representation of overall progress.
+ *
+ * @param bytes
+ * @param totalBytes
  */
 function updateProgress(bytes, totalBytes) {
+	// progress bars on individual files
+	var bytesLeft = bytes;
 	var fileList = $("#files");
 
 	fileList.children().each(function() {
@@ -94,14 +99,67 @@ function updateProgress(bytes, totalBytes) {
 		var size = row.data("file").size;
 		var progress = 0;
 
-		if (bytes > 0) {
-			progress = Math.min(1, bytes / size);
-			bytes -= size;
+		if (bytesLeft > 0) {
+			progress = Math.min(1, bytesLeft / size);
+			bytesLeft -= size;
 		}
 
 		var progressInt = Math.floor(100 * progress);
 		row.find(".progress").css("width", progressInt + "%");
 	});
+
+	// status text
+	var cur = getHumanSize(bytes);
+	var total  = getHumanSize(totalBytes);
+	var percent = Math.floor((bytes / totalBytes) * 100);
+
+	if (isNaN(percent) || percent < 0 || percent > 100) {
+		percent = 0;
+	}
+
+	var bull = String.fromCharCode(8226); // bullet character
+
+	line1 = cur + " / " + total + " (" + percent + "%)";
+	line2 = "80 kB/s " + bull + " 3 seconds remaining";
+
+	$("#statusText").html(htmlEncode(line1) + "<br />" + htmlEncode(line2));
+}
+
+/**
+ * Encode text for HTML.
+ *
+ * Source: http://stackoverflow.com/a/1219983
+ *
+ * @param value
+ * @return encoded text
+ */
+function htmlEncode(value) {
+	return $("<div />").text(value).html();
+}
+
+/**
+ * Convert a byte count into a human-readable size string like "4.2 MB".
+ *
+ * Roughly based on Apache Commons FileUtils#byteCountToDisplaySize:
+ * https://commons.apache.org/proper/commons-io/
+ *
+ * @param bytes
+ * @return human-readable size
+ */
+var ONE_GB = 1073741824;
+var ONE_MB = 1048576;
+var ONE_KB = 1024;
+
+function getHumanSize(size) {
+	if (size / ONE_GB >= 1) {
+		return (size / ONE_GB).toFixed(1) + " GB";
+	} else if (size / ONE_MB >= 1) {
+		return (size / ONE_MB).toFixed(1) + " MB";
+	} else if (size / ONE_KB >= 1) {
+		return (size / ONE_KB).toFixed(1) + " KB";
+	} else {
+		return size + " bytes";
+	}
 }
 
 /**

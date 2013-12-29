@@ -138,6 +138,14 @@ h1 {
 	display: none;
 }
 
+#statusText {
+	text-align: center;
+	font-size: 12px;
+	line-height: 1.2em;
+	margin-bottom: 0px;
+	display: none;
+}
+
 #selectFile {
 	background-color: #EB7F00;
 }
