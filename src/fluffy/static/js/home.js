@@ -97,6 +97,10 @@ function updateProgress(bytes, totalBytes) {
 		$("#fileHolder").children(":visible").animate({
 			opacity: 0
 		}, 350);
+
+		var statusText = "Upload complete, storing file" +
+			plural(allFiles.length) + "...";
+		$("#loading > p").text(statusText);
 		$("#loading").fadeIn(350);
 
 		return;
@@ -185,6 +189,16 @@ function htmlEncode(value) {
 }
 
 /**
+ * Return "s" when some quantity should be plural.
+ *
+ * @param count
+ * @return "s" or empty string
+ */
+function plural(count) {
+	return count == 1 ? "" : "s";
+}
+
+/**
  * Convert a seconds count into a human-readable time string like
  * "3 minutes, 7 seconds".
  *
@@ -211,10 +225,6 @@ function getHumanTime(seconds) {
 		units.shift();
 		times.shift();
 	}
-
-	var plural = function(time) {
-		return time == 1 ? "" : "s";
-	};
 
 	var str = "";
 
