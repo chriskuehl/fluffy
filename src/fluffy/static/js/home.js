@@ -144,6 +144,10 @@ function fileAlreadyQueued(file) {
 function displayFile(file) {
 	var li = $("<li />");
 
+	var progress = $("<div />");
+	progress.addClass("progress");
+	progress.appendTo(li);
+
 	var icon = $("<img />");
 	icon.attr("src", getIcon(file.name));
 	icon.appendTo(li);

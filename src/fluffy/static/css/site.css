@@ -42,16 +42,33 @@ h1 {
 	height: 42px;
 }
 
+#files li .progress {
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+
+	background-color: #FFD694;
+
+	width: 0%;
+
+	z-index: 1;
+}
+
 #files li img {
 	position: absolute;
 	left: 5px;
 	top: 5px;
+
+	z-index: 10;
 }
 
 #files li .title {
 	position: absolute;
 	left: 40px;
 	top: 14px;
+
+	z-index: 10;
 }
 
 #files li .remove {
@@ -59,6 +76,8 @@ h1 {
 	right: 8px;
 	top: 8px;
 	bottom: 8px;
+
+	z-index: 10;
 
 	display: block;
 	padding: 0px 10px;
