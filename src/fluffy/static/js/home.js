@@ -1,5 +1,12 @@
+// extensions which have icons available
+var ICON_EXTENSIONS = [
+	"7z", "ai", "bmp", "doc", "docx", "gif", "gz", "html",
+	"jpeg", "jpg", "midi", "mp3", "odf", "odt", "pdf", "png", "psd", "rar",
+	"rtf", "tar", "txt", "wav", "xls", "zip"
+];
+
 var fileIndex = 0;
-var fileInputs = [];
+var allFiles = [];
 
 $(document).ready(function() {
 	// browse button
@@ -18,17 +25,65 @@ $(document).ready(function() {
 
 /**
  * Takes a file input element and handles displaying the file to the user and
- * storing the input to be submitted with the request.
+ * storing the file to be submitted with the request.
  *
- * The input will be moved out of the existing parent and placed into a form
- * with all the other inputs being used for the upload.
+ * The input will be removed from the DOM.
  *
  * @param input - jQuery input object
  */
 function handleInput(input) {
-	console.log("Handling input: " + input.val());
+	var files = input[0].files;
 
-	input.appendTo($("#uploadForm"));
+	for (var i = 0; i < files.length; i ++) {
+		var file = files[i];
+
+		allFiles.push(file);
+		displayFile(file);
+	}
+
+	input.remove();
+}
+
+/**
+ * Displays a file in the file list.
+ *
+ * @param file - File object
+ */
+function displayFile(file) {
+	var li = $("<li />");
+
+	var icon = $("<img />");
+	icon.attr("src", getIcon(file.name));
+	icon.appendTo(li);
+
+	var title = $("<div />");
+	title.addClass("title");
+	title.text(file.name);
+	title.appendTo(li);
+
+	var remove = $("<a />");
+	remove.addClass("remove");
+	remove.html("&times;");
+	remove.appendTo(li);
+
+	li.appendTo($("#files"));
+}
+
+/**
+ * Returns the path of the icon for a file.
+ *
+ * @param fileName
+ * @return relative path to the icon
+ */
+function getIcon(fileName) {
+	var parts = fileName.split(".");
+	var extension = parts[parts.length - 1].toLowerCase();
+
+	if (ICON_EXTENSIONS.indexOf(extension) == -1) {
+		extension = "unknown";
+	}
+
+	return "/static/img/mime/small/" + extension + ".png";
 }
 
 /**
