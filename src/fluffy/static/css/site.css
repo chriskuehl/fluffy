@@ -29,6 +29,8 @@ h1 {
 }
 
 #fileHolder {
+	position: relative;
+
 	padding: 15px;
 	background-color: #F3FFE2;
 	border-radius: 3px;
@@ -152,4 +154,31 @@ h1 {
 
 .hiddenFileInput {
 	display: none;
+}
+
+#loading {
+	background-image: url("/static/img/loading-32.gif");
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+
+	position: absolute;
+
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	bottom: 0px;
+
+	display: none;
+}
+
+#loading p {
+	position: absolute;
+
+	top: 50%;
+	left: 0px;
+	right: 0px;
+	margin-top: 23px;
+
+	text-align: center;
+	font-size: 12px;
 }

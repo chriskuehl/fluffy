@@ -92,6 +92,16 @@ function upload() {
  * @param totalBytes
  */
 function updateProgress(bytes, totalBytes) {
+	if (bytes >= totalBytes) {
+		// hide uploading UI, show loading orb
+		$("#fileHolder").children(":visible").animate({
+			opacity: 0
+		}, 350);
+		$("#loading").fadeIn(350);
+
+		return;
+	}
+
 	// progress bars on individual files
 	var bytesLeft = bytes;
 	var fileList = $("#files");
