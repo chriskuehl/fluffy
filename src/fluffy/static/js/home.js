@@ -9,6 +9,8 @@ var fileIndex = 0;
 var allFiles = [];
 
 var uploading = false;
+var uploadCompleted = false;
+var uploadRequest;
 var uploadSamples = [];
 
 $(document).ready(function() {
@@ -29,6 +31,8 @@ $(document).ready(function() {
 	$("#upload").click(function() {
 		if (! uploading) {
 			upload();
+		} else if (! uploadCompleted) {
+			cancelUpload();
 		}
 	});
 });
@@ -54,7 +58,7 @@ function upload() {
 
 	// start the upload
 	// http://stackoverflow.com/a/8244082
-	$.ajax({
+	var request = $.ajax({
 		url: "/upload",
 		type: "POST",
 		contentType: false,
@@ -66,6 +70,10 @@ function upload() {
 			var req = $.ajaxSettings.xhr();
 
 			req.upload.addEventListener("progress", function(e) {
+				if (request != uploadRequest) {
+					return; // upload was cancelled
+				}
+
 				if (e.lengthComputable) {
 					updateProgress(e.loaded, e.total);
 				}
@@ -75,9 +83,38 @@ function upload() {
 		},
 
 		success: function(data) {
+			if (request != uploadRequest) {
+				return; // upload was cancelled
+			}
+
 			console.log("returned: " + data);
 		}
 	});
+
+	uploadRequest = request;
+}
+
+/**
+ * Cancels the current upload and restores the UI back to pre-upload state.
+ */
+function cancelUpload() {
+	if (uploadRequest) {
+		uploadRequest.abort();
+	}
+
+	uploading = false;
+	uploadRequest = null;
+	uploadSamples = [];
+
+	// update UI
+	var uploadButton = $("#upload");
+	uploadButton.text("Start Upload");
+
+	$("#statusText").hide();
+	$("#selectFiles").slideDown(200);
+	$(".remove").fadeIn(200);
+
+	$(".progress").css("width", "0%");
 }
 
 /**
@@ -92,7 +129,13 @@ function upload() {
  * @param totalBytes
  */
 function updateProgress(bytes, totalBytes) {
+	if (uploadCompleted) {
+		return;
+	}
+
 	if (bytes >= totalBytes) {
+		uploadCompleted = true;
+
 		// hide uploading UI, show loading orb
 		$("#fileHolder").children(":visible").animate({
 			opacity: 0
