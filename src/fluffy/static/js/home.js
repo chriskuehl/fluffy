@@ -60,6 +60,19 @@ function upload() {
 		data: getFormData(),
 		processData: false,
 
+		xhr: function() {
+			var req = $.ajaxSettings.xhr();
+
+			req.upload.addEventListener("progress", function(e) {
+				if (e.lengthComputable) {
+					var percent = e.loaded / e.total;
+					console.log(e.loaded + "\t" + e.total + "\t" + percent);
+				}
+			}, false);
+
+			return req;
+		},
+
 		success: function(data) {
 			console.log("returned: " + data);
 		}
