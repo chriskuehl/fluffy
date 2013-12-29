@@ -37,11 +37,29 @@ function handleInput(input) {
 	for (var i = 0; i < files.length; i ++) {
 		var file = files[i];
 
-		allFiles.push(file);
-		displayFile(file);
+		if (! fileAlreadyQueued(file)) {
+			allFiles.push(file);
+			displayFile(file);
+		}
 	}
 
 	input.remove();
+}
+
+/**
+ * Checks if a file is already queued to be uploaded, checking for duplicates
+ * based on name.
+ *
+ * @return whether or not a file is already queued to be uploaded
+ */
+function fileAlreadyQueued(file) {
+	for (var i = 0; i < allFiles.length; i ++) {
+		if (allFiles[i].name == file.name) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /**
@@ -65,6 +83,16 @@ function displayFile(file) {
 	remove.addClass("remove");
 	remove.html("&times;");
 	remove.appendTo(li);
+
+	remove.click(function() {
+		var idx = allFiles.indexOf(file);
+
+		if (idx > -1) {
+			allFiles.splice(idx, 1);
+		}
+
+		li.remove();
+	});
 
 	li.appendTo($("#files"));
 }
