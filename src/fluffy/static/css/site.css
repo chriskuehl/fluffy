@@ -38,6 +38,10 @@ h1 {
 	margin-bottom: 15px;
 }
 
+#files:empty {
+	margin-bottom: 0px !important;
+}
+
 #files li {
 	background-color: #FFE6B3;
 	margin-bottom: 10px;
@@ -101,6 +105,8 @@ h1 {
 	bottom: 0px;
 	left: 0px;
 	right: 0px;
+
+	opacity: 0;
 }
 
 #selectFile {
