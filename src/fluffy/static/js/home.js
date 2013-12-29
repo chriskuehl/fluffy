@@ -7,6 +7,7 @@ var ICON_EXTENSIONS = [
 
 var fileIndex = 0;
 var allFiles = [];
+var uploading = false;
 
 $(document).ready(function() {
 	// browse button
@@ -21,7 +22,62 @@ $(document).ready(function() {
 
 	// drop zone file drag-and-drop
 	addDropZoneInput();
+
+	// uploading
+	$("#upload").click(function() {
+		if (! uploading) {
+			upload();
+		}
+	});
 });
+
+/**
+ * Upload the queued files via XHR. Takes care of updating the UI (displaying
+ * progress, hiding remove buttons, etc.)
+ */
+function upload() {
+	if (! canUpload()) {
+		return alert("Can't upload right now.");
+	}
+
+	uploading = true;
+
+	// update UI
+	var uploadButton = $("#upload");
+	uploadButton.text("Cancel Upload");
+	uploadButton.css("margin-bottom", "0px");
+
+	$("#selectFiles").slideUp(200);
+	$(".remove").fadeOut(200);
+
+	// start the upload
+	// http://stackoverflow.com/a/8244082
+	$.ajax({
+		url: "/upload",
+		type: "POST",
+		contentType: false,
+
+		data: getFormData(),
+		processData: false,
+
+		success: function(data) {
+			console.log("returned: " + data);
+		}
+	});
+}
+
+/**
+ * @return FormData object containing files to be uploaded
+ */
+function getFormData() {
+	var formData = new FormData();
+
+	for (var i = 0; i < allFiles.length; i ++) {
+		formData.append("file", allFiles[i]);
+	}
+
+	return formData;
+}
 
 /**
  * Takes a file input element and handles displaying the file to the user and
@@ -32,6 +88,10 @@ $(document).ready(function() {
  * @param input - jQuery input object
  */
 function handleInput(input) {
+	if (uploading) {
+		return;
+	}
+
 	var files = input[0].files;
 
 	for (var i = 0; i < files.length; i ++) {
@@ -85,6 +145,10 @@ function displayFile(file) {
 	remove.appendTo(li);
 
 	remove.click(function() {
+		if (uploading) {
+			return;
+		}
+
 		var idx = allFiles.indexOf(file);
 
 		if (idx > -1) {
@@ -105,7 +169,7 @@ function displayFile(file) {
  */
 function updateUpload() {
 	var visible = $("#upload").is(":visible");
-	var shouldBeVisible = allFiles.length > 0;
+	var shouldBeVisible = canUpload();
 
 	if (visible && ! shouldBeVisible) {
 		$("#upload").hide();
@@ -114,6 +178,13 @@ function updateUpload() {
 		// jQuery will "restore" it to inline
 		$("#upload").css("display", "block");
 	}
+}
+
+/**
+ * @return whether or not an upload can proceed
+ */
+function canUpload() {
+	return allFiles.length > 0;
 }
 
 /**
