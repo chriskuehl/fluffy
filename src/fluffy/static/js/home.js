@@ -71,6 +71,7 @@ function upload() {
  */
 function getFormData() {
 	var formData = new FormData();
+	formData.append("csrfmiddlewaretoken", $("#csrf_token").val());
 
 	for (var i = 0; i < allFiles.length; i ++) {
 		formData.append("file", allFiles[i]);

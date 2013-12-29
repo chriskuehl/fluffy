@@ -22,6 +22,7 @@
 				<div id="fileHolder">
 					<ul id="files"></ul>
 					<a id="upload">Start Upload</a>
+
 					<div id="selectFiles">
 						<div id="dropZone">drop files here</div>
 						<a id="selectFile">Browse</a>
@@ -29,5 +30,7 @@
 				</div>
 			</div>
 		</div>
+
+		<input type="hidden" id="csrf_token" value="{{ csrf_token }}" />
 	</body>
 </html>
