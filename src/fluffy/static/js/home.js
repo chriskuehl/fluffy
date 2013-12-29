@@ -92,9 +92,28 @@ function displayFile(file) {
 		}
 
 		li.remove();
+		updateUpload();
 	});
 
 	li.appendTo($("#files"));
+	updateUpload();
+}
+
+/**
+ * Show or hide the upload button based on whether or not any files are
+ * queued for upload.
+ */
+function updateUpload() {
+	var visible = $("#upload").is(":visible");
+	var shouldBeVisible = allFiles.length > 0;
+
+	if (visible && ! shouldBeVisible) {
+		$("#upload").hide();
+	} else if (! visible && shouldBeVisible) {
+		// set display -> block instead of calling show() since otherwise
+		// jQuery will "restore" it to inline
+		$("#upload").css("display", "block");
+	}
 }
 
 /**
