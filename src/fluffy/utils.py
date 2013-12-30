@@ -36,20 +36,43 @@ def get_human_size(size):
 	else:
 		return "{} bytes".format(size)
 
+# constants to represent zipped or unzipped (at start of encoded string)
+NOT_ZIPPED = "u"
+ZIPPED = "z"
+
 def encode_obj(obj):
 	"""Encodes an object for inclusion in a query string.
 
 	Works internally by serializing the object into JSON, gzipping the JSON,
 	and then base64 encoding it.
+
+	The serialized data will only be zipped if doing so would result in a
+	shorter string. The returned string will start with ZIPPED or NOT_ZIPPED
+	(a single character constant) to indicate zipped or unzipped.
 	"""
 	serialized = json.dumps(obj)
 	zipped = zlib.compress(serialized.encode("utf-8"))
 
-	return base64.urlsafe_b64encode(zipped).decode("utf-8")
+	# pick either zipped or unzipped, whichever is shortest
+	encode = lambda s: base64.urlsafe_b64encode(s).decode("utf-8")
+
+	choices = (
+		NOT_ZIPPED + encode(serialized.encode("utf-8")),
+		ZIPPED + encode(zipped)
+	)
+
+	return min(choices, key=len)
 
 def decode_obj(encoded):
 	"""Decodes a string encoded by encode_obj into an object."""
-	zipped = base64.urlsafe_b64decode(encoded.encode("utf-8"))
-	serialized = zlib.decompress(zipped).decode("utf-8")
+	zipped = encoded.startswith(ZIPPED)
+	encoded = encoded[1:]
 
-	return json.loads(serialized)
+	bytes = base64.urlsafe_b64decode(encoded.encode("utf-8"))
+
+	if zipped:
+		text = zlib.decompress(bytes).decode("utf-8")
+	else:
+		text = bytes.decode("utf-8")
+
+	return json.loads(text)
