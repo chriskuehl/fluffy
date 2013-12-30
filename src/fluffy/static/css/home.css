@@ -1,0 +1,154 @@
+#fileHolder {
+	position: relative;
+
+	padding: 15px;
+	background-color: #F3FFE2;
+	border-radius: 3px;
+}
+
+#files li {
+	background-color: #FFE6B3;
+	margin-bottom: 10px;
+
+	position: relative;
+	height: 42px;
+}
+
+#files li .progress {
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+
+	background-color: #FFD694;
+
+	width: 0%;
+
+	z-index: 1;
+}
+
+#files li img {
+	position: absolute;
+	left: 5px;
+	top: 5px;
+
+	z-index: 10;
+}
+
+#files li .title {
+	position: absolute;
+	left: 40px;
+	top: 14px;
+
+	z-index: 10;
+}
+
+#files li .remove {
+	position: absolute;
+	right: 8px;
+	top: 8px;
+	bottom: 8px;
+
+	z-index: 10;
+
+	display: block;
+	padding: 0px 10px;
+	padding-top: 5px;
+	cursor: pointer;
+
+	background-color: #FFD694;
+}
+
+#dropZone {
+	position: relative;
+
+	border: dashed 4px #EB7F00;
+	padding: 35px 20px;
+
+	text-align: center;
+	font-size: 26px;
+	font-weight: bold;
+
+	color: #EB7F00;
+
+	margin-bottom: 10px;
+
+	background-color: #F3FFE2;
+
+	-webkit-transition: background-color 100ms linear;
+	-moz-transition: background-color 100ms linear;
+	-o-transition: background-color 100ms linear;
+	-ms-transition: background-color 100ms linear;
+	transition: background-color 100ms linear;
+}
+
+#dropZone input {
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+
+	opacity: 0;
+}
+
+#upload, #selectFile {
+	display: block;
+	cursor: pointer;
+
+	border-radius: 3px;
+	padding: 10px;
+
+	text-align: center;
+	color: white;
+}
+
+#upload {
+	background-color: #1695A3;
+	margin-bottom: 15px;
+
+	display: none;
+}
+
+#statusText {
+	text-align: center;
+	font-size: 12px;
+	line-height: 1.2em;
+	margin-bottom: 0px;
+	display: none;
+}
+
+#selectFile {
+	background-color: #EB7F00;
+}
+
+.hiddenFileInput {
+	display: none;
+}
+
+#loading {
+	background-image: url("/static/img/loading-32.gif");
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+
+	position: absolute;
+
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	bottom: 0px;
+
+	display: none;
+}
+
+#loading p {
+	position: absolute;
+
+	top: 50%;
+	left: 0px;
+	right: 0px;
+	margin-top: 23px;
+
+	text-align: center;
+	font-size: 12px;
+}
