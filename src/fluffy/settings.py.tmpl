@@ -86,12 +86,28 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "fluffy/static")]
 
 # fluffy-specific configuration options
 # storage backend (how are the files stored after being uploaded?)
+""" File backend
 STORAGE_BACKEND = {
 	"name": "file",
 	"options": {
 		# use {name} as a placeholder for the file name
 		"file_path": "/tmp/{name}",
 		"info_path": "/tmp/info-{name}.html"
+	}
+}
+"""
+
+STORAGE_BACKEND = {
+	"name": "s3cli",
+	"options": {
+		# use {name} as a placeholder for the file name
+		"file_name": "{name}",
+		"info_name": "{name}.html",
+
+		"file_s3path": "s3://fluffy-test/{name}",
+		"info_s3path": "s3://fluffy-test/info/{name}.html",
+
+		"tmp_path": "/tmp/{name}"
 	}
 }
 
