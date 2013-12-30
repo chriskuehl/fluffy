@@ -18,9 +18,15 @@ class FileBackend:
 		which needs to be called in order to persist the uploaded file to
 		the storage backend."""
 		path = self.options["file_path"].format(name=stored_file.name)
+		info_path = self.options["info_path"].format(name=stored_file.name)
 
 		# store the file itself
 		print("Writing to {}...".format(path))
 		with open(path, "wb+") as dest:
 			for chunk in stored_file.file.chunks():
 				dest.write(chunk)
+
+		# store the info page
+		print("Writing info page to {}...".format(info_path))
+		with open(info_path, "wb+") as dest:
+			dest.write(stored_file.info_html.encode("utf-8"))
