@@ -18,8 +18,23 @@ class FileBackend:
 
 			path = self.options[path_name]
 
+			if path.endswith("/"):
+				path = path[:-1]
+				self.options[path_name] = path
+
 			if not os.path.isdir(path):
 				raise Exception("Invalid {}: {}".format(path_name, path))
 
-	def store(self, file):
-		pass
+	def store(self, stored_file):
+		"""Stores the file and its info page. This is the only method
+		which needs to be called in order to persist the uploaded file to
+		the storage backend."""
+		path = self.file_path(stored_file)
+		print("Writing to {}...".format(path))
+
+		with open(path, "wb+") as dest:
+			for chunk in stored_file.file.chunks():
+				dest.write(chunk)
+
+	def file_path(self, stored_file):
+		return "{}/{}".format(self.options["file_path"], stored_file.name)
