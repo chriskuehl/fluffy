@@ -1,8 +1,9 @@
 from django.conf import settings
-from fluffy.backends import FileBackend
+from fluffy.backends import FileBackend, S3CommandLineBackend
 
 backends = {
-	"file": FileBackend
+	"file": FileBackend,
+	"s3cli": S3CommandLineBackend
 }
 
 def get_backend():
