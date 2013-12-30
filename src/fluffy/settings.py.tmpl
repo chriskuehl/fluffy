@@ -74,3 +74,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "fluffy/static")]
+
+# fluffy-specific configuration options
+# storage backend (how are the files stored after being uploaded?)
+STORAGE_BACKEND = {
+	"name": "file",
+	"options": {
+		"file_path": "/tmp/",
+		"info_path": "/tmp/"
+	}
+}
