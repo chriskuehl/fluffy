@@ -1,0 +1,39 @@
+{% load staticfiles %}
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<title>{{ name }} &ndash; fluffy.cc</title>
+
+		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
+		<link rel="stylesheet" href="{% static "css/reset.css" %}" />
+		<link rel="stylesheet" href="{% static "css/site.css" %}" />
+		<link rel="stylesheet" href="{% static "css/info.css" %}" />
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+		<script src="{% static "js/site.js" %}"></script>
+	</head>
+
+	<body>
+		<div id="container">
+			<div id="content">
+				<h1>fluffy.cc</h1>
+				<div id="file">
+					<div id="detailHolder">
+						<div id="icon">
+							<img src="{% static "img/mime/large/pdf.png" %}" />
+						</div>
+						<div id="details">
+							<h2>my big file.pdf</h2>
+							<p>December 29th, 2013</p>
+							<p>8.3 MB</p>
+						</div>
+					</div>
+
+					<a id="download">Download</a>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
