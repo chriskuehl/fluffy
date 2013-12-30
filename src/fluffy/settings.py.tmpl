@@ -89,8 +89,9 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "fluffy/static")]
 STORAGE_BACKEND = {
 	"name": "file",
 	"options": {
-		"file_path": "/tmp/",
-		"info_path": "/tmp/"
+		# use {name} as a placeholder for the file name
+		"file_path": "/tmp/{name}",
+		"info_path": "/tmp/info-{name}.html"
 	}
 }
 
