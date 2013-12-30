@@ -22,16 +22,16 @@
 				<div id="file">
 					<div id="detailHolder">
 						<div id="icon">
-							<img src="{% static "img/mime/large/pdf.png" %}" />
+							<img src="/static/img/mime/large/{{ extension }}.png" />
 						</div>
 						<div id="details">
-							<h2>my big file.pdf</h2>
-							<p>December 29th, 2013</p>
-							<p>8.3 MB</p>
+							<h2>{{ name }}</h2>
+							<p>{{ date }}</p>
+							<p>{{ size }}</p>
 						</div>
 					</div>
 
-					<a id="download">Download</a>
+					<a href="{{ download_url }}" id="download">Download</a>
 				</div>
 			</div>
 		</div>
