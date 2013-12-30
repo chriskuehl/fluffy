@@ -47,7 +47,6 @@ class StoredFile:
 
 		return render_to_string("info.html", params)
 
-
 	@property
 	def extension(self):
 		"""Returns extension without leading period, or empty string if no
