@@ -75,7 +75,7 @@ TEMPLATE_CONTEXT_PROCESSORS = ("django.contrib.auth.context_processors.auth",
 	"django.core.context_processors.static",
 	"django.core.context_processors.tz",
 	"django.contrib.messages.context_processors.messages",
-	"fluffy.context_processors.abuse_contact")
+	"fluffy.context_processors.constants")
 
 
 # Static files (CSS, JavaScript, Images)
@@ -94,7 +94,9 @@ STORAGE_BACKEND = {
 	}
 }
 
-# URLs for viewing files and info pages
+# URL patterns
+HOME_URL = "http://fluffy.cc/"
+
 # use {name} as a placeholder for the file name
 FILE_URL = "http://i.fluffy.cc/{name}"
 INFO_URL = "http://i.fluffy.cc/{name}/info"
