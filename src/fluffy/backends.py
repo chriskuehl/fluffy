@@ -1,5 +1,11 @@
 import os
 
+"""Backends handle storing of uploaded files. A backend should implement
+__init__(self, options) where options will be the dict of options given in the
+fluffy settings, and store(self, stored_file) which stores an uploaded file.
+
+All other details are left up to your implementation."""
+
 class FileBackend:
 	"""FileBackend is a storage backend which stores files and info pages
 	on the local disk."""
