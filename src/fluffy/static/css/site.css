@@ -7,6 +7,7 @@ body {
 	width: 580px;
 
 	margin: 100px auto;
+	margin-bottom: 35px;
 	padding: 20px;
 
 	border-radius: 5px;
@@ -26,4 +27,27 @@ h1 {
 	
 	margin-bottom: 15px;
 	color: #1695A3;
+}
+
+.footer {
+	text-align: center;
+	font-size: 12px;
+	line-height: 1.7em;
+
+	margin-bottom: 30px;
+
+	color: #7EA9AD;
+}
+
+.footer a {
+	color: #5E8C90;
+	text-decoration: none;
+}
+
+a.report {
+	opacity: 0.5;
+}
+
+.footer a:hover {
+	color: #89C2C7;
 }
