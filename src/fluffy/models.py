@@ -1,8 +1,13 @@
 import random
 import os
+from fluffy.utils import get_human_size
+from datetime import date
+from django.template.loader import render_to_string
+from django.conf import settings
 
 class StoredFile:
 	"""A File object wraps an actual file and has a unique ID."""
+
 	NAME_LENGTH = 32
 	NAME_CHARS = "bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ0123456789"
 
@@ -13,6 +18,7 @@ class StoredFile:
 	def generate_name(self):
 		"""Generates a unique name for the file. We don't actually verify that
 		the name is unique, but chances are very slim that it won't be."""
+
 		name = "".join(random.choice(StoredFile.NAME_CHARS) \
 			for _ in range(StoredFile.NAME_LENGTH))
 
@@ -24,8 +30,28 @@ class StoredFile:
 		self.name = name
 
 	@property
+	def info_html(self):
+		"""Returns the HTML of the info page."""
+		extension = self.extension
+
+		if not extension:
+			extension = "unknown"
+
+		params = {
+			"name": self.file.name,
+			"size": get_human_size(self.file.size),
+			"date": date.today().strftime("%B %e, %Y"),
+			"extension": extension,
+			"download_url": settings.FILE_URL.format(name=self.name)
+		}
+
+		return render_to_string("info.html", params)
+
+
+	@property
 	def extension(self):
 		"""Returns extension without leading period, or empty string if no
 		extension."""
+
 		path, ext = os.path.splitext(self.file.name)
 		return ext[1:] if ext else ""
