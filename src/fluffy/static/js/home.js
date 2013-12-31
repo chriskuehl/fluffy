@@ -83,6 +83,10 @@ function upload() {
 		},
 
 		error: function(xhr, status) {
+			if (request != uploadRequest) {
+				return; // upload was cancelled
+			}
+
 			// TODO: improve error handling
 			console.log("Hard failure: " + status);
 			alert("Sorry, an unexpected error occured.");
@@ -109,13 +113,15 @@ function upload() {
  * Cancels the current upload and restores the UI back to pre-upload state.
  */
 function cancelUpload() {
-	if (uploadRequest) {
-		uploadRequest.abort();
-	}
+	oldRequest = uploadRequest;
 
 	uploading = false;
 	uploadRequest = null;
 	uploadSamples = [];
+
+	if (oldRequest) {
+		oldRequest.abort();
+	}
 
 	// update UI
 	var uploadButton = $("#upload");
