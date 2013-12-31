@@ -36,14 +36,20 @@ def upload(request):
 		elapsed = time.time() - start
 		print("Stored {} files in {:.1f} seconds.".format(len(stored_files), elapsed))
 
-		details = [get_details(f) for f in stored_files]
-		details_encoded = encode_obj(details)
+		# redirect to the details page if multiple files were uploaded
+		# otherwise, redirect to the info page of the single file
+		if len(stored_files) > 1:
+			details = [get_details(f) for f in stored_files]
+			details_encoded = encode_obj(details)
 
-		details_url = reverse("details", kwargs={"enc": details_encoded})
+			url = reverse("details", kwargs={"enc": details_encoded})
+		else:
+			url = settings.INFO_URL.format(name=stored_files[0].name)
+
 
 		response = {
 			"success": True,
-			"redirect": details_url
+			"redirect": url
 		}
 	except BackendException as e:
 		print("Error storing files: {}".format(e))
