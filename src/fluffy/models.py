@@ -39,7 +39,8 @@ class StoredFile:
 			"size": get_human_size(self.file.size),
 			"date": date.today().strftime("%B %e, %Y"),
 			"extension": get_extension_icon(extension),
-			"download_url": settings.FILE_URL.format(name=self.name)
+			"download_url": settings.FILE_URL.format(name=self.name),
+			"home_url": settings.HOME_URL
 		}
 
 		return render_to_string("info.html", params)
