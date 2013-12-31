@@ -1,6 +1,6 @@
 import random
 import os
-from fluffy.utils import get_human_size, trim_filename
+from fluffy.utils import get_human_size, trim_filename, get_extension_icon
 from datetime import date
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -34,14 +34,11 @@ class StoredFile:
 		"""Returns the HTML of the info page."""
 		extension = self.extension
 
-		if not extension:
-			extension = "unknown"
-
 		params = {
 			"name": trim_filename(self.file.name, 17),
 			"size": get_human_size(self.file.size),
 			"date": date.today().strftime("%B %e, %Y"),
-			"extension": extension,
+			"extension": get_extension_icon(extension),
 			"download_url": settings.FILE_URL.format(name=self.name)
 		}
 

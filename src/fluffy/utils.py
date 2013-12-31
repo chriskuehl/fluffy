@@ -78,6 +78,19 @@ def decode_obj(encoded):
 
 	return json.loads(text)
 
+
+ICON_EXTENSIONS = [
+	"7z", "ai", "bmp", "doc", "docx", "gif", "gz", "html",
+	"jpeg", "jpg", "midi", "mp3", "odf", "odt", "pdf", "png", "psd", "rar",
+	"rtf", "svg", "tar", "txt", "wav", "xls", "zip"
+]
+
+def get_extension_icon(extension):
+	"""Returns the filename of the icon to use for an extension, excluding
+	the .png at the end of the icon name.
+	"""
+	return extension if extension in ICON_EXTENSIONS else "unknown"
+
 def trim_filename(name, length):
 	"""Trim a filename down to a desired maximum length, making attempts to
 	preserve the important parts of the name.
