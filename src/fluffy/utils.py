@@ -89,6 +89,7 @@ def get_extension_icon(extension):
 	"""Returns the filename of the icon to use for an extension, excluding
 	the .png at the end of the icon name.
 	"""
+	extension = extension.lower()
 	return extension if extension in ICON_EXTENSIONS else "unknown"
 
 def trim_filename(name, length):
