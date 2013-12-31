@@ -1,3 +1,4 @@
+import os
 import json
 import zlib
 import base64
@@ -76,3 +77,39 @@ def decode_obj(encoded):
 		text = bytes.decode("utf-8")
 
 	return json.loads(text)
+
+def trim_filename(name, length):
+	"""Trim a filename down to a desired maximum length, making attempts to
+	preserve the important parts of the name.
+
+	We prefer to preserve, in order:
+	1. the extension in full
+	2. the first three and last two characters of the name
+	3. everything else, prioritizing the first characters
+	"""
+	if len(name) <= length:
+		return name
+
+	name, ext = os.path.splitext(name)
+	length = max(length, len(ext) + 5)
+
+	if len(name) + len(ext) <= length + 2:
+		# we can't really do better
+		return name + ext
+
+	length += 1 # don't count the dot in the extension
+	length += 1 # count elipses as two characters
+
+	prefix = ""
+	suffix = name[-2:]
+
+	get_result = lambda: prefix.strip() + "..." + suffix.strip() + ext
+
+	for i in range(3, len(name) - 2):
+		prefix = name[:i]
+		result = get_result()
+
+		if len(result) >= length:
+			return result
+
+	return get_result()
