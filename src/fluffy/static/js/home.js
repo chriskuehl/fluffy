@@ -82,12 +82,23 @@ function upload() {
 			return req;
 		},
 
+		error: function(xhr, status) {
+			// TODO: improve error handling
+			console.log("Hard failure: " + status);
+			alert("Sorry, an unexpected error occured.");
+		},
+
 		success: function(data) {
 			if (request != uploadRequest) {
 				return; // upload was cancelled
 			}
 
-			console.log("returned: " + data);
+			// TODO: improve error handling
+			if (! data.success) {
+				return alert(data.error);
+			}
+
+			window.location.href = data.redirect;
 		}
 	});
 
