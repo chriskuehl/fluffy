@@ -65,3 +65,11 @@ def get_details(stored_file):
 	human_size = get_human_size(stored_file.file.size)
 
 	return (stored_file.name, human_name, human_size)
+
+def details(request, enc=encode_obj([])):
+	"""Displays details about an upload (or any set of files, really).
+
+	enc is the encoded list of detail tuples, as returned by get_details.
+	"""
+	details = decode_obj(enc)
+	return HttpResponse(str(details))
