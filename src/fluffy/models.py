@@ -52,5 +52,5 @@ class StoredFile:
 		"""Returns extension without leading period, or empty string if no
 		extension."""
 
-		path, ext = os.path.splitext(self.file.name)
+		ext = os.path.splitext(self.file.name)[1]
 		return ext[1:] if ext else ""
