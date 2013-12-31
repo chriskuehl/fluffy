@@ -70,12 +70,10 @@ def get_details(stored_file):
 	Details in the tuple:
 	  - stored name
 	  - human name without extension (to save space)
-	  - human size (to save space)
 	"""
 	human_name = os.path.splitext(stored_file.file.name)[0]
-	human_size = get_human_size(stored_file.file.size)
 
-	return (stored_file.name, human_name, human_size)
+	return (stored_file.name, human_name)
 
 def details(request, enc=encode_obj([])):
 	"""Displays details about an upload (or any set of files, really).
@@ -91,13 +89,11 @@ def get_full_details(file):
 	"""Returns a dictionary of details for a file given a detail tuple."""
 	stored_name = file[0]
 	name = file[1] # original file name
-	size = file[2]
 	ext = os.path.splitext(stored_name)[1]
 
 	return {
 		"download_url": settings.FILE_URL.format(name=stored_name),
 		"info_url": settings.INFO_URL.format(name=stored_name),
 		"name": trim_filename(name + ext, 17), # original name is stored w/o extension
-		"size": size,
 		"extension": ext[1:] if ext else "unknown"
 	}
