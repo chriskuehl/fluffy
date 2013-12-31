@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from fluffy.models import StoredFile
 from fluffy.utils import get_backend, get_human_size, encode_obj, decode_obj
+from fluffy.backends import BackendException
 
 def index(request):
 	return render(request, "index.html")
@@ -42,8 +43,16 @@ def upload(request):
 			"success": True,
 			"redirect": details_url
 		}
-	except Exception as e:
+	except BackendException as e:
 		print("Error storing files: {}".format(e))
+		print("\t{}".format(e.display_message))
+
+		response = {
+			"success": False,
+			"error": e.display_message
+		}
+	except Exception as e:
+		print("Unknown error storing files: {}".format(e))
 
 		response = {
 			"success": False,

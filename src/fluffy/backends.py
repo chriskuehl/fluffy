@@ -20,16 +20,21 @@ class FileBackend:
 		path = self.options["file_path"].format(name=stored_file.name)
 		info_path = self.options["info_path"].format(name=stored_file.name)
 
-		# store the file itself
-		print("Writing to {}...".format(path))
-		with open(path, "wb+") as dest:
-			for chunk in stored_file.file.chunks():
-				dest.write(chunk)
+		try:
+			# store the file itself
+			print("Writing to {}...".format(path))
+			with open(path, "wb+") as dest:
+				for chunk in stored_file.file.chunks():
+					dest.write(chunk)
 
-		# store the info page
-		print("Writing info page to {}...".format(info_path))
-		with open(info_path, "wb+") as dest:
-			dest.write(stored_file.info_html.encode("utf-8"))
+			# store the info page
+			print("Writing info page to {}...".format(info_path))
+			with open(info_path, "wb+") as dest:
+				dest.write(stored_file.info_html.encode("utf-8"))
+		except IOException as e:
+			internal = "Received IOException: {}".format(e)
+			display = "Sorry, we weren't able to save your file."
+			raise BackendException(internal, display)
 
 class S3CommandLineBackend:
 	"""Storage backend which uploads to S3 using AWS' command-line tools.
@@ -80,6 +85,22 @@ class S3CommandLineBackend:
 			cmd = "aws s3 cp {} {}".format(pipes.quote(path), pipes.quote(s3))
 			print("Uploading to S3 with command: {}".format(cmd))
 			status = os.system(cmd)
-			print("Status: {}".format(status))
+
+			if status != 0:
+				internal = "Received {} status code for command {}".format(status, cmd)
+				display = "Sorry, we weren't able to save your file."
+				raise BackendException(internal, display)
 
 			os.remove(path)
+
+class BackendException(Exception):
+	"""Exception to be raised when a backend encounters an error trying to store
+	a file. user_message will be displayed to the user, internal_message will
+	be logged and not displayed.
+
+	BackendException will display a "friendly" message to the user. All other
+	uncaught exceptions will display a generic error.
+	"""
+	def __init__(self, internal_message, display_message):
+		self.display_message = display_message
+		Exception.__init__(self, internal_message)
