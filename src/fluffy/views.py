@@ -1,9 +1,11 @@
 import time
 import os
+import json
+from django.core.urlresolvers import reverse
 from django.shortcuts import render
 from django.http import HttpResponse
 from fluffy.models import StoredFile
-from fluffy.utils import get_backend, get_human_size, encode_obj
+from fluffy.utils import get_backend, get_human_size, encode_obj, decode_obj
 
 def index(request):
 	return render(request, "index.html")
@@ -16,26 +18,41 @@ def upload(request):
 	Returns JSON containing the URL to redirect to; the actual redirect is done
 	by the JavaScript on the upload page.
 	"""
-	backend = get_backend()
-	file_list = request.FILES.getlist("file")
-	stored_files = [StoredFile(file) for file in file_list]
+	try:
+		backend = get_backend()
+		file_list = request.FILES.getlist("file")
+		stored_files = [StoredFile(file) for file in file_list]
 
-	start = time.time()
-	print("Storing {} files...".format(len(stored_files)))
+		start = time.time()
+		print("Storing {} files...".format(len(stored_files)))
 
-	for stored_file in stored_files:
-		print("Storing {}...".format(stored_file.name))
-		backend.store(stored_file)
+		for stored_file in stored_files:
+			print("Storing {}...".format(stored_file.name))
+			backend.store(stored_file)
 
-	elapsed = time.time() - start
-	print("Stored {} files in {:.1f} seconds.".format(len(stored_files), elapsed))
+		elapsed = time.time() - start
+		print("Stored {} files in {:.1f} seconds.".format(len(stored_files), elapsed))
 
-	response_list = [get_response(f) for f in stored_files]
-	response = encode_obj(response_list)
+		details = [get_details(f) for f in stored_files]
+		details_encoded = encode_obj(details)
 
-	return HttpResponse(response)
+		details_url = reverse("details", kwargs={"enc": details_encoded})
 
-def get_response(stored_file):
+		response = {
+			"success": True,
+			"redirect": details_url
+		}
+	except Exception as e:
+		print("Error storing files: {}".format(e))
+
+		response = {
+			"success": False,
+			"error": "An unknown error occured."
+		}
+
+	return HttpResponse(json.dumps(response), content_type="application/json")
+
+def get_details(stored_file):
 	"""Returns a tuple of details of a single stored file to be included in the
 	parameters of the info page.
 
