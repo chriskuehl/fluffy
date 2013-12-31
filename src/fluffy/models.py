@@ -1,6 +1,6 @@
 import random
 import os
-from fluffy.utils import get_human_size
+from fluffy.utils import get_human_size, trim_filename
 from datetime import date
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -38,7 +38,7 @@ class StoredFile:
 			extension = "unknown"
 
 		params = {
-			"name": self.file.name,
+			"name": trim_filename(self.file.name, 17),
 			"size": get_human_size(self.file.size),
 			"date": date.today().strftime("%B %e, %Y"),
 			"extension": extension,

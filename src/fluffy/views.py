@@ -6,7 +6,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.conf import settings
 from fluffy.models import StoredFile
-from fluffy.utils import get_backend, get_human_size, encode_obj, decode_obj
+from fluffy.utils import get_backend, get_human_size, encode_obj, decode_obj, \
+	trim_filename
 from fluffy.backends import BackendException
 
 def index(request):
@@ -96,7 +97,7 @@ def get_full_details(file):
 	return {
 		"download_url": settings.FILE_URL.format(name=stored_name),
 		"info_url": settings.INFO_URL.format(name=stored_name),
-		"name": name + ext, # original name is stored w/o extension
+		"name": trim_filename(name + ext, 17), # original name is stored w/o extension
 		"size": size,
 		"extension": ext[1:] if ext else "unknown"
 	}
