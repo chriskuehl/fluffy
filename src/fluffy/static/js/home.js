@@ -24,8 +24,23 @@ $(document).ready(function() {
 		console.log($(this).val());
 	});
 
-	// drop zone file drag-and-drop
-	addDropZoneInput();
+	// drop zone
+	var dropZone = $("#dropZone");
+	dropZone.on("dragover dragenter", dropZoneHoverOn);
+	dropZone.on("dragleave drop", dropZoneHoverOff);
+	dropZone.on("drop", function(e) {
+		var oe = e.originalEvent;
+
+		if (oe.dataTransfer) {
+			var dt = oe.dataTransfer;
+
+			for (var i = 0; i < dt.files.length; i ++) {
+				queueFile(dt.files[i]);
+			}
+		} else {
+			alert("Sorry, your browser doesn't seem to support file dropping.");
+		}
+	});
 
 	// uploading
 	$("#upload").click(function() {
@@ -353,15 +368,21 @@ function handleInput(input) {
 	var files = input[0].files;
 
 	for (var i = 0; i < files.length; i ++) {
-		var file = files[i];
-
-		if (! fileAlreadyQueued(file)) {
-			allFiles.push(file);
-			displayFile(file);
-		}
+		queueFile(files[i]);
 	}
 
 	input.remove();
+}
+
+/**
+ * Queues a file by pushing it to the allFiles array and displaying it in
+ * the file list.
+ */
+function queueFile(file) {
+	if (! fileAlreadyQueued(file)) {
+		allFiles.push(file);
+		displayFile(file);
+	}
 }
 
 /**
@@ -501,25 +522,16 @@ function makeFileInput() {
 	return input;
 }
 
-/**
- * Create an input in #dropZone which can handle drag/drop file uploads
- */
-function addDropZoneInput() {
-	input = makeFileInput();
-
-	input.appendTo($("#dropZone"));
-	input.on("dragenter", dropZoneHoverOn);
-	input.on("dragleave drop", dropZoneHoverOff);
-
-	input.change(function() {
-		addDropZoneInput();
-	});
-}
-
-function dropZoneHoverOn() {
+function dropZoneHoverOn(e) {
 	$("#dropZone").css("backgroundColor", "#FFEECA");
+
+	e.preventDefault();
+	return false;
 }
 
-function dropZoneHoverOff() {
+function dropZoneHoverOff(e) {
 	$("#dropZone").css("backgroundColor", "#F3FFE2");
+
+	e.preventDefault();
+	return false;
 }
