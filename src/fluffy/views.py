@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from fluffy.models import StoredFile
 from fluffy.utils import get_backend, get_human_size, encode_obj, decode_obj, \
-	trim_filename, get_extension_icon
+	trim_filename, get_extension_icon, validate_files, ValidationException
 from fluffy.backends import BackendException
 
 def index(request):
@@ -24,6 +24,9 @@ def upload(request):
 	try:
 		backend = get_backend()
 		file_list = request.FILES.getlist("file")
+
+		validate_files(file_list);
+
 		stored_files = [StoredFile(file) for file in file_list]
 
 		start = time.time()
@@ -58,6 +61,14 @@ def upload(request):
 		response = {
 			"success": False,
 			"error": e.display_message
+		}
+	except ValidationException as e:
+		print("Refusing to accept file (failed validation):")
+		print("\t{}".format(e))
+
+		response = {
+			"success": False,
+			"error": str(e)
 		}
 	except Exception as e:
 		print("Unknown error storing files: {}".format(e))

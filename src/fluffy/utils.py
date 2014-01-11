@@ -127,3 +127,18 @@ def trim_filename(name, length):
 			return result
 
 	return get_result()
+
+def validate_files(file_list):
+	for file in file_list:
+		validate_file(file)
+
+def validate_file(file):
+	if file.size > settings.MAX_UPLOAD_SIZE:
+		human_size = get_human_size(settings.MAX_UPLOAD_SIZE)
+		msg = "{} exceeded the maximum file size limit of {}"
+		msg = msg.format(file.name, human_size)
+
+		raise ValidationException(msg)
+
+class ValidationException(Exception):
+	pass
