@@ -71,9 +71,9 @@ change the page headers to feature your own site.
 Contributions to fluffy are welcome! Send your pull requests or file an issue.
 Thanks for the help!
 
-fluffy is copyright &copy; 2013 Chris Kuehl, with all original code released
-under an MIT license. Other code, such as included libraries or Django starter
-code, is under its original license. See LICENSE for full details.
+fluffy is copyright &copy; 2014 Chris Kuehl, Lynn Tsai, with all original code
+released under an MIT license. Other code, such as included libraries or Django
+starter code, is under its original license. See LICENSE for full details.
 
 fluffy uses awesome icon sets developed by
 [FatCow](http://www.fatcow.com/free-icons) and [Everaldo
