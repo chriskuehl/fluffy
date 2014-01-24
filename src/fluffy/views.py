@@ -6,9 +6,9 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.conf import settings
 from fluffy.models import StoredFile
-from fluffy.utils import get_backend, get_human_size, encode_obj, decode_obj, \
+from fluffy.utils import get_human_size, encode_obj, decode_obj, \
 	trim_filename, get_extension_icon, validate_files, ValidationException
-from fluffy.backends import BackendException
+from fluffy.backends import get_backend, BackendException
 
 def index(request):
 	return render(request, "index.html")

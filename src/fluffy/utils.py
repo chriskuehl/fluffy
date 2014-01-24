@@ -3,20 +3,6 @@ import json
 import zlib
 import base64
 from django.conf import settings
-from fluffy.backends import FileBackend, S3CommandLineBackend
-
-backends = {
-	"file": FileBackend,
-	"s3cli": S3CommandLineBackend
-}
-
-def get_backend():
-	"""Returns a backend instance as configured in the settings."""
-	conf = settings.STORAGE_BACKEND
-	name, options = conf["name"], conf["options"]
-
-	return backends[name](options)
-
 
 ONE_GB = 1073741824
 ONE_MB = 1048576

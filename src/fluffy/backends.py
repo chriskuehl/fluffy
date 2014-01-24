@@ -1,6 +1,7 @@
 import os
 import pipes
 from fluffy.utils import get_human_size
+from django.conf import settings
 
 """Backends handle storing of uploaded files. A backend should implement
 __init__(self, options) where options will be the dict of options given in the
@@ -120,3 +121,16 @@ class BackendException(Exception):
 	def __init__(self, internal_message, display_message):
 		self.display_message = display_message
 		Exception.__init__(self, internal_message)
+
+backends = {
+	"file": FileBackend,
+	"s3cli": S3CommandLineBackend,
+	"debug": DebugBackend
+}
+
+def get_backend():
+	"""Returns a backend instance as configured in the settings."""
+	conf = settings.STORAGE_BACKEND
+	name, options = conf["name"], conf["options"]
+
+	return backends[name](options)
