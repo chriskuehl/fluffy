@@ -43,9 +43,11 @@ for saving the file. The following backends are currently available:
   any web server.
 * **Amazon S3.** Storage on Amazon S3. You can serve these with S3 static
   websites or with CloudFront (if you want a CDN).
+* **Debug.** Prints information about uploaded files to `stdout`. Not useful in
+  production environments, but helpful when debugging upload problems.
 
 Writing a storage backend is dead simple and requires you to implement only a
-single method. The current backends are both less than 30 lines of code.
+single method. The current backends are all less than 30 lines of code.
 
 #### Serving files
 
