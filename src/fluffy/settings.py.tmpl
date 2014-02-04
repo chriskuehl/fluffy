@@ -132,3 +132,10 @@ ABUSE_CONTACT = "abuse@example.com"
 
 # max upload size per file (in bytes)
 MAX_UPLOAD_SIZE = 10 * 1048576 # 10 MB
+
+# trusted networks (requires netaddr package)
+# prefix must be specified, for a single IPv4 use /32
+TRUSTED_NETWORKS = (
+	"127.0.0.0/8", # loopback
+	"172.16.0.0/16"
+)

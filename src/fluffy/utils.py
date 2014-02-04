@@ -2,11 +2,17 @@ import os
 import json
 import zlib
 import base64
+from netaddr import IPNetwork, IPAddress
 from django.conf import settings
 
 ONE_GB = 1073741824
 ONE_MB = 1048576
 ONE_KB = 1024
+
+def trusted_network(ip):
+	"""Returns whether a given address is a member of a trusted network."""
+	addr = IPAddress(ip)
+	return any((addr in IPNetwork(net) for net in settings.TRUSTED_NETWORKS))
 
 def get_human_size(size):
 	"""Convert a byte count into a human-readable size string like "4.2 MB".

@@ -60,6 +60,10 @@
 
 		{% include "footer.html" %}
 
+		{% if trusted %}
+			<p id="trustedUser">You are a trusted user.</p>
+		{% endif %}
+
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 		<script src="{% static "js/home.js" %}"></script>
 	</body>

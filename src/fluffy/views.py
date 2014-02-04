@@ -7,11 +7,13 @@ from django.http import HttpResponse
 from django.conf import settings
 from fluffy.models import StoredFile
 from fluffy.utils import get_human_size, encode_obj, decode_obj, \
-	trim_filename, get_extension_icon, validate_files, ValidationException
+	trim_filename, get_extension_icon, validate_files, ValidationException, \
+	trusted_network
 from fluffy.backends import get_backend, BackendException
 
 def index(request):
-	return render(request, "index.html")
+	trusted = trusted_network(get_client_ip(request))
+	return render(request, "index.html", {"trusted": trusted})
 
 def upload(request):
 	"""Process an upload, storing each uploaded file with the configured
@@ -120,3 +122,13 @@ def get_full_details(file):
 		"name": trim_filename(name + ext, 17), # original name is stored w/o extension
 		"extension": get_extension_icon(ext[1:] if ext else "")
 	}
+
+# http://stackoverflow.com/a/5976065/450164
+def get_client_ip(request):
+	x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+	if x_forwarded_for:
+		ip = x_forwarded_for.split(',')[-1].strip()
+	else:
+		ip = request.META.get('REMOTE_ADDR')
+	return ip
