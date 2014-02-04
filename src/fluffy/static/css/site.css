@@ -3,6 +3,18 @@ body {
 	font-family: "Open Sans", Helvetica, Arial, sans-serif;
 }
 
+.jsOnly {
+	display: none;
+}
+
+p.error {
+	font-size: 14px;
+	line-height: 1.4em;
+	text-align: center;
+
+	color: #B20000;
+}
+
 #container {
 	width: 580px;
 

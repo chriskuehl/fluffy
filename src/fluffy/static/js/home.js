@@ -74,7 +74,7 @@ function upload() {
 	// start the upload
 	// http://stackoverflow.com/a/8244082
 	var request = $.ajax({
-		url: "/upload",
+		url: "/upload?json",
 		type: "POST",
 		contentType: false,
 
