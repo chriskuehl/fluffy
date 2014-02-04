@@ -25,9 +25,10 @@ def upload(request):
 	"""
 	try:
 		backend = get_backend()
+		trusted_user = trusted_network(get_client_ip(request))
 		file_list = request.FILES.getlist("file")
 
-		validate_files(file_list);
+		validate_files(file_list, trusted_user);
 
 		stored_files = [StoredFile(file) for file in file_list]
 

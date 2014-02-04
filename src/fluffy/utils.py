@@ -120,12 +120,14 @@ def trim_filename(name, length):
 
 	return get_result()
 
-def validate_files(file_list):
+def validate_files(file_list, trusted_user):
 	for file in file_list:
-		validate_file(file)
+		validate_file(file, trusted_user)
 
-def validate_file(file):
-	if file.size > settings.MAX_UPLOAD_SIZE:
+def validate_file(file, trusted_user):
+	if file.size > settings.MAX_UPLOAD_SIZE and \
+		(not settings.TRUSTED_NOMAXSIZE or not trusted_user):
+
 		human_size = get_human_size(settings.MAX_UPLOAD_SIZE)
 		msg = "{} exceeded the maximum file size limit of {}"
 		msg = msg.format(file.name, human_size)
