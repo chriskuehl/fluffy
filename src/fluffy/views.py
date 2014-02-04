@@ -2,7 +2,7 @@ import time
 import os
 import json
 from django.core.urlresolvers import reverse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.conf import settings
 from fluffy.models import StoredFile
@@ -78,7 +78,13 @@ def upload(request):
 			"error": "An unknown error occured."
 		}
 
-	return HttpResponse(json.dumps(response), content_type="application/json")
+	if "json" in request.GET:
+		return HttpResponse(json.dumps(response), content_type="application/json")
+	else:
+		if not response["success"]:
+			return HttpResponse("Error: {}".format(response["error"]), content_type="text/plain")
+		else:
+			return redirect(response["redirect"])
 
 def get_details(stored_file):
 	"""Returns a tuple of details of a single stored file to be included in the
