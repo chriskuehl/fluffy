@@ -35,4 +35,4 @@ nosetests.xml
 .project
 .pydevproject
 
-src/fluffy/settings.py
+server/fluffy/settings.py
