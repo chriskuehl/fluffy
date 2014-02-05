@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+import argparse, sys, os, re, requests
+
+SERVER = "http://fluffy.cc"
+HOME_PATH = "/"
+POST_PATH = "/upload?json"
+
+def printe(msg):
+	print(msg, file=sys.stderr)
+
+def get_csrf_token():
+	r = requests.get(SERVER + HOME_PATH)
+	regex = re.compile('<input type="hidden" name="csrfmiddlewaretoken" id="csrf_token" value="(.*?)" />')
+	match = regex.search(r.text)
+	
+	if match:
+		return match.group(1), r.cookies
+	
+	printe("Unable to get CSRF token!")
+	sys.exit(1)
+
+parser = argparse.ArgumentParser(description="Upload files to fluffy")
+parser.add_argument("file", type=str, nargs="+", help="path to file(s) to upload")
+args = parser.parse_args()
+
+printe("Getting CSRF token...")
+csrf, cookies = get_csrf_token()
+
+files = (("file", open(os.path.expanduser(path))) for path in args.file)
+headers = {"X-CSRFToken": csrf}
+
+upload_path = SERVER + POST_PATH
+printe("Uploading to {}...".format(upload_path))
+
+req = requests.post(upload_path, cookies=cookies, headers=headers, files=files)
+
+if req.status_code == 200:
+	json = req.json()
+
+	if not json["success"]:
+		printe("Error: {}".format(json["error"]))
+	else:
+		print(json["redirect"])
+else:
+	printe("Server returned status code {}".format(req.status_code))
