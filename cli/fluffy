@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse, sys, os, re, requests
 
-SERVER = "http://fluffy.cc"
 HOME_PATH = "/"
 POST_PATH = "/upload?json"
 
@@ -21,7 +20,10 @@ def get_csrf_token():
 
 parser = argparse.ArgumentParser(description="Upload files to fluffy")
 parser.add_argument("file", type=str, nargs="+", help="path to file(s) to upload")
+parser.add_argument("--server", default="http://fluffy.cc/", type=str, help="server to upload to (in form of a url)")
 args = parser.parse_args()
+
+SERVER = args.server if not args.server.endswith("/") else args.server[:-1]
 
 printe("Getting CSRF token...")
 csrf, cookies = get_csrf_token()
