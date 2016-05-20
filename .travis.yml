@@ -1,6 +1,5 @@
 language: python
-install: make test
-script: tox
+script: make test
 sudo: false
 cache:
     directories:
