@@ -7,7 +7,7 @@
 ### What is fluffy?
 
 fluffy is a Django-based web application that allows you to upload arbitrary
-files to the web. Once you upload the files, you get a link to the file which
+fikes to the web. Once you upload the files, you get a link to the file which
 you can share.
 
 The reference instance of fluffy is online at [fluffy.cc](http://fluffy.cc/).
@@ -45,8 +45,6 @@ for saving the file. The following backends are currently available:
   any web server.
 * **Amazon S3.** Storage on Amazon S3. You can serve these with S3 static
   websites or with CloudFront (if you want a CDN).
-* **Debug.** Prints information about uploaded files to `stdout`. Not useful in
-  production environments, but helpful when debugging upload problems.
 
 Writing a storage backend is dead simple and requires you to implement only a
 single method. The current backends are all less than 30 lines of code.
@@ -75,9 +73,8 @@ change the page headers to feature your own site.
 Contributions to fluffy are welcome! Send your pull requests or file an issue.
 Thanks for the help!
 
-fluffy is copyright &copy; 2016 Chris Kuehl, Lynn Tsai, with all original code
-released under an MIT license. Other code, such as included libraries or Django
-starter code, is under its original license. See LICENSE for full details.
+fluffy is released under the MIT license; see LICENSE for full details.
+
 
 fluffy uses awesome icon sets developed by
 [FatCow](http://www.fatcow.com/free-icons) and [Everaldo

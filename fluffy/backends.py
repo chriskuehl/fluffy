@@ -9,8 +9,6 @@ import pipes
 
 from django.conf import settings
 
-from fluffy.utils import get_human_size
-
 
 class FileBackend:
     """Storage backend which stores files and info pages on the local disk."""
@@ -100,22 +98,6 @@ class S3CommandLineBackend:
             os.remove(path)
 
 
-class DebugBackend:
-    """Storage backend which doesn't store files but prints debug info."""
-
-    def __init__(self, options):
-        self.options = options
-
-    def store(self, stored_file):
-        """Stores the file and its info page. This is the only method
-        which needs to be called in order to persist the uploaded file to
-        the storage backend."""
-
-        print('Storing file:')
-        print('\tName: {}'.format(stored_file.name))
-        print('\tSize: {}'.format(get_human_size(stored_file.file.size)))
-
-
 class BackendException(Exception):
     """Exception to be raised when a backend encounters an error trying to store
     a file. user_message will be displayed to the user, internal_message will
@@ -132,7 +114,6 @@ class BackendException(Exception):
 backends = {
     'file': FileBackend,
     's3cli': S3CommandLineBackend,
-    'debug': DebugBackend
 }
 
 
