@@ -1,47 +1,54 @@
 #!/usr/bin/env python3
-import argparse, sys, os, re, requests
+import argparse
+import os
+import re
+import sys
 
-HOME_PATH = "/"
-POST_PATH = "/upload?json"
+import requests
+
+HOME_PATH = '/'
+POST_PATH = '/upload?json'
+
 
 def printe(msg):
-	print(msg, file=sys.stderr)
+    print(msg, file=sys.stderr)
+
 
 def get_csrf_token():
-	r = requests.get(SERVER + HOME_PATH)
-	regex = re.compile('<input type="hidden" name="csrfmiddlewaretoken" id="csrf_token" value="(.*?)" />')
-	match = regex.search(r.text)
-	
-	if match:
-		return match.group(1), r.cookies
-	
-	printe("Unable to get CSRF token!")
-	sys.exit(1)
+    r = requests.get(SERVER + HOME_PATH)
+    regex = re.compile('<input type="hidden" name="csrfmiddlewaretoken" id="csrf_token" value="(.*?)" />')
+    match = regex.search(r.text)
 
-parser = argparse.ArgumentParser(description="Upload files to fluffy")
-parser.add_argument("file", type=str, nargs="+", help="path to file(s) to upload")
-parser.add_argument("--server", default="http://fluffy.cc/", type=str, help="server to upload to (in form of a url)")
+    if match:
+        return match.group(1), r.cookies
+
+    printe('Unable to get CSRF token!')
+    sys.exit(1)
+
+parser = argparse.ArgumentParser(description='Upload files to fluffy')
+parser.add_argument('file', type=str, nargs='+', help='path to file(s) to upload')
+parser.add_argument('--server', default='http://fluffy.cc/', type=str, help='server to upload to (in form of a url)')
 args = parser.parse_args()
 
-SERVER = args.server if not args.server.endswith("/") else args.server[:-1]
+SERVER = args.server if not args.server.endswith('/') else args.server[:-1]
 
-printe("Getting CSRF token...")
+printe('Getting CSRF token...')
 csrf, cookies = get_csrf_token()
 
-files = (("file", open(os.path.expanduser(path))) for path in args.file)
-headers = {"X-CSRFToken": csrf}
+files = (('file', open(os.path.expanduser(path))) for path in args.file)
+headers = {'X-CSRFToken': csrf}
 
 upload_path = SERVER + POST_PATH
-printe("Uploading to {}...".format(upload_path))
+printe('Uploading to {}...'.format(upload_path))
 
 req = requests.post(upload_path, cookies=cookies, headers=headers, files=files)
 
 if req.status_code == 200:
-	json = req.json()
+    json = req.json()
 
-	if not json["success"]:
-		printe("Error: {}".format(json["error"]))
-	else:
-		print(json["redirect"])
+    if not json['success']:
+        printe('Error: {}'.format(json['error']))
+    else:
+        print(json['redirect'])
 else:
-	printe("Server returned status code {}".format(req.status_code))
+    printe('Server returned status code {}'.format(req.status_code))
