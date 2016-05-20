@@ -1,0 +1,13 @@
+language: python
+install: make test
+script: tox
+sudo: false
+cache:
+    directories:
+        - $HOME/venv
+addons:
+    apt:
+        sources:
+            - deadsnakes
+        packages:
+            - python3.4-dev
