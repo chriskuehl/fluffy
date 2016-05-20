@@ -1,4 +1,6 @@
 ## fluffy: a file sharing web app that doesn't suck.
+[![Build Status](https://travis-ci.org/chriskuehl/fluffy.svg?branch=master)](https://travis-ci.org/chriskuehl/fluffy)
+[![PyPI version](https://badge.fury.io/py/fluffy-server.svg)](https://pypi.python.org/pypi/fluffy-server)
 
 ![fluffy screenshots](http://i.fluffy.cc/sx8c22NDDBw2hG0slzZVLM2ZW2FHw0j5.png)
 
