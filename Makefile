@@ -1,5 +1,6 @@
 VENV := venv
 BIN := $(VENV)/bin
+DOCKER_TAG := ckuehl/fluffy-server
 
 export FLUFFY_SETTINGS := $(PWD)/settings.py
 
@@ -11,13 +12,20 @@ $(VENV): setup.py requirements.txt requirements-dev.txt
 
 .PHONY: dev
 dev: $(VENV)
-	env
 	$(BIN)/python -m fluffy.run
 
 .PHONY: test
 test: $(VENV)
 	$(BIN)/pre-commit install -f --install-hooks
 	$(BIN)/pre-commit run --all-files
+
+.PHONY: docker-image
+docker-image:
+	docker build -t $(DOCKER_TAG) .
+
+.PHONY: docker-run
+docker-run: docker-image
+	docker run -p 8000 $(DOCKER_TAG)
 
 .PHONY: clean
 clean:

@@ -7,6 +7,7 @@ setup(
     author='Chris Kuehl',
     author_email='ckuehl@ocf.berkeley.edu',
     packages=find_packages(),
+    include_package_data=True,
     install_requires={
         'flask',
     },

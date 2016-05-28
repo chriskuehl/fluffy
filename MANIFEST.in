@@ -1,0 +1,2 @@
+recursive-include fluffy/static *
+recursive-include fluffy/templates *
