@@ -8,8 +8,7 @@ setup(
     author_email='ckuehl@ocf.berkeley.edu',
     packages=find_packages(),
     install_requires={
-        # TODO: upgrade this
-        'django==1.6.1',
+        'flask',
     },
     classifiers={
         'Programming Language :: Python :: 3',

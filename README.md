@@ -6,7 +6,7 @@
 
 ### What is fluffy?
 
-fluffy is a Django-based web application that allows you to upload arbitrary
+fluffy is a Flask-based web application that allows you to upload arbitrary
 fikes to the web. Once you upload the files, you get a link to the file which
 you can share.
 
@@ -62,8 +62,8 @@ To host your own copy of fluffy, clone the git repo. Copy `settings.py.tmpl` to
 storage backend you wish to use. There's no database, so setup is very simple.
 
 Once you've adjusted the configuration, you can deploy fluffy the way you
-deploy any Django app. fluffy is tested with Python versions 2.7 and 3.3, and
-is also probably compatible with other versions.
+deploy any Flask app. fluffy is tested with Python version 3.4; it requires at
+least Python 3.3, though it's untested.
 
 Since "fluffy.cc" is just one instance of fluffy, you'll probably want to
 change the page headers to feature your own site.

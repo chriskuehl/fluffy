@@ -2,9 +2,9 @@ import os
 import random
 from datetime import date
 
-from django.conf import settings
-from django.template.loader import render_to_string
+from flask import render_template
 
+from fluffy import app
 from fluffy.utils import get_extension_icon
 from fluffy.utils import get_human_size
 from fluffy.utils import trim_filename
@@ -41,19 +41,19 @@ class StoredFile:
 
         params = {
             'name': trim_filename(self.file.name, 17),
-            'size': get_human_size(self.file.size),
+            # TODO: fix size
+            'size': get_human_size(0),  # self.file.size),
             'date': date.today().strftime('%B %e, %Y'),
             'extension': get_extension_icon(extension),
-            'download_url': settings.FILE_URL.format(name=self.name),
-            'home_url': settings.HOME_URL
+            'download_url': app.config['FILE_URL'].format(name=self.name),
+            'home_url': app.config['HOME_URL'],
         }
 
-        return render_to_string('info.html', params)
+        return render_template('info.html', **params)
 
     @property
     def extension(self):
-        """Returns extension without leading period, or empty string if no
+        """Returns extension eithout leading period, or empty string if no
         extension."""
-
-        ext = os.path.splitext(self.file.name)[1]
+        ext = os.path.splitext(self.file.filename)[1]
         return ext[1:] if ext else ''

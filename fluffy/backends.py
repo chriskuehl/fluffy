@@ -7,7 +7,7 @@ All other details are left up to your implementation.
 import os
 import pipes
 
-from django.conf import settings
+from fluffy import app
 
 
 class FileBackend:
@@ -26,13 +26,11 @@ class FileBackend:
         try:
             # store the file itself
             print('Writing to {}...'.format(path))
-            with open(path, 'wb+') as dest:
-                for chunk in stored_file.file.chunks():
-                    dest.write(chunk)
+            stored_file.file.save(path)
 
             # store the info page
             print('Writing info page to {}...'.format(info_path))
-            with open(info_path, 'wb+') as dest:
+            with open(info_path, 'wb') as dest:
                 dest.write(stored_file.info_html.encode('utf-8'))
         except IOError as e:
             internal = 'Received IOError: {}'.format(e)
@@ -119,7 +117,7 @@ backends = {
 
 def get_backend():
     """Returns a backend instance as configured in the settings."""
-    conf = settings.STORAGE_BACKEND
+    conf = app.config['STORAGE_BACKEND']
     name, options = conf['name'], conf['options']
 
     return backends[name](options)

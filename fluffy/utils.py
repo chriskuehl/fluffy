@@ -3,9 +3,7 @@ import json
 import os
 import zlib
 
-from django.conf import settings
-from netaddr import IPAddress
-from netaddr import IPNetwork
+from fluffy import app
 
 ONE_GB = 1073741824
 ONE_MB = 1048576
@@ -14,8 +12,10 @@ ONE_KB = 1024
 
 def trusted_network(ip):
     """Returns whether a given address is a member of a trusted network."""
-    addr = IPAddress(ip)
-    return any((addr in IPNetwork(net) for net in settings.TRUSTED_NETWORKS))
+    # TODO: this
+    return False
+    # addr = IPAddress(ip)
+    # return any((addr in IPNetwork(net) for net in app.config['TRUSTED_NETWORKS']))
 
 
 def get_human_size(size):
@@ -137,12 +137,14 @@ def validate_files(file_list, trusted_user):
 
 
 def validate_file(file, trusted_user):
-    if file.size > settings.MAX_UPLOAD_SIZE and \
-            (not settings.TRUSTED_NOMAXSIZE or not trusted_user):
+    # TODO: fix file size calculation (Flask makes it harder)
+    return
+    if file.size > app.config['MAX_UPLOAD_SIZE'] and \
+            (not app.config['TRUSTED_NOMAXSIZE'] or not trusted_user):
 
-        human_size = get_human_size(settings.MAX_UPLOAD_SIZE)
+        human_size = get_human_size(app.config['MAX_UPLOAD_SIZE'])
         msg = '{} exceeded the maximum file size limit of {}'
-        msg = msg.format(file.name, human_size)
+        msg = msg.format(file.filename, human_size)
 
         raise ValidationException(msg)
 

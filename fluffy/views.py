@@ -1,13 +1,13 @@
-import json
 import os
 import time
 
-from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.shortcuts import render
+from flask import jsonify
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import url_for
 
+from fluffy import app
 from fluffy.backends import BackendException
 from fluffy.backends import get_backend
 from fluffy.models import StoredFile
@@ -20,12 +20,14 @@ from fluffy.utils import validate_files
 from fluffy.utils import ValidationException
 
 
-def index(request):
-    trusted = trusted_network(get_client_ip(request))
-    return render(request, 'index.html', {'trusted': trusted})
+@app.route('/')
+def index():
+    trusted = trusted_network(get_client_ip())
+    return render_template('index.html', trusted=trusted)
 
 
-def upload(request):
+@app.route('/upload', methods={'POST'})
+def upload():
     """Process an upload, storing each uploaded file with the configured
     storage backend. Redirects to a status page which displays the uploaded
     file(s).
@@ -35,8 +37,8 @@ def upload(request):
     """
     try:
         backend = get_backend()
-        trusted_user = trusted_network(get_client_ip(request))
-        file_list = request.FILES.getlist('file')
+        trusted_user = trusted_network(get_client_ip())
+        file_list = request.files.getlist('file')
 
         validate_files(file_list, trusted_user)
 
@@ -58,13 +60,13 @@ def upload(request):
             details = [get_details(f) for f in stored_files]
             details_encoded = encode_obj(details)
 
-            url = reverse('details', kwargs={'enc': details_encoded})
+            url = url_for('details', enc=details_encoded)
         else:
-            url = settings.INFO_URL.format(name=stored_files[0].name)
+            url = app.config['INFO_URL'].format(name=stored_files[0].name)
 
         response = {
             'success': True,
-            'redirect': url
+            'redirect': url,
         }
     except BackendException as e:
         print('Error storing files: {}'.format(e))
@@ -72,7 +74,7 @@ def upload(request):
 
         response = {
             'success': False,
-            'error': e.display_message
+            'error': e.display_message,
         }
     except ValidationException as e:
         print('Refusing to accept file (failed validation):')
@@ -80,23 +82,23 @@ def upload(request):
 
         response = {
             'success': False,
-            'error': str(e)
+            'error': str(e),
         }
     except Exception as e:
         print('Unknown error storing files: {}'.format(e))
 
         response = {
             'success': False,
-            'error': 'An unknown error occured.'
+            'error': 'An unknown error occured.',
         }
 
-    if 'json' in request.GET:
-        return HttpResponse(json.dumps(response), content_type='application/json')
-    else:
-        if not response['success']:
-            return HttpResponse('Error: {}'.format(response['error']), content_type='text/plain')
+    if response['success']:
+        if 'json' in request.args:
+            return jsonify(response)
         else:
             return redirect(response['redirect'])
+    else:
+        return 'Error: {}'.format(response['error'])
 
 
 def get_details(stored_file):
@@ -112,7 +114,8 @@ def get_details(stored_file):
     return (stored_file.name, human_name)
 
 
-def details(request, enc=encode_obj([])):
+@app.route('/details/<enc>')
+def details(enc):
     """Displays details about an upload (or any set of files, really).
 
     enc is the encoded list of detail tuples, as returned by get_details.
@@ -120,7 +123,7 @@ def details(request, enc=encode_obj([])):
     req_details = decode_obj(enc)
     details = [get_full_details(file) for file in req_details]
 
-    return render(request, 'details.html', {'details': details})
+    return render_template('details.html', details=details)
 
 
 def get_full_details(file):
@@ -130,20 +133,13 @@ def get_full_details(file):
     ext = os.path.splitext(stored_name)[1]
 
     return {
-        'download_url': settings.FILE_URL.format(name=stored_name),
-        'info_url': settings.INFO_URL.format(name=stored_name),
+        'download_url': app.config['FILE_URL'].format(name=stored_name),
+        'info_url': app.config['INFO_URL'].format(name=stored_name),
         'name': trim_filename(name + ext, 17),  # original name is stored w/o extension
         'extension': get_extension_icon(ext[1:] if ext else '')
     }
 
-# http://stackoverflow.com/a/5976065/450164
 
-
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[-1].strip()
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+def get_client_ip():
+    # TODO: improve this to better handle proxies
+    return request.remote_addr
