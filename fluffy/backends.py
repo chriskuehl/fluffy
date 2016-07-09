@@ -4,8 +4,8 @@ fluffy settings, and store(self, stored_file) which stores an uploaded file.
 
 All other details are left up to your implementation.
 """
-import os
 import mimetypes
+import os
 
 import boto3
 

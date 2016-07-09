@@ -6,24 +6,24 @@ STORAGE_BACKEND = {
     'options': {
         # use {name} as a placeholder for the file name
         'file_path': '/tmp/{name}',
-        'info_path': '/tmp/{name}.html'
+        'info_path': '/tmp/{name}.html',
     }
 }
 
 # S3 CLI backend
 STORAGE_BACKEND = {
-    "name": "s3",
-    "options": {
+    'name': 's3',
+    'options': {
         # use {name} as a placeholder for the file name
-        "file_name": "{name}",
-        "info_name": "{name}.html",
+        'file_name': '{name}',
+        'info_name': '{name}.html',
 
-        "file_bucket": "fluffy.cc",
-        "info_bucket": "fluffy.cc",
-        "file_s3path": "{name}",
-        "info_s3path": "info/{name}.html",
+        'file_bucket': 'fluffy.cc',
+        'info_bucket': 'fluffy.cc',
+        'file_s3path': '{name}',
+        'info_s3path': 'info/{name}.html',
 
-        "tmp_path": "/tmp/{name}"
+        'tmp_path': '/tmp/{name}',
     }
 }
 
@@ -48,7 +48,7 @@ MAX_CONTENT_LENGTH = MAX_UPLOAD_SIZE * 2
 # prefix must be specified, for a single IPv4 use /32
 TRUSTED_NETWORKS = (
     '127.0.0.0/8',  # loopback
-    '172.16.0.0/16'
+    '172.16.0.0/16',
 )
 
 # do trusted networks get to violate max file size?
