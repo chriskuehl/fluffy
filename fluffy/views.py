@@ -27,13 +27,7 @@ def index():
 
 @app.route('/upload', methods={'POST'})
 def upload():
-    """Process an upload, storing each uploaded file with the configured
-    storage backend. Redirects to a status page which displays the uploaded
-    file(s).
-
-    Returns JSON containing the URL to redirect to; the actual redirect is done
-    by the JavaScript on the upload page.
-    """
+    """Process an upload and return JSON status."""
     try:
         backend = get_backend()
         trusted_user = trusted_network(get_client_ip())
@@ -57,32 +51,25 @@ def upload():
         # otherwise, redirect to the info page of the single file
         if len(stored_files) > 1:
             details = [get_details(f) for f in stored_files]
-            details_encoded = encode_obj(details)
-
-            url = url_for('details', enc=details_encoded)
+            url = url_for('details', enc=encode_obj(details))
         else:
             url = app.config['INFO_URL'].format(name=stored_files[0].name)
 
-        response = {
-            'success': True,
-            'redirect': url,
-        }
-    except ValidationException as e:
-        print('Refusing to accept file (failed validation):')
-        print('\t{}'.format(e))
-
-        response = {
-            'success': False,
-            'error': str(e),
-        }
-
-    if response['success']:
         if 'json' in request.args:
-            return jsonify(response)
+            return jsonify({
+                'success': True,
+                'redirect': url,
+            })
         else:
-            return redirect(response['redirect'])
-    else:
-        return 'Error: {}'.format(response['error'])
+            return redirect(url)
+    except ValidationException as ex:
+        print('Refusing to accept file (failed validation):')
+        print('\t{}'.format(ex))
+
+        return jsonify({
+            'success': False,
+            'error': str(ex),
+        })
 
 
 def get_details(stored_file):
