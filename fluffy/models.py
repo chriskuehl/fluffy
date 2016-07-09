@@ -18,9 +18,9 @@ class StoredFile:
 
     def __init__(self, file):
         self.file = file
-        self.generate_name()
+        self._generate_name()
 
-    def generate_name(self):
+    def _generate_name(self):
         """Generates a unique name for the file. We don't actually verify that
         the name is unique, but chances are very slim that it won't be."""
 
@@ -53,7 +53,7 @@ class StoredFile:
 
     @property
     def extension(self):
-        """Returns extension eithout leading period, or empty string if no
+        """Returns extension without leading period, or empty string if no
         extension."""
         ext = os.path.splitext(self.file.filename)[1]
         return ext[1:] if ext else ''

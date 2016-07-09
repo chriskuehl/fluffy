@@ -11,19 +11,21 @@ STORAGE_BACKEND = {
 }
 
 # S3 CLI backend
-# STORAGE_BACKEND = {
-#     "name": "s3cli",
-#     "options": {
-#         # use {name} as a placeholder for the file name
-#         "file_name": "{name}",
-#         "info_name": "{name}.html",
-#
-#         "file_s3path": "s3://fluffy-test/{name}",
-#         "info_s3path": "s3://fluffy-test/info/{name}.html",
-#
-#         "tmp_path": "/tmp/{name}"
-#     }
-# }
+STORAGE_BACKEND = {
+    "name": "s3",
+    "options": {
+        # use {name} as a placeholder for the file name
+        "file_name": "{name}",
+        "info_name": "{name}.html",
+
+        "file_bucket": "fluffy.cc",
+        "info_bucket": "fluffy.cc",
+        "file_s3path": "{name}",
+        "info_s3path": "info/{name}.html",
+
+        "tmp_path": "/tmp/{name}"
+    }
+}
 
 # URL patterns
 HOME_URL = 'http://fluffy.cc/'

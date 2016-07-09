@@ -84,13 +84,6 @@ def upload():
             'success': False,
             'error': str(e),
         }
-    except Exception as e:
-        print('Unknown error storing files: {}'.format(e))
-
-        response = {
-            'success': False,
-            'error': 'An unknown error occured.',
-        }
 
     if response['success']:
         if 'json' in request.args:
