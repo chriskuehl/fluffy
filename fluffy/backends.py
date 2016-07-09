@@ -25,19 +25,14 @@ class FileBackend(Backend):
         path = self.options['file_path'].format(name=stored_file.name)
         info_path = self.options['info_path'].format(name=stored_file.name)
 
-        try:
-            # store the file itself
-            print('Writing to {}...'.format(path))
-            stored_file.file.save(path)
+        # store the file itself
+        print('Writing to {}...'.format(path))
+        stored_file.file.save(path)
 
-            # store the info page
-            print('Writing info page to {}...'.format(info_path))
-            with open(info_path, 'wb') as dest:
-                dest.write(stored_file.info_html.encode('utf-8'))
-        except IOError as e:
-            internal = 'Received IOError: {}'.format(e)
-            display = "Sorry, we weren't able to save your file."
-            raise BackendException(internal, display)
+        # store the info page
+        print('Writing info page to {}...'.format(info_path))
+        with open(info_path, 'wb') as dest:
+            dest.write(stored_file.info_html.encode('utf-8'))
 
 
 class S3Backend(Backend):
@@ -68,19 +63,6 @@ class S3Backend(Backend):
                 ContentType=mime,
             )
 
-
-class BackendException(Exception):
-    """Exception to be raised when a backend encounters an error trying to store
-    a file. user_message will be displayed to the user, internal_message will
-    be logged and not displayed.
-
-    BackendException will display a "friendly" message to the user. All other
-    uncaught exceptions will display a generic error.
-    """
-
-    def __init__(self, internal_message, display_message):
-        self.display_message = display_message
-        Exception.__init__(self, internal_message)
 
 backends = {
     'file': FileBackend,

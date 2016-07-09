@@ -8,7 +8,6 @@ from flask import request
 from flask import url_for
 
 from fluffy import app
-from fluffy.backends import BackendException
 from fluffy.backends import get_backend
 from fluffy.models import StoredFile
 from fluffy.utils import decode_obj
@@ -67,14 +66,6 @@ def upload():
         response = {
             'success': True,
             'redirect': url,
-        }
-    except BackendException as e:
-        print('Error storing files: {}'.format(e))
-        print('\t{}'.format(e.display_message))
-
-        response = {
-            'success': False,
-            'error': e.display_message,
         }
     except ValidationException as e:
         print('Refusing to accept file (failed validation):')
