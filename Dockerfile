@@ -10,7 +10,7 @@ RUN apt-get update \
         wget \
     && apt-get clean
 RUN wget -O /tmp/dumb-init.deb \
-        https://github.com/Yelp/dumb-init/releases/download/v1.0.2/dumb-init_1.0.2_amd64.deb \
+        https://github.com/Yelp/dumb-init/releases/download/v1.1.1/dumb-init_1.1.1_amd64.deb \
     && dpkg -i /tmp/dumb-init.deb \
     && rm /tmp/dumb-init.deb
 
