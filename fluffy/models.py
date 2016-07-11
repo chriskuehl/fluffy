@@ -40,7 +40,7 @@ class StoredFile:
         extension = self.extension
 
         params = {
-            'name': trim_filename(self.file.name, 17),
+            'name': trim_filename(self.file.filename, 17),
             # TODO: fix size
             'size': get_human_size(0),  # self.file.size),
             'date': date.today().strftime('%B %e, %Y'),
