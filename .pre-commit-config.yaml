@@ -1,5 +1,5 @@
--   repo: https://github.com/chriskuehl/pre-commit-hooks.git
-    sha: cd3f867cafee3488a93a13f97bf7fdab329c996e
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    sha: 3fa02652357ff0dbb42b5bc78c673b7bc105fcf3
     hooks:
     -   id: autopep8-wrapper
         language_version: python3
@@ -23,24 +23,13 @@
     -   id: name-tests-test
     -   id: requirements-txt-fixer
     -   id: trailing-whitespace
--   repo: https://github.com/chriskuehl/reorder_python_imports.git
-    sha: 138f897f7d53c53dd4535dc377764fa3a58e310c
+-   repo: https://github.com/asottile/reorder_python_imports
+    sha: b022734351abe44d0b05a71a4fa1175287c59b49
     hooks:
     -   id: reorder-python-imports
         language_version: python3
--   repo: https://github.com/chriskuehl/pre-commit-hooks-1.git
-    sha: cb3b03ba29a70be8ff4702429ea331cfc61b87c8
+-   repo: https://github.com/Lucas-C/pre-commit-hooks
+    sha: 0f5055d31f39ea3ac1f5335a0cca320200cd0c51
     hooks:
     -   id: remove-tabs
         language_version: python2.7
--   repo: https://github.com/pre-commit/mirrors-scss-lint
-    sha: 3eb13b9647543ad4d6a62c8be8a9131e3b99b96a
-    hooks:
-    -   id: scss-lint
--   repo: local
-    hooks:
-    -   id: no-top-level-header
-        language: pcre
-        name: No Top-Level Headers (Markdown)
-        entry: ^#\s
-        types: [markdown]
