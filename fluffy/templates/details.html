@@ -9,7 +9,7 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/details.css') }}" />
     </head>
     </head>
 
@@ -18,7 +18,7 @@
             <div id="content">
                 <h1><a href="{{ home_url }}">fluffy.cc</a></h1>
                 <div id="files">
-                    {% for file in details %}
+                    {% for file in uploads %}
                         <div class="file">
                             <div class="detailHolder">
                                 <div class="icon">

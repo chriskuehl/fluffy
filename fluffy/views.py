@@ -1,5 +1,4 @@
-import os
-import time
+import json
 
 from flask import jsonify
 from flask import redirect
@@ -9,80 +8,47 @@ from flask import url_for
 
 from fluffy import app
 from fluffy.backends import get_backend
-from fluffy.models import StoredFile
-from fluffy.utils import decode_obj
-from fluffy.utils import encode_obj
-from fluffy.utils import get_extension_icon
-from fluffy.utils import trim_filename
-from fluffy.utils import trusted_network
-from fluffy.utils import validate_files
-from fluffy.utils import ValidationException
+from fluffy.models import FileTooLargeError
+from fluffy.models import UploadedFile
+from fluffy.utils import decode
+from fluffy.utils import encode
+from fluffy.utils import human_size
 
 
 @app.route('/')
 def index():
-    trusted = trusted_network(get_client_ip())
-    return render_template('index.html', trusted=trusted)
+    return render_template('index.html')
 
 
 @app.route('/upload', methods={'POST'})
 def upload():
     """Process an upload and return JSON status."""
-    try:
-        backend = get_backend()
-        trusted_user = trusted_network(get_client_ip())
-        file_list = request.files.getlist('file')
-
-        validate_files(file_list, trusted_user)
-
-        stored_files = [StoredFile(file) for file in file_list]
-
-        start = time.time()
-        print('Storing {} files...'.format(len(stored_files)))
-
-        for stored_file in stored_files:
-            print('Storing {}...'.format(stored_file.name))
-            backend.store(stored_file)
-
-        elapsed = time.time() - start
-        print('Stored {} files in {:.1f} seconds.'.format(len(stored_files), elapsed))
-
-        # redirect to the details page if multiple files were uploaded
-        # otherwise, redirect to the info page of the single file
-        if len(stored_files) > 1:
-            details = [get_details(f) for f in stored_files]
-            url = url_for('details', enc=encode_obj(details))
-        else:
-            url = app.config['INFO_URL'].format(name=stored_files[0].name)
-
-        if 'json' in request.args:
+    uploaded_files = []
+    for f in request.files.getlist('file'):
+        try:
+            with UploadedFile.from_http_file(f) as uf:
+                get_backend().store(uf)
+            uploaded_files.append(uf)
+        except FileTooLargeError:
             return jsonify({
-                'success': True,
-                'redirect': url,
+                'success': False,
+                'error': '{} exceeded the maximum file size limit of {}'.format(
+                    f.filename,
+                    human_size(app.config['MAX_UPLOAD_SIZE']),
+                ),
             })
-        else:
-            return redirect(url)
-    except ValidationException as ex:
-        print('Refusing to accept file (failed validation):')
-        print('\t{}'.format(ex))
 
+    url = url_for(
+        'details',
+        enc=encode(json.dumps([uf.serialized for uf in uploaded_files])),
+    )
+    if 'json' in request.args:
         return jsonify({
-            'success': False,
-            'error': str(ex),
+            'success': True,
+            'redirect': url,
         })
-
-
-def get_details(stored_file):
-    """Returns a tuple of details of a single stored file to be included in the
-    parameters of the info page.
-
-    Details in the tuple:
-      - stored name
-      - human name without extension (to save space)
-    """
-    human_name = os.path.splitext(stored_file.file.name)[0]
-
-    return (stored_file.name, human_name)
+    else:
+        return redirect(url)
 
 
 @app.route('/details/<enc>')
@@ -91,24 +57,10 @@ def details(enc):
 
     enc is the encoded list of detail tuples, as returned by get_details.
     """
-    req_details = decode_obj(enc)
-    details = [get_full_details(file) for file in req_details]
-
-    return render_template('details.html', details=details)
-
-
-def get_full_details(file):
-    """Returns a dictionary of details for a file given a detail tuple."""
-    stored_name = file[0]
-    name = file[1]  # original file name
-    ext = os.path.splitext(stored_name)[1]
-
-    return {
-        'download_url': app.config['FILE_URL'].format(name=stored_name),
-        'info_url': app.config['INFO_URL'].format(name=stored_name),
-        'name': trim_filename(name + ext, 17),  # original name is stored w/o extension
-        'extension': get_extension_icon(ext[1:] if ext else '')
-    }
+    return render_template(
+        'details.html',
+        uploads=[UploadedFile.deserialized(uf) for uf in json.loads(decode(enc))],
+    )
 
 
 def get_client_ip():

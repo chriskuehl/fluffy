@@ -1,59 +1,98 @@
+import json
+import mimetypes
 import os
 import random
-from datetime import date
+import tempfile
+from collections import namedtuple
+from contextlib import contextmanager
 
-from flask import render_template
+from cached_property import cached_property
 
 from fluffy import app
-from fluffy.utils import get_extension_icon
-from fluffy.utils import get_human_size
-from fluffy.utils import trim_filename
 
 
-class StoredFile:
-    """A File object wraps an actual file and has a unique ID."""
+STORED_FILE_NAME_LENGTH = 32
+STORED_FILE_NAME_CHARS = 'bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ0123456789'
 
-    NAME_LENGTH = 32
-    NAME_CHARS = 'bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ0123456789'
 
-    def __init__(self, file):
-        self.file = file
-        self._generate_name()
+class UploadedFile(namedtuple('UploadedFile', (
+        'human_name',
+        'num_bytes',
+        'open_file',
+        'unique_id',
+))):
 
-    def _generate_name(self):
-        """Generates a unique name for the file. We don't actually verify that
-        the name is unique, but chances are very slim that it won't be."""
+    @classmethod
+    @contextmanager
+    def from_http_file(cls, f):
+        with tempfile.NamedTemporaryFile() as tf:
+            # We don't know the file size until we start to save the file (the
+            # client can lie about the uploaded size, and some browsers don't
+            # even send it).
+            f.save(tf)
+            num_bytes = f.tell()
+            if num_bytes > app.config['MAX_UPLOAD_SIZE']:
+                raise FileTooLargeError()
+            tf.seek(0)
 
-        name = ''.join(random.choice(StoredFile.NAME_CHARS)
-                       for _ in range(StoredFile.NAME_LENGTH))
+            yield cls(
+                human_name=f.filename,
+                num_bytes=num_bytes,
+                open_file=tf,
+                unique_id=''.join(
+                    random.choice(STORED_FILE_NAME_CHARS)
+                    for _ in range(STORED_FILE_NAME_LENGTH)
+                ),
+            )
 
-        extension = self.extension
+    @cached_property
+    def name(self):
+        """File name that will be stored."""
+        if self.extension:
+            return '{self.unique_id}.{self.extension}'.format(self=self)
+        else:
+            return self.unique_id
 
-        if extension:
-            name += '.' + extension
-
-        self.name = name
-
-    @property
-    def info_html(self):
-        """Returns the HTML of the info page."""
-        extension = self.extension
-
-        params = {
-            'name': trim_filename(self.file.filename, 17),
-            # TODO: fix size
-            'size': get_human_size(0),  # self.file.size),
-            'date': date.today().strftime('%B %e, %Y'),
-            'extension': get_extension_icon(extension),
-            'download_url': app.config['FILE_URL'].format(name=self.name),
-            'home_url': app.config['HOME_URL'],
-        }
-
-        return render_template('info.html', **params)
-
-    @property
+    @cached_property
     def extension(self):
-        """Returns extension without leading period, or empty string if no
-        extension."""
-        ext = os.path.splitext(self.file.filename)[1]
-        return ext[1:] if ext else ''
+        """Return file extension, or empty string."""
+        _, ext = os.path.splitext(self.human_name)
+        return ext
+
+    @cached_property
+    def mimetype(self):
+        mime, _ = mimetypes.guess_type(self.name)
+        if mime:
+            return mime
+        else:
+            return 'applicaton/octet-stream'
+
+    @cached_property
+    def download_url(self):
+        return app.config['FILE_URL'].format(name=self.name)
+
+    @cached_property
+    def info_url(self):
+        return app.config['INFO_URL'].format(name=self.name)
+
+    @classmethod
+    def deserialized(cls, s):
+        obj = json.loads(s)
+        return cls(
+            human_name=obj['human_name'],
+            num_bytes=obj['num_bytes'],
+            unique_id=obj['unique_id'],
+            open_file=None,
+        )
+
+    @cached_property
+    def serialized(self):
+        return json.dumps({
+            'human_name': self.human_name,
+            'num_bytes': self.num_bytes,
+            'unique_id': self.unique_id,
+        })
+
+
+class FileTooLargeError(Exception):
+    pass
