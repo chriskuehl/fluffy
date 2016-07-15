@@ -2,9 +2,11 @@ import base64
 import os
 import zlib
 
-ONE_GB = 1073741824
-ONE_MB = 1048576
-ONE_KB = 1024
+from fluffy import app
+
+ONE_KB = 2**10
+ONE_MB = 2**20
+ONE_GB = 2**30
 
 
 def trusted_network(ip):
@@ -15,67 +17,56 @@ def trusted_network(ip):
     # return any((addr in IPNetwork(net) for net in app.config['TRUSTED_NETWORKS']))
 
 
+@app.template_filter()
 def human_size(size):
-    if size / ONE_GB >= 1:
-        return '{:.1f} GB'.format(size / ONE_GB)
-    elif size / ONE_MB >= 1:
-        return '{:.1f} MB'.format(size / ONE_MB)
-    elif size / ONE_KB >= 1:
-        return '{:.1f} KB'.format(size / ONE_KB)
+    if size >= ONE_GB:
+        return '{:.1f} GiB'.format(size / ONE_GB)
+    elif size >= ONE_MB:
+        return '{:.1f} MiB'.format(size / ONE_MB)
+    elif size >= ONE_KB:
+        return '{:.1f} KiB'.format(size / ONE_KB)
     else:
         return '{} bytes'.format(size)
-
-# constants to represent zipped or unzipped (at start of encoded string)
-NOT_ZIPPED = 'u'
-ZIPPED = 'z'
 
 
 def encode(plaintext):
     """Encodes a string for inclusion in the query string.
 
-    Works internally by serializing the object into JSON, gzipping the JSON,
-    and then base64 encoding it.
-
-    The serialized data will only be zipped if doing so would result in a
-    shorter string. The returned string will start with ZIPPED or NOT_ZIPPED
-    (a single character constant) to indicate zipped or unzipped.
+    Works by gzipping the string, and then urlsafe-base64 encoding it.
     """
-    def encode(s):
-        return base64.urlsafe_b64encode(s).decode('utf8')
-
-    zipped = zlib.compress(plaintext.encode('utf8'))
-    choices = (
-        NOT_ZIPPED + encode(plaintext.encode('utf-8')),
-        ZIPPED + encode(zipped),
-    )
-    return min(choices, key=len)
+    return base64.urlsafe_b64encode(
+        zlib.compress(plaintext.encode('utf8')),
+    ).decode('utf8')
 
 
 def decode(encoded):
-    """Decodes a string encoded by encode_obj into an object."""
-    zipped = encoded.startswith(ZIPPED)
-    the_bytes = base64.urlsafe_b64decode(encoded[1:].encode('utf-8'))
-    if zipped:
-        return zlib.decompress(the_bytes).decode('utf-8')
-    else:
-        return the_bytes.decode('utf-8')
+    """Decodes a string encoded by encode."""
+    return zlib.decompress(
+        base64.urlsafe_b64decode(encoded.encode('utf8')),
+    ).decode('utf8')
 
 
-ICON_EXTENSIONS = [
+# TODO: read these out of the package
+ICON_EXTENSIONS = frozenset([
     '7z', 'ai', 'bmp', 'doc', 'docx', 'gif', 'gz', 'html',
     'jpeg', 'jpg', 'midi', 'mp3', 'odf', 'odt', 'pdf', 'png', 'psd', 'rar',
     'rtf', 'svg', 'tar', 'txt', 'wav', 'xls', 'zip'
-]
+])
 
 
-def get_extension_icon(extension):
+@app.template_filter()
+def icon_for_extension(extension):
     """Returns the filename of the icon to use for an extension, excluding
     the .png at the end of the icon name.
     """
     extension = extension.lower()
-    return extension if extension in ICON_EXTENSIONS else 'unknown'
+    if extension in ICON_EXTENSIONS:
+        return extension
+    else:
+        return 'unknown'
 
 
+@app.template_filter()
 def trim_filename(name, length):
     """Trim a filename down to a desired maximum length, making attempts to
     preserve the important parts of the name.

@@ -57,12 +57,14 @@ class UploadedFile(namedtuple('UploadedFile', (
     def extension(self):
         """Return file extension, or empty string."""
         _, ext = os.path.splitext(self.human_name)
+        if ext.startswith('.'):
+            ext = ext[1:]
         return ext
 
     @cached_property
     def mimetype(self):
         mime, _ = mimetypes.guess_type(self.name)
-        if mime:
+        if mime and mime.startswith('image/'):
             return mime
         else:
             return 'applicaton/octet-stream'

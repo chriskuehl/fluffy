@@ -1,29 +1,26 @@
 """File storage backends.
 
 Backends know how to store an uploaded file, and not much else.
-
-A backend is required to implement the interface:
-
-    __init__(self, options)
-
-        ...where options will be the dict of options given in the fluffy
-        settings
-
-    store(self, stored_file)
-
-        ...which stores an uploaded file.
-
-All other details are left up to your implementation.
 """
+import abc
+
 import boto3
 
 from fluffy import app
 
 
 class Backend:
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self, options):
         self.options = options
+
+    @abc.abstractmethod
+    def store(self, upload):
+        """Store a file.
+
+        :param upload: an UploadedFile object
+        """
 
 
 class FileBackend(Backend):

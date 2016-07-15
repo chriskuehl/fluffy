@@ -16,19 +16,19 @@
     <body>
         <div id="container">
             <div id="content">
-                <h1><a href="{{ home_url }}">fluffy.cc</a></h1>
+                <h1><a href="{{home_url}}">fluffy.cc</a></h1>
                 <div id="files">
                     {% for file in uploads %}
                         <div class="file">
                             <div class="detailHolder">
                                 <div class="icon">
-                                    <img src="/static/img/mime/large/{{ file.extension }}.png" />
+                                    <img src="/static/img/mime/large/{{ file.extension|icon_for_extension }}.png" />
                                 </div>
                                 <div class="details">
-                                    <h2>{{ file.name }}</h2>
+                                    <h2>{{file.human_name|trim_filename(16)}}</h2>
                                     <p>
-                                        <a href="{{ file.info_url }}" class="info">Info Page</a>
-                                        <a href="{{ file.download_url }}" class="download">Direct Link</a>
+                                        <a href="{{file.info_url}}" class="info">Info Page</a>
+                                        <a href="{{file.download_url}}" class="download">Direct Link</a>
                                     </p>
                                 </div>
                             </div>
