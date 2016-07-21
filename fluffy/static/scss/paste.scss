@@ -1,0 +1,45 @@
+.page-paste {
+    #container {
+        width: 960px;
+    }
+
+    $paste-padding-top: 2px;
+
+    #paste {
+        font-family: 'Source Code Pro', monospace;
+        font-size: 14px;
+        position: relative;
+
+        padding: 5px;
+
+        .line-numbers {
+            padding: $paste-padding-top 0;
+
+            background-color: #fafafa;
+            border-right: solid 1px #eee;
+
+            float: left;
+            line-height: 1.25em;
+            text-align: right;
+            margin-right: 5px;
+
+
+            a {
+                display: block;
+                color: #222;
+                text-decoration: none;
+                padding-left: 8px;
+                padding-right: 5px;
+
+                &:hover {
+                    background-color: #fffef4;
+                }
+            }
+        }
+
+        .text {
+            padding: $paste-padding-top 0;
+            background-color: #fff;
+        }
+    }
+}

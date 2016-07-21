@@ -12,6 +12,7 @@ setup(
         'boto3',
         'cached_property',
         'flask',
+        'pygments',
     },
     classifiers={
         'Programming Language :: Python :: 3',

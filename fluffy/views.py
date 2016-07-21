@@ -63,6 +63,20 @@ def details(enc):
     )
 
 
+# TODO: remove this
+@app.route('/test/paste')
+def paste():
+    if not app.debug:
+        return
+    import requests
+    text = requests.get('https://raw.githubusercontent.com/ocf/ocfweb/master/ocfweb/account/register.py').text
+    return render_template(
+        'paste.html',
+        num_lines=len(text.splitlines()),
+        text=text,
+    )
+
+
 def get_client_ip():
     # TODO: improve this to better handle proxies
     return request.remote_addr

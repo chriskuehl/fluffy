@@ -5,6 +5,8 @@ from pathlib import Path
 
 from flask import url_for
 
+from fluffy import app
+
 
 PROJECT_ROOT = Path(__file__).parent
 STATIC_ROOT = PROJECT_ROOT / 'static'
@@ -37,8 +39,7 @@ def asset_url(path):
     assets. We don't want old info pages to break if we update with new
     incompatible styles.
     """
-    from fluffy import app
-    if False and app.debug:
+    if app.debug:
         return url_for('static', filename=path)
     else:
         return app.config['STATIC_ASSETS_URL'].format(
@@ -47,7 +48,6 @@ def asset_url(path):
 
 
 def upload_assets():
-    from fluffy import app
     for root, dirs, files in os.walk(str(STATIC_ROOT)):
         for fname in files:
             if not fname.endswith('.hash'):

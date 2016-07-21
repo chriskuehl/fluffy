@@ -1,0 +1,56 @@
+<!doctype html>
+<html class="page-paste">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <title>View Paste &ndash; fluffy.cc</title>
+
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
+        <link href='https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Source+Code+Pro:500,700' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="{{asset_url('app.css')}}" />
+    </head>
+
+    <body>
+        <div id="container">
+            <div id="content">
+                <h1><a href="{{home_url}}">fluffy.cc</a></h1>
+                <div id="paste">
+                    <div class="line-numbers">
+                        {% for i in range(num_lines) %}
+                            <a href="#L{{i}}" id="L{{i}}">{{i}}</a>
+                        {% endfor %}
+                    </div>
+                    <div class="text" contenteditable="true" spellcheck="false">
+                        {{text|highlight|safe}}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include "footer.html" %}
+
+        <!-- TODO: can we factor out jQuery? -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+        <script>
+            var whitelistedKeys = [
+                // arrow keys
+                37,
+                38,
+                39,
+                40,
+            ];
+            $(document).ready(function() {
+                $('#paste').on('keydown', function(e) {
+                    if (e.ctrlKey) {
+                        return true;
+                    }
+                    if ($.inArray(e.which, whitelistedKeys) !== -1) {
+                        return true;
+                    }
+                    return false;
+                });
+            });
+        </script>
+    </body>
+</html>

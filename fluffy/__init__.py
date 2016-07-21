@@ -3,8 +3,6 @@ import sys
 
 from flask import Flask
 
-from fluffy.assets import asset_url as real_asset_url
-
 
 app = Flask(__name__)
 app.config.from_envvar('FLUFFY_SETTINGS')
@@ -19,4 +17,11 @@ def home_url():
 
 @app.context_processor
 def asset_url():
+    from fluffy.assets import asset_url as real_asset_url
     return {'asset_url': real_asset_url}
+
+
+@app.template_filter()
+def highlight(text):
+    from fluffy.highlighting import highlight
+    return highlight(text)
