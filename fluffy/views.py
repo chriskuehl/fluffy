@@ -6,6 +6,7 @@ from flask import render_template
 from flask import request
 from flask import url_for
 
+import fluffy.highlighting  # noqa
 from fluffy import app
 from fluffy.backends import get_backend
 from fluffy.models import FileTooLargeError
@@ -66,8 +67,6 @@ def details(enc):
 # TODO: remove this
 @app.route('/test/paste')
 def paste():
-    if not app.debug:
-        return
     import requests
     text = requests.get('https://raw.githubusercontent.com/ocf/ocfweb/master/ocfweb/account/register.py').text
     return render_template(

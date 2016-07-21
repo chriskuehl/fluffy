@@ -73,10 +73,6 @@ class UploadedFile(namedtuple('UploadedFile', (
     def download_url(self):
         return app.config['FILE_URL'].format(name=self.name)
 
-    @cached_property
-    def info_url(self):
-        return app.config['INFO_URL'].format(name=self.name)
-
     @classmethod
     def deserialized(cls, s):
         obj = json.loads(s)

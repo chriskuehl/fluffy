@@ -3,6 +3,8 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import guess_lexer
 from pygments.styles import get_style_by_name
 
+from fluffy import app
+
 
 _pygments_formatter = HtmlFormatter(
     noclasses=True,
@@ -10,6 +12,7 @@ _pygments_formatter = HtmlFormatter(
 )
 
 
+@app.template_filter()
 def highlight(text):
     return pygments.highlight(
         text,

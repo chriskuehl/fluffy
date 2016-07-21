@@ -19,9 +19,3 @@ def home_url():
 def asset_url():
     from fluffy.assets import asset_url as real_asset_url
     return {'asset_url': real_asset_url}
-
-
-@app.template_filter()
-def highlight(text):
-    from fluffy.highlighting import highlight
-    return highlight(text)

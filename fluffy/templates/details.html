@@ -24,8 +24,8 @@
                                 <div class="details">
                                     <h2>{{file.human_name|trim_filename(16)}}</h2>
                                     <p>
-                                        <a href="{{file.info_url}}" class="info">Info Page</a>
                                         <a href="{{file.download_url}}" class="download">Direct Link</a>
+                                        &nbsp;&nbsp;  {{file.num_bytes|human_size}}
                                     </p>
                                 </div>
                             </div>

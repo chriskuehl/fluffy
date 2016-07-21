@@ -32,7 +32,7 @@ STORAGE_BACKEND = {
 }
 
 # URL patterns
-HOME_URL = 'http://fluffy.cc/'
+HOME_URL = 'http://localhost:5000/'
 FILE_URL = 'https://i.fluffy.cc/{name}'
 INFO_URL = 'https://i.fluffy.cc/info/{name}.html'
 
