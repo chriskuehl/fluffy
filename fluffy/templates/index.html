@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html class="page-home">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,9 +7,7 @@
         <title>fluffy.cc</title>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}" />
+        <link rel="stylesheet" href="{{asset_url('app.css')}}" />
     </head>
 
     <body>
@@ -64,7 +62,7 @@
         {% endif %}
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-        <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+        <script src="{{asset_url('js/home.js')}}"></script>
     </body>
 </html>
 

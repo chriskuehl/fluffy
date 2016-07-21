@@ -16,4 +16,9 @@ setup(
     classifiers={
         'Programming Language :: Python :: 3',
     },
+    entry_points={
+        'console_scripts': [
+            'fluffy-upload-assets = fluffy.assets:upload_assets',
+        ],
+    },
 )

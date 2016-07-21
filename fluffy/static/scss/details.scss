@@ -1,0 +1,61 @@
+.page-details {
+    #files {
+        padding: 15px;
+        background-color: #F3FFE2;
+        border-radius: 3px;
+    }
+
+    .file {
+        position: relative;
+    }
+
+    .icon {
+        position: absolute;
+
+        top: 42px;
+        left: 65px;
+
+        width: 128px;
+        height: 128px;
+    }
+
+    .detailHolder {
+        height: 184px;
+    }
+
+    .details {
+        position: absolute;
+
+        top: 60px;
+        right: 0px;
+        left: 206px;
+
+        color: #333;
+    }
+
+    .details h2 {
+        font-size: 36px;
+        font-weight: bold;
+    }
+
+    .download, .info {
+        display: inline-block;
+        cursor: pointer;
+
+        border-radius: 3px;
+        padding: 10px;
+
+        text-align: center;
+        color: white;
+
+        text-decoration: none;
+    }
+
+    .info {
+        background-color: #1695A3;
+    }
+
+    .download {
+        background-color: #EB7F00;
+    }
+}

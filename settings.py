@@ -19,9 +19,13 @@ STORAGE_BACKEND = {
         'info_name': '{name}.html',
 
         'file_bucket': 'fluffy.cc',
-        'info_bucket': 'fluffy.cc',
         'file_s3path': '{name}',
+
+        'info_bucket': 'fluffy.cc',
         'info_s3path': 'info/{name}.html',
+
+        'asset_bucket': 'fluffy.cc',
+        'asset_s3path': 'assets/{name}',
 
         'tmp_path': '/tmp/{name}',
     }
@@ -29,10 +33,10 @@ STORAGE_BACKEND = {
 
 # URL patterns
 HOME_URL = 'http://fluffy.cc/'
+FILE_URL = 'https://i.fluffy.cc/{name}'
+INFO_URL = 'https://i.fluffy.cc/info/{name}.html'
 
-# use {name} as a placeholder for the file name
-FILE_URL = 'http://i.fluffy.cc/{name}'
-INFO_URL = 'http://i.fluffy.cc/info/{name}.html'
+STATIC_ASSETS_URL = 'https://i.fluffy.cc/assets/{name}'
 
 # abuse contact email address
 ABUSE_CONTACT = 'abuse@example.com'

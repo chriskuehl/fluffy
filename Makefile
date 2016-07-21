@@ -10,8 +10,34 @@ all: $(VENV)
 $(VENV): setup.py requirements.txt requirements-dev.txt
 	vendor/venv-update venv= -p python3.4 venv install= -r requirements.txt -r requirements-dev.txt
 
+
+fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
+	$(BIN)/sassc fluffy/static/scss/app.scss $@
+
+
+ASSET_FILES := $(shell find fluffy/static -type f -not -name '*.hash')
+ASSET_HASHES := $(addsuffix .hash,$(ASSET_FILES))
+
+fluffy/static/%.hash: fluffy/static/%
+	sha256sum $^ | awk '{print $$1}' > $@
+
+.PHONY: assets
+assets: fluffy/static/app.css.hash $(ASSET_HASHES)
+
+.PHONY: upload-assets
+upload-assets: assets $(VENV)
+	$(BIN)/fluffy-upload-assets
+
+.PHONY: watch-assets
+watch-assets:
+	while :; do \
+		find fluffy/static -type f | \
+			inotifywait --fromfile - -e modify; \
+			make assets; \
+	done
+
 .PHONY: dev
-dev: $(VENV)
+dev: $(VENV) fluffy/static/app.css
 	$(BIN)/python -m fluffy.run
 
 .PHONY: test
@@ -20,8 +46,10 @@ test: $(VENV)
 	$(BIN)/pre-commit run --all-files
 
 .PHONY: docker-image
-docker-image:
+docker-image: assets
 	docker build -t $(DOCKER_TAG) .
+	@echo 'Maybe you want to run:'
+	@echo -e '    \033[1mdocker push ckuehl/fluffy-server\033[0m'
 
 .PHONY: docker-run
 docker-run: docker-image
