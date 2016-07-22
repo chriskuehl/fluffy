@@ -10,6 +10,8 @@
 /.cache
 /dist
 /build
+/cli/dist
+/cli/build
 
 /fluffy/static/app.css
 /fluffy/static/**/*.hash
