@@ -1,4 +1,31 @@
 .page-paste {
+    .paste-toolbar {
+        background-color: #e0e0e0;
+        padding: 8px;
+        font-size: 14px;
+        color: #333;
+
+        .info {
+            float: left;
+            margin-top: 8px;
+            margin-left: 5px;
+        }
+
+        .button {
+            float: right;
+            font-size: 14px;
+            background-color: #f3f3f3;
+            margin-left: 8px;
+            padding: 8px;
+            text-decoration: none;
+            color: #333;
+
+            &:hover {
+                opacity: 0.8;
+            }
+        }
+    }
+
     #container {
         width: 960px;
     }
@@ -9,8 +36,6 @@
         font-family: 'Source Code Pro', monospace;
         font-size: 14px;
         position: relative;
-
-        padding: 5px;
 
         .line-numbers {
             padding: $paste-padding-top 0;

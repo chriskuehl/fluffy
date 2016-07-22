@@ -16,7 +16,8 @@ MIME_WHITELIST = frozenset([
     'audio/',
     'image/',
     'text/plain',
-    'video/'
+    'text/x-python',
+    'video/',
 ])
 
 
@@ -59,6 +60,21 @@ class UploadedFile(namedtuple('UploadedFile', (
                 human_name=f.filename,
                 num_bytes=num_bytes,
                 open_file=tf,
+                unique_id=gen_unique_id(),
+            )
+
+    @classmethod
+    @contextmanager
+    def from_text(cls, text):
+        with io.BytesIO(text.encode('utf8')) as open_file:
+            num_bytes = len(text)
+            if num_bytes > app.config['MAX_UPLOAD_SIZE']:
+                raise FileTooLargeError()
+
+            yield cls(
+                human_name='plaintext.txt',
+                num_bytes=num_bytes,
+                open_file=open_file,
                 unique_id=gen_unique_id(),
             )
 

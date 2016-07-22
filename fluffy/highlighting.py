@@ -36,16 +36,18 @@ _pygments_formatter = HtmlFormatter(
 )
 
 
-@app.template_filter()
-def highlight(text, language=None):
+def guess_lexer(text, language):
     try:
-        if language is None:
-            lexer = pygments.lexers.guess_lexer(text)
-        else:
-            lexer = pygments.lexers.get_lexer_by_name(language)
+        return pygments.lexers.guess_lexer(text)
     except pygments.util.ClassNotFound:
-        lexer = pygments.lexers.get_lexer_by_name('python')
+        try:
+            return pygments.lexers.get_lexer_by_name(language)
+        except pygments.util.ClassNotFound:
+            return pygments.lexers.get_lexer_by_name('python')
 
+
+@app.template_filter()
+def highlight(text, lexer):
     return pygments.highlight(
         text,
         lexer,
