@@ -1,4 +1,5 @@
 from fluffy_cli import __version__
+from setuptools import find_packages
 from setuptools import setup
 
 
@@ -8,7 +9,7 @@ def main():
         version=__version__,
         author='Chris Kuehl',
         author_email='ckuehl@ocf.berkeley.edu',
-        py_modules=('fluffy_cli',),
+        packages=find_packages(),
         install_requires={
             'requests',
         },
