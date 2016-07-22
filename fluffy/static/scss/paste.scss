@@ -11,10 +11,18 @@
             margin-left: 5px;
         }
 
+        input[type=submit].button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: "Open Sans", Helvetica, Arial, sans-serif;
+            line-height: 14px;
+        }
+
         .button {
             float: right;
             font-size: 14px;
-            background-color: #f3f3f3;
+            background-color: #f3f3f3 !important;
             margin-left: 8px;
             padding: 8px;
             text-decoration: none;

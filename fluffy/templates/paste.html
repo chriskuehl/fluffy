@@ -13,9 +13,12 @@
         <a class="button" href="{{raw_url}}">
             Raw Text
         </a>
-        <a class="button" href="{{edit_url}}">
-            Copy &amp; Edit
-        </a>
+
+        <form method="POST" action="{{home_url}}">
+            <input type="hidden" name="text" value="{{text}}" />
+            <input type="submit" class="button" value="Copy &amp; Edit" />
+        </form>
+
         <div style="clear: both;"></div>
     </div>
     <div id="paste">

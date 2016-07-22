@@ -14,14 +14,17 @@ from fluffy.utils import human_size
 from fluffy.utils import ONE_MB
 
 
-@app.route('/')
+@app.route('/', methods={'GET', 'POST'})
 def home():
+    text = request.form.get('text', '')
     return render_template(
         'home.html',
         languages=sorted(
             UI_LANGUAGES_MAP.items(),
             key=lambda key_val: key_val[1],
         ),
+        text=text,
+        wrapper_classes='start-on-paste' if text else '',
     )
 
 

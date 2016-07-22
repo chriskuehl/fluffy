@@ -2,65 +2,67 @@
 {% extends 'layouts/base.html' %}
 
 {% block content %}
-    <div class="fileUploadForm">
-        <div id="file-holder">
-            <p class="switch-modes js-only"><a>paste source code instead</a></p>
+    <div class="{{wrapper_classes}}">
+        <div class="fileUploadForm">
+            <div id="file-holder">
+                <p class="switch-modes js-only"><a>paste source code instead</a></p>
 
-            <ul id="files"></ul>
-            <a id="upload">Start Upload</a>
+                <ul id="files"></ul>
+                <a id="upload">Start Upload</a>
 
-            <div id="advancedUpload" class="js-only">
-                <p id="statusText"></p>
+                <div id="advancedUpload" class="js-only">
+                    <p id="statusText"></p>
 
-                <div id="selectFiles">
-                    <div id="dropZone">drop files here</div>
-                    <a id="selectFile">Browse</a>
+                    <div id="selectFiles">
+                        <div id="dropZone">drop files here</div>
+                        <a id="selectFile">Browse</a>
+                    </div>
                 </div>
-            </div>
-            <div id="basicUpload">
-                <p class="error" id="oldBrowserMessage">Your browser doesn't support dragging-and-dropping of files, so you're stuck with an icky file input. Bummer!</p>
-                <noscript><p class="error">Your browser has JavaScript disabled, which means you don't get cool features like dragging-and-dropping or upload progress meters. Bummer!</p></noscript>
+                <div id="basicUpload">
+                    <p class="error" id="oldBrowserMessage">Your browser doesn't support dragging-and-dropping of files, so you're stuck with an icky file input. Bummer!</p>
+                    <noscript><p class="error">Your browser has JavaScript disabled, which means you don't get cool features like dragging-and-dropping or upload progress meters. Bummer!</p></noscript>
 
-                <form action="/upload" method="POST" enctype="multipart/form-data">
-                    <p style="margin-bottom: 0px;">
-                        <label for="basicFormFile">File to Upload: </label><input id="basicFormFile" type="file" name="file" />
-                        <input type="submit" name="upload" value="Upload File" />
-                    </p>
-                </form>
+                    <form action="/upload" method="POST" enctype="multipart/form-data">
+                        <p style="margin-bottom: 0px;">
+                            <label for="basicFormFile">File to Upload: </label><input id="basicFormFile" type="file" name="file" />
+                            <input type="submit" name="upload" value="Upload File" />
+                        </p>
+                    </form>
+                </div>
+                <div id="loading"><p></p></div>
             </div>
-            <div id="loading"><p></p></div>
         </div>
+
+        <noscript>
+            <hr />
+            <style>
+                .pastebinForm {
+                    display: block !important;
+                }
+                .js-only {
+                    display: none !important;
+                }
+            </style>
+        </noscript>
+
+        <form class="pastebinForm" method="POST" action="/paste">
+            <p class="switch-modes js-only"><a>upload files instead</a></p>
+
+            <p>
+                <textarea name="text" placeholder="paste text here" required>{{text}}</textarea>
+            </p>
+            <p>
+                <select name="language">
+                    <option selected="selected" value="">Guess the language for me</option>
+
+                    {% for lang_key, text in languages %}
+                        <option value="{{lang_key}}">{{text}}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <input class="pasteButton" type="submit" value="Paste" />
+        </form>
     </div>
-
-    <noscript>
-        <hr />
-        <style>
-            .pastebinForm {
-                display: block !important;
-            }
-            .js-only {
-                display: none !important;
-            }
-        </style>
-    </noscript>
-
-    <form class="pastebinForm" method="POST" action="/paste">
-        <p class="switch-modes js-only"><a>upload files instead</a></p>
-
-        <p>
-            <textarea name="text" placeholder="paste text here" required></textarea>
-        </p>
-        <p>
-            <select name="language">
-                <option selected="selected" value="">Guess the language for me</option>
-
-                {% for lang_key, text in languages %}
-                    <option value="{{lang_key}}">{{text}}</option>
-                {% endfor %}
-            </select>
-        </p>
-        <input class="pasteButton" type="submit" value="Paste" />
-    </form>
 {% endblock %}
 
 {% block inline_js %}

@@ -18,6 +18,10 @@
         border-radius: 3px;
     }
 
+    .start-on-paste #file-holder {
+        display: none;
+    }
+
     #oldBrowserMessage {
         display: none;
     }
@@ -174,6 +178,11 @@
         font-size: 12px;
     }
 
+
+    .start-on-paste .pastebinForm {
+        display: block;
+    }
+
     .pastebinForm {
         display: none;
         padding: 15px;
@@ -183,7 +192,6 @@
         textarea {
             box-sizing: border-box;
             border: solid 1px #efefef;
-            resize: vertical;
 
             padding: 5px;
 
