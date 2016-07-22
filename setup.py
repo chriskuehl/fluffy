@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='fluffy-server',
-    version='1.0.0',
+    version='1.1.0',
     author='Chris Kuehl',
     author_email='ckuehl@ocf.berkeley.edu',
     packages=find_packages(),
