@@ -38,10 +38,10 @@ _pygments_formatter = HtmlFormatter(
 
 def guess_lexer(text, language):
     try:
-        return pygments.lexers.guess_lexer(text)
+        return pygments.lexers.get_lexer_by_name(language)
     except pygments.util.ClassNotFound:
         try:
-            return pygments.lexers.get_lexer_by_name(language)
+            return pygments.lexers.guess_lexer(text)
         except pygments.util.ClassNotFound:
             return pygments.lexers.get_lexer_by_name('python')
 

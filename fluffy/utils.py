@@ -12,6 +12,15 @@ STORED_FILE_NAME_CHARS = 'bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ0123456789'
 
 
 @app.template_filter()
+def pluralize(s, num):
+    # very naive
+    if abs(num) == 1:
+        return s
+    else:
+        return s + 's'
+
+
+@app.template_filter()
 def human_size(size):
     if size >= ONE_GB:
         return '{:.1f} GiB'.format(size / ONE_GB)
@@ -20,7 +29,7 @@ def human_size(size):
     elif size >= ONE_KB:
         return '{:.1f} KiB'.format(size / ONE_KB)
     else:
-        return '{} bytes'.format(size)
+        return '{} {}'.format(size, pluralize('byte', size))
 
 
 def gen_unique_id():
