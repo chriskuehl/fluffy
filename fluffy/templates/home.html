@@ -2,12 +2,14 @@
 {% extends 'layouts/base.html' %}
 
 {% block content %}
-    <div class="fileUploadForm" style="display: none;">
+    <div class="fileUploadForm">
         <div id="file-holder">
+            <p class="switch-modes js-only"><a>paste source code instead</a></p>
+
             <ul id="files"></ul>
             <a id="upload">Start Upload</a>
 
-            <div class="js-only" id="advancedUpload">
+            <div id="advancedUpload" class="js-only">
                 <p id="statusText"></p>
 
                 <div id="selectFiles">
@@ -30,7 +32,21 @@
         </div>
     </div>
 
+    <noscript>
+        <hr />
+        <style>
+            .pastebinForm {
+                display: block !important;
+            }
+            .js-only {
+                display: none !important;
+            }
+        </style>
+    </noscript>
+
     <form class="pastebinForm" method="POST" action="/paste">
+        <p class="switch-modes js-only"><a>upload files instead</a></p>
+
         <p>
             <textarea name="text" placeholder="paste text here" required></textarea>
         </p>

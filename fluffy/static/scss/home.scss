@@ -1,4 +1,15 @@
 .page-home {
+    .switch-modes {
+        text-align: center;
+        margin-bottom: 15px;
+
+        a {
+            text-decoration: none;
+            cursor: pointer;
+            color: #EB7F00;
+        }
+    }
+
     #file-holder {
         position: relative;
 
@@ -164,6 +175,7 @@
     }
 
     .pastebinForm {
+        display: none;
         padding: 15px;
         background-color: #F3FFE2;
         border-radius: 3px;

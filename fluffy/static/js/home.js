@@ -13,7 +13,37 @@ var uploadCompleted = false;
 var uploadRequest;
 var uploadSamples = [];
 
+var transitioningModes = false;
+
 $(document).ready(function() {
+    $('.switch-modes a').click(function() {
+        if (transitioningModes) {
+            return;
+        }
+
+        transitioningModes = true;
+        var duration = 200;
+        var pb = $('.pastebinForm'), fh = $('#file-holder');
+
+        if (fh.is(':visible')) {
+            fh.slideUp(duration);
+            pb.slideDown(duration, function() {
+                transitioningModes = false;
+            });
+        } else {
+            pb.slideUp(duration);
+            fh.slideDown(duration, function() {
+                transitioningModes = false;
+            });
+        }
+        /*
+        $('body').toggleClass('pastebin-mode', null, 200, 'swing', function() {
+            alert('callback!');
+            transitioningModes = false;
+        });
+        */
+    });
+
     // browse button
     $("#selectFile").click(function() {
         input = addHiddenFileInput();
