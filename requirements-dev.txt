@@ -1,4 +1,5 @@
 -e .
+-e ./cli
 ckuehl-pre-commit-types==0.7.6.dev1
 coverage
 ipdb
