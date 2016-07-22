@@ -98,13 +98,18 @@ function upload() {
         },
 
         error: function(xhr, status) {
-            if (request != uploadRequest) {
+            if (request !== uploadRequest) {
                 return; // upload was cancelled
             }
 
-            // TODO: improve error handling
-            console.log("Hard failure: " + status);
-            alert("Sorry, an unexpected error occured.");
+            if (xhr.status === 413) {
+                alert('Sorry! This request exceeds the maximum upload size.');
+                cancelUpload();
+            } else {
+                // TODO: improve error handling
+                console.log("Unhandled failure: " + status + ", status=" + xhr.status + ", statusText=" + xhr.statusText);
+                alert("Sorry, an unexpected error occured.");
+            }
         },
 
         success: function(data) {
