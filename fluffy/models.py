@@ -1,7 +1,6 @@
-import json
+import io
 import mimetypes
 import os
-import random
 import tempfile
 from collections import namedtuple
 from contextlib import contextmanager
@@ -9,10 +8,22 @@ from contextlib import contextmanager
 from cached_property import cached_property
 
 from fluffy import app
+from fluffy.utils import gen_unique_id
 
 
-STORED_FILE_NAME_LENGTH = 32
-STORED_FILE_NAME_CHARS = 'bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ0123456789'
+class ObjectToStore:
+
+    @property
+    def open_file(self):
+        raise NotImplementedError()
+
+    @property
+    def mimetype(self):
+        raise NotImplementedError()
+
+    @property
+    def name(self):
+        raise NotImplementedError()
 
 
 class UploadedFile(namedtuple('UploadedFile', (
@@ -20,7 +31,7 @@ class UploadedFile(namedtuple('UploadedFile', (
         'num_bytes',
         'open_file',
         'unique_id',
-))):
+)), ObjectToStore):
 
     @classmethod
     @contextmanager
@@ -39,10 +50,7 @@ class UploadedFile(namedtuple('UploadedFile', (
                 human_name=f.filename,
                 num_bytes=num_bytes,
                 open_file=tf,
-                unique_id=''.join(
-                    random.choice(STORED_FILE_NAME_CHARS)
-                    for _ in range(STORED_FILE_NAME_LENGTH)
-                ),
+                unique_id=gen_unique_id(),
             )
 
     @cached_property
@@ -73,23 +81,24 @@ class UploadedFile(namedtuple('UploadedFile', (
     def download_url(self):
         return app.config['FILE_URL'].format(name=self.name)
 
-    @classmethod
-    def deserialized(cls, s):
-        obj = json.loads(s)
-        return cls(
-            human_name=obj['human_name'],
-            num_bytes=obj['num_bytes'],
-            unique_id=obj['unique_id'],
-            open_file=None,
-        )
 
-    @cached_property
-    def serialized(self):
-        return json.dumps({
-            'human_name': self.human_name,
-            'num_bytes': self.num_bytes,
-            'unique_id': self.unique_id,
-        })
+class HtmlToStore(namedtuple('HtmlToStore', (
+    'name',
+    'open_file',
+)), ObjectToStore):
+
+    @classmethod
+    @contextmanager
+    def from_html(cls, html):
+        with io.BytesIO(html.encode('utf8')) as open_file:
+            yield cls(
+                name=gen_unique_id() + '.html',
+                open_file=open_file,
+            )
+
+    @property
+    def mimetype(self):
+        return 'text/html'
 
 
 class FileTooLargeError(Exception):

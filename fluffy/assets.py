@@ -1,6 +1,7 @@
 import functools
 import os
 import re
+import subprocess
 from pathlib import Path
 
 from flask import url_for
@@ -28,7 +29,7 @@ def name_for_asset(path):
     )
 
 
-def asset_url(path):
+def asset_url(path, allow_debug=True):
     """Return a URL for the asset, suitable for dev or prod.
 
     In dev, we use Flask to serve it.
@@ -39,7 +40,7 @@ def asset_url(path):
     assets. We don't want old info pages to break if we update with new
     incompatible styles.
     """
-    if app.debug:
+    if app.debug and allow_debug:
         return url_for('static', filename=path)
     else:
         return app.config['STATIC_ASSETS_URL'].format(
@@ -48,6 +49,7 @@ def asset_url(path):
 
 
 def upload_assets():
+    commands = []
     for root, dirs, files in os.walk(str(STATIC_ROOT)):
         for fname in files:
             if not fname.endswith('.hash'):
@@ -57,12 +59,19 @@ def upload_assets():
             asset_path = asset_hash_path[:-5]
 
             if os.path.isfile(asset_path):
-                print('aws s3 cp {} s3://{}/{}'.format(
+                commands.append('aws s3 cp {} s3://{}/{}'.format(
                     asset_path,
-                    app.config['STORAGE_BACKEND']['options']['asset_bucket'],
-                    app.config['STORAGE_BACKEND']['options']['asset_s3path'].format(
+                    app.config['STORAGE_BACKEND']['asset_bucket'],
+                    app.config['STORAGE_BACKEND']['asset_s3path'].format(
                         name=name_for_asset(
                             os.path.relpath(asset_path, str(STATIC_ROOT)),
                         ),
                     )
                 ))
+
+    print('=' * 50)
+    print('\n'.join(commands))
+    print('=' * 50)
+    if input('Want me to run these for you? [yN] ').lower() in ('y', 'yes'):
+        for command in commands:
+            subprocess.check_call(command, shell=True)

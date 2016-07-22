@@ -1,6 +1,5 @@
-import base64
 import os
-import zlib
+import random
 
 from fluffy import app
 
@@ -8,13 +7,8 @@ ONE_KB = 2**10
 ONE_MB = 2**20
 ONE_GB = 2**30
 
-
-def trusted_network(ip):
-    """Returns whether a given address is a member of a trusted network."""
-    # TODO: this
-    return False
-    # addr = IPAddress(ip)
-    # return any((addr in IPNetwork(net) for net in app.config['TRUSTED_NETWORKS']))
+STORED_FILE_NAME_LENGTH = 32
+STORED_FILE_NAME_CHARS = 'bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ0123456789'
 
 
 @app.template_filter()
@@ -29,21 +23,11 @@ def human_size(size):
         return '{} bytes'.format(size)
 
 
-def encode(plaintext):
-    """Encodes a string for inclusion in the query string.
-
-    Works by gzipping the string, and then urlsafe-base64 encoding it.
-    """
-    return base64.urlsafe_b64encode(
-        zlib.compress(plaintext.encode('utf8')),
-    ).decode('utf8')
-
-
-def decode(encoded):
-    """Decodes a string encoded by encode."""
-    return zlib.decompress(
-        base64.urlsafe_b64decode(encoded.encode('utf8')),
-    ).decode('utf8')
+def gen_unique_id():
+    return ''.join(
+        random.choice(STORED_FILE_NAME_CHARS)
+        for _ in range(STORED_FILE_NAME_LENGTH)
+    )
 
 
 # TODO: read these out of the package

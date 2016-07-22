@@ -1,58 +1,47 @@
 """File storage backends.
 
-Backends know how to store an uploaded file, and not much else.
+Backends are required to be able to store both HTML and objects. HTML should be
+served as text/html, objects should be served as something safe.
+
+Some backends can control the mimetype (S3), some can't (file). So be careful
+what you do!
 """
-import abc
+import functools
 
 import boto3
 
 from fluffy import app
 
 
-class Backend:
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, options):
-        self.options = options
-
-    @abc.abstractmethod
-    def store(self, upload):
-        """Store a file.
-
-        :param upload: an UploadedFile object
-        """
-
-
-class FileBackend(Backend):
+# TODO: FileBackend is broken
+class FileBackend:
     """Storage backend which stores files and info pages on the local disk."""
 
     def store(self, stored_file):
         path = self.options['file_path'].format(name=stored_file.name)
-        print('Writing to {}...'.format(path))
         stored_file.file.save(path)
 
 
-class S3Backend(Backend):
+class S3Backend:
     """Storage backend which uploads to S3 using boto3."""
 
-    def store(self, upload):
+    def _store(self, obj):
+        # S3 lets us specify mimetypes per file :D
         s3 = boto3.resource('s3')
-        s3.Bucket(self.options['file_bucket']).put_object(
-            Key=self.options['file_s3path'].format(name=upload.name),
-            Body=upload.open_file,
-            ContentType=upload.mimetype,
+        s3.Bucket(app.config['STORAGE_BACKEND']['bucket']).put_object(
+            Key=app.config['STORAGE_BACKEND']['s3path'].format(name=obj.name),
+            Body=obj.open_file,
+            ContentType=obj.mimetype,
         )
 
-
-backends = {
-    'file': FileBackend,
-    's3': S3Backend,
-}
+    store_object = _store
+    store_html = _store
 
 
+@functools.lru_cache()
 def get_backend():
-    """Returns a backend instance as configured in the settings."""
-    conf = app.config['STORAGE_BACKEND']
-    name, options = conf['name'], conf['options']
-
-    return backends[name](options)
+    """Return current backend."""
+    return {
+        'file': FileBackend,
+        's3': S3Backend,
+    }[app.config['STORAGE_BACKEND']['name']]()
