@@ -1,9 +1,32 @@
 import pygments
 from pygments.formatters import HtmlFormatter
-from pygments.lexers import guess_lexer
 from pygments.styles import get_style_by_name
 
 from fluffy import app
+
+
+# We purposefully don't list all possible languages, and instead just the ones
+# we think people are most likely to use.
+UI_LANGUAGES_MAP = {
+    'bash': 'Bash / Shell',
+    'c': 'C',
+    'c++': 'C++',
+    'cheetah': 'Cheetah',
+    'diff': 'Diff',
+    'groovy': 'Groovy',
+    'html': 'HTML',
+    'java': 'Java',
+    'javascript': 'JavaScript',
+    'json': 'JSON',
+    'makefile': 'Makefile',
+    'objective-c': 'Objective-C',
+    'php': 'PHP',
+    'python3': 'Python',
+    'ruby': 'Ruby',
+    'scala': 'Scala',
+    'sql': 'SQL',
+    'yaml': 'YAML',
+}
 
 
 _pygments_formatter = HtmlFormatter(
@@ -13,9 +36,17 @@ _pygments_formatter = HtmlFormatter(
 
 
 @app.template_filter()
-def highlight(text):
+def highlight(text, language=None):
+    try:
+        if language is None:
+            lexer = pygments.lexers.guess_lexer(text)
+        else:
+            lexer = pygments.lexers.get_lexer_by_name(language)
+    except pygments.util.ClassNotFound:
+        lexer = pygments.lexers.get_lexer_by_name('python')
+
     return pygments.highlight(
         text,
-        guess_lexer(text),
+        lexer,
         _pygments_formatter,
     )

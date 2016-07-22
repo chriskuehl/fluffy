@@ -19,4 +19,5 @@ def defaults():
         'asset_url': real_asset_url,
         'branding': app.config['BRANDING'],
         'home_url': app.config['HOME_URL'],
+        'num_lines': lambda text: len(text.splitlines()),
     }

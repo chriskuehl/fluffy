@@ -1,5 +1,5 @@
 .page-home {
-    #fileHolder {
+    #file-holder {
         position: relative;
 
         padding: 15px;
@@ -102,7 +102,7 @@
         opacity: 0;
     }
 
-    #upload, #selectFile {
+    #upload, #selectFile, .pasteButton {
         display: block;
         cursor: pointer;
 
@@ -128,8 +128,8 @@
         display: none;
     }
 
-    #selectFile {
-        background-color: #EB7F00;
+    #selectFile, .pasteButton {
+        background-color: #EB7F00 !important;
     }
 
     .hiddenFileInput {
@@ -161,5 +161,38 @@
 
         text-align: center;
         font-size: 12px;
+    }
+
+    .pastebinForm {
+        padding: 15px;
+        background-color: #F3FFE2;
+        border-radius: 3px;
+
+        textarea {
+            box-sizing: border-box;
+            border: solid 1px #efefef;
+            resize: vertical;
+
+            padding: 5px;
+
+            width: 100%;
+            height: 500px;
+        }
+
+        select {
+            box-sizing: border-box;
+            padding: 3px;
+            width: 100%;
+        }
+
+        .pasteButton {
+            display: block;
+            width: 100%;
+            font-size: 100%;
+            font-family: "Open Sans", Helvetica, Arial, sans-serif;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
     }
 }

@@ -1,4 +1,7 @@
 {% set page_name = 'paste' %}
+{# This templates gets uploaded as HTML to the CDN; #}
+{# Debug mode will always give us invalid relative URLs. #}
+{% set allow_debug = False %}
 {% extends 'layouts/base.html' %}
 
 {% block head_extra %}
@@ -8,12 +11,12 @@
 {% block content %}
     <div id="paste">
         <div class="line-numbers">
-            {% for i in range(1, num_lines + 1) %}
+            {% for i in range(1, num_lines(text) + 1) %}
                 <a href="#L{{i}}" id="L{{i}}">{{i}}</a>
             {% endfor %}
         </div>
         <div class="text" contenteditable="true" spellcheck="false">
-            {{text|highlight|safe}}</pre>
+            {{text|highlight(language=language)|safe}}</pre>
         </div>
     </div>
 {% endblock %}

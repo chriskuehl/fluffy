@@ -3,18 +3,25 @@ from flask import redirect
 from flask import render_template
 from flask import request
 
-import fluffy.highlighting  # noqa
 from fluffy import app
 from fluffy.backends import get_backend
+from fluffy.highlighting import UI_LANGUAGES_MAP
 from fluffy.models import FileTooLargeError
 from fluffy.models import HtmlToStore
 from fluffy.models import UploadedFile
 from fluffy.utils import human_size
+from fluffy.utils import ONE_MB
 
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    return render_template(
+        'home.html',
+        languages=sorted(
+            UI_LANGUAGES_MAP.items(),
+            key=lambda key_val: key_val[1],
+        ),
+    )
 
 
 @app.route('/upload', methods={'POST'})
@@ -52,13 +59,20 @@ def upload():
         return redirect(url)
 
 
-# TODO: remove this
-@app.route('/test/paste')
+@app.route('/paste', methods={'POST'})
 def paste():
-    import requests
-    text = requests.get('https://raw.githubusercontent.com/ocf/ocfweb/master/ocfweb/account/register.py').text
-    return render_template(
+    """Paste and redirect."""
+    text = request.form['text']
+
+    # TODO: make this better
+    assert 1 <= len(text) <= ONE_MB, len(text)
+
+    with HtmlToStore.from_html(render_template(
         'paste.html',
-        num_lines=len(text.splitlines()),
         text=text,
-    )
+        language=request.form['language'],
+    )) as paste_obj:
+        get_backend().store_html(paste_obj)
+
+    url = app.config['HTML_URL'].format(name=paste_obj.name)
+    return redirect(url)

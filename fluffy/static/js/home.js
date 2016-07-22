@@ -174,7 +174,7 @@ function updateProgress(bytes, totalBytes) {
         uploadCompleted = true;
 
         // hide uploading UI, show loading orb
-        $("#fileHolder").children(":visible").animate({
+        $("#file-holder").children(":visible").animate({
             opacity: 0
         }, 350);
 
