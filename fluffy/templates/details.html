@@ -1,40 +1,27 @@
-<!doctype html>
-<html class="page-details">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+{% set page_name = 'details' %}
+{# This templates gets uploaded as HTML to the CDN; #}
+{# Debug mode will always give us invalid relative URLs. #}
+{% set allow_debug = False %}
 
-        <title>Upload Details &ndash; {{branding}}</title>
+{% extends 'layouts/base.html' %}
 
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
-        <link rel="stylesheet" href="{{asset_url('app.css', allow_debug=False)}}" />
-    </head>
-
-    <body>
-        <div id="container">
-            <div id="content">
-                <h1><a href="{{home_url}}">{{branding}}</a></h1>
-                <div id="files">
-                    {% for file in uploads %}
-                        <div class="file">
-                            <div class="detailHolder">
-                                <div class="icon">
-                                    <img src="/static/img/mime/large/{{ file.extension|icon_for_extension }}.png" />
-                                </div>
-                                <div class="details">
-                                    <h2>{{file.human_name|trim_filename(16)}}</h2>
-                                    <p>
-                                        <a href="{{file.download_url}}" class="download">Direct Link</a>
-                                        &nbsp;&nbsp;  {{file.num_bytes|human_size}}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
+{% block content %}
+    <div id="files">
+        {% for file in uploads %}
+            <div class="file">
+                <div class="detailHolder">
+                    <div class="icon">
+                        <img src="/static/img/mime/large/{{ file.extension|icon_for_extension }}.png" />
+                    </div>
+                    <div class="details">
+                        <h2>{{file.human_name|trim_filename(16)}}</h2>
+                        <p>
+                            <a href="{{file.download_url}}" class="download">Direct Link</a>
+                            &nbsp;&nbsp;  {{file.num_bytes|human_size}}
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        {% include "footer.html" %}
-    </body>
-</html>
+        {% endfor %}
+    </div>
+{% endblock content %}

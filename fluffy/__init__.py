@@ -11,21 +11,12 @@ app.logger.setLevel(logging.DEBUG)
 
 
 @app.context_processor
-def home_url():
-    return {'home_url': app.config['HOME_URL']}
-
-
-@app.context_processor
-def branding():
-    return {'branding': app.config['BRANDING']}
-
-
-@app.context_processor
-def abuse_contact():
-    return {'abuse_contact': app.config['ABUSE_CONTACT']}
-
-
-@app.context_processor
-def asset_url():
+def defaults():
     from fluffy.assets import asset_url as real_asset_url
-    return {'asset_url': real_asset_url}
+    return {
+        'abuse_contact': app.config['ABUSE_CONTACT'],
+        'allow_debug': True,
+        'asset_url': real_asset_url,
+        'branding': app.config['BRANDING'],
+        'home_url': app.config['HOME_URL'],
+    }

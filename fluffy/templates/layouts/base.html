@@ -1,0 +1,34 @@
+<!doctype html>
+<html class="page-{{page_name}}">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <title>{{branding}}</title>
+
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
+        <link rel="stylesheet" href="{{asset_url('app.css', allow_debug=allow_debug)}}" />
+
+        {% block extra_head %}{% endblock %}
+    </head>
+
+    <body>
+        <div id="container">
+            <div id="content">
+                <h1><a href="{{home_url}}">{{branding}}</a></h1>
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+
+        <p class="footer">
+            fluffy is free and open-source software, available for you <a href="https://github.com/chriskuehl/fluffy">on GitHub</a>.<br />
+            Icons generously provided by <a href="http://www.fatcow.com/free-icons">FatCow</a> and <a href="https://commons.wikimedia.org/wiki/Crystal_Clear">Everaldo Coelho</a>.<br />
+            <a class="report" href="mailto:{{abuse_contact}}">Report Abuse</a>
+        </p>
+
+        {% block inline_js %}{% endblock %}
+    </body>
+</html>
+
+<!-- vim: ft=jinja
+-->
