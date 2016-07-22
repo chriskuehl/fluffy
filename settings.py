@@ -20,6 +20,9 @@ STORAGE_BACKEND = {
     'asset_s3path': 'assets/{name}',
 }
 
+# branding to show in heading
+BRANDING = 'fluffy'
+
 # URL patterns
 HOME_URL = 'http://localhost:5000/'
 FILE_URL = 'https://i.fluffy.cc/{name}'

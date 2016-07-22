@@ -16,6 +16,11 @@ def home_url():
 
 
 @app.context_processor
+def branding():
+    return {'branding': app.config['BRANDING']}
+
+
+@app.context_processor
 def abuse_contact():
     return {'abuse_contact': app.config['ABUSE_CONTACT']}
 

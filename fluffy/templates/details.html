@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <title>Upload Details &ndash; fluffy.cc</title>
+        <title>Upload Details &ndash; {{branding}}</title>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans" />
         <link rel="stylesheet" href="{{asset_url('app.css', allow_debug=False)}}" />
@@ -13,7 +13,7 @@
     <body>
         <div id="container">
             <div id="content">
-                <h1><a href="{{home_url}}">fluffy.cc</a></h1>
+                <h1><a href="{{home_url}}">{{branding}}</a></h1>
                 <div id="files">
                     {% for file in uploads %}
                         <div class="file">
