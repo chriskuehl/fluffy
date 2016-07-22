@@ -2,7 +2,7 @@
 {% extends 'layouts/base.html' %}
 
 {% block head_extra %}
-    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Source+Code+Pro:500,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:500,700' rel='stylesheet' type='text/css'>
 {% endblock %}
 
 {% block content %}
@@ -25,6 +25,12 @@
         var whitelistedKeys = [
             // arrow keys
             37, 38, 39, 40,
+
+            // home/end
+            35, 36,
+
+            // page up/down
+            33, 34,
         ];
         $(document).ready(function() {
             $('#paste').on('keydown', function(e) {
