@@ -16,7 +16,7 @@ from fluffy.utils import ONE_MB
 
 @app.route('/', methods={'GET', 'POST'})
 def home():
-    text = request.form.get('text', '')
+    text = request.form.get('text', '') or request.args.get('text', '')
     return render_template(
         'home.html',
         languages=sorted(
@@ -24,7 +24,7 @@ def home():
             key=lambda key_val: key_val[1],
         ),
         text=text,
-        wrapper_classes='start-on-paste' if text else '',
+        wrapper_classes='start-on-paste' if (text or 'text' in request.args) else '',
     )
 
 
