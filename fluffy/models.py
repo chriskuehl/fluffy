@@ -11,6 +11,15 @@ from fluffy import app
 from fluffy.utils import gen_unique_id
 
 
+MIME_WHITELIST = frozenset([
+    'application/pdf',
+    'audio/',
+    'image/',
+    'text/plain',
+    'video/'
+])
+
+
 class ObjectToStore:
 
     @property
@@ -72,9 +81,14 @@ class UploadedFile(namedtuple('UploadedFile', (
     @cached_property
     def mimetype(self):
         mime, _ = mimetypes.guess_type(self.name)
-        if mime and mime.startswith('image/'):
+        if (
+                mime and
+                any(mime.startswith(check) for check in MIME_WHITELIST)
+        ):
             return mime
         else:
+            if self.name.endswith('.md'):
+                return 'text/plain'
             return 'applicaton/octet-stream'
 
     @cached_property
