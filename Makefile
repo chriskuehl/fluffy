@@ -42,6 +42,7 @@ dev: $(VENV) fluffy/static/app.css
 
 .PHONY: test
 test: $(VENV)
+	$(BIN)/py.test -vv tests/
 	$(BIN)/pre-commit install -f --install-hooks
 	$(BIN)/pre-commit run --all-files
 

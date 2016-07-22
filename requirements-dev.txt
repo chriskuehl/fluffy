@@ -2,4 +2,5 @@
 ckuehl-pre-commit-types==0.7.6.dev1
 ipdb
 libsass
+pytest
 requests

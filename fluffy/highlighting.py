@@ -1,4 +1,5 @@
 import pygments
+import pygments.lexers
 from pygments.formatters import HtmlFormatter
 from pygments.styles import get_style_by_name
 
