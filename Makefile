@@ -7,7 +7,7 @@ export FLUFFY_SETTINGS := $(PWD)/settings.py
 .PHONY: all
 all: $(VENV)
 
-$(VENV): setup.py requirements.txt requirements-dev.txt
+$(VENV): setup.py cli/setup.py requirements.txt requirements-dev.txt
 	vendor/venv-update venv= -p python3.4 venv install= -r requirements.txt -r requirements-dev.txt
 
 
