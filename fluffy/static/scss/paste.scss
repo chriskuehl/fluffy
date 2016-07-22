@@ -58,6 +58,7 @@
 
 
             a {
+                cursor: pointer;
                 display: block;
                 color: #222;
                 text-decoration: none;
@@ -65,7 +66,11 @@
                 padding-right: 5px;
 
                 &:hover {
-                    background-color: #fffef4;
+                    background-color: #ffeaaf !important;
+                }
+
+                &.selected {
+                    background-color: #ffe18e;
                 }
             }
         }

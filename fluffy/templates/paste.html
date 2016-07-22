@@ -8,7 +8,7 @@
 {% block content %}
     <div class="paste-toolbar">
         <div class="info">
-            {{num_lines(text)}} lines of {{lexer.name}}
+            {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of {{lexer.name}}
         </div>
         <a class="button" href="{{raw_url}}">
             Raw Text
@@ -24,7 +24,7 @@
     <div id="paste">
         <div class="line-numbers">
             {% for i in range(1, num_lines(text) + 1) %}
-                <a href="#L{{i}}" id="L{{i}}">{{i}}</a>
+                <a id="LL{{i}}">{{i}}</a>
             {% endfor %}
         </div>
         <div class="text" contenteditable="true" spellcheck="false">
@@ -47,7 +47,86 @@
             // page up/down
             33, 34,
         ];
+
+        function realSort(array) {
+            // wtf javascript
+            array.sort(function(a, b) { return a - b; });
+        }
+
+        function selectedLines() {
+            var h = window.location.hash || '#';
+            if (h.substring(0, 1) === '#') {
+                h = h.substring(1);
+            }
+
+            var maybe_selected = h.split(',');
+            var selected = [];
+            for (var i = 0; i < maybe_selected.length; i++) {
+                var el = maybe_selected[i];
+                if (el.substring(0, 1) !== 'L') {
+                    continue;
+                }
+                el = parseInt(el.substring(1));
+                if (el >= 1 && selected.indexOf(el) === -1) {
+                    selected.push(el);
+                }
+            }
+            realSort(selected);
+            return selected;
+        }
+
+        function updateSelectedHash(selected) {
+            if (selected.length > 0) {
+                realSort(selected);
+                for (var i = 0; i < selected.length; i++) {
+                    selected[i] = 'L' + selected[i];
+                }
+                window.location.hash = '#' + selected.join(',');
+            } else {
+                window.location.hash = '';
+            }
+        }
+
         $(document).ready(function() {
+            var numbers = $('.line-numbers > a');
+            var setState = -1;
+            $(document).mouseup(function() {
+                setState = -1;
+            });
+
+            function maybeChangeState(el) {
+                if (setState === -1) {
+                    return;
+                }
+
+                var selected = selectedLines();
+                var line = parseInt(el.text());
+                var idx = selected.indexOf(line);
+
+                if (idx === -1 && setState === 1) {
+                    el.addClass('selected');
+                    selected.push(line);
+                    updateSelectedHash(selected);
+                } else if (idx !== -1 && setState === 0) {
+                    el.removeClass('selected');
+                    selected.splice(idx, 1);
+                    updateSelectedHash(selected);
+                }
+                return false;
+            }
+
+            numbers.on('mousedown', function(e) {
+                var selected = selectedLines();
+                var line = parseInt($(this).text());
+                setState = selected.indexOf(line) === -1 ? 1 : 0;
+                return maybeChangeState($(this));
+            });
+            numbers.on('click', function() { return false; });
+            numbers.on('mouseenter', function(e) { return maybeChangeState($(this)); });
+            numbers.on('dragstart', function(e) {
+                return false;
+            });
+
             $('#paste').on('keydown', function(e) {
                 if (e.ctrlKey) {
                     return true;
@@ -57,6 +136,23 @@
                 }
                 return false;
             });
+
+
+            // highlight existing lines
+            var selected = selectedLines();
+            var hasMovedDown = false;
+            for (var i = 0; i < selected.length; i++) {
+                var line = selected[i];
+                var e = $('#LL' + line);
+                e.addClass('selected');
+
+                if (!hasMovedDown) {
+                    hasMovedDown = true;
+                    if ($('body').scrollTop() == 0) {
+                        $('body').scrollTop(e.offset().top - 50);
+                    }
+                }
+            }
         });
     </script>
 {% endblock %}
