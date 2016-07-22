@@ -8,6 +8,8 @@
 /.coverage.*
 /.tox
 /.cache
+/dist
+/build
 
 /fluffy/static/app.css
 /fluffy/static/**/*.hash
