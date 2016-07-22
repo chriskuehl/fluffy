@@ -42,7 +42,10 @@ dev: $(VENV) fluffy/static/app.css
 
 .PHONY: test
 test: $(VENV)
-	$(BIN)/py.test -vv tests/
+	$(BIN)/coverage erase
+	$(BIN)/coverage run $(BIN)/py.test -vv tests/
+	$(BIN)/coverage combine
+	$(BIN)/coverage report
 	$(BIN)/pre-commit install -f --install-hooks
 	$(BIN)/pre-commit run --all-files
 

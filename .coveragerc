@@ -1,0 +1,9 @@
+[run]
+parallel = True
+branch = True
+
+[report]
+show_missing = True
+include =
+    fluffy/*
+    tests/*
