@@ -1,5 +1,4 @@
 import functools
-import json
 import os
 import re
 import subprocess
@@ -8,7 +7,6 @@ from pathlib import Path
 from flask import url_for
 
 from fluffy import app
-from fluffy.utils import ICON_EXTENSIONS
 
 
 PROJECT_ROOT = Path(__file__).parent
@@ -48,26 +46,6 @@ def asset_url(path):
         return app.config['STATIC_ASSETS_URL'].format(
             name=name_for_asset(path),
         )
-
-
-def build_icons_js():
-    print(
-        'var icons = {\n' +
-        ''.join(sorted(
-            '    {}: {},\n'.format(
-                json.dumps(ext),
-                json.dumps(asset_url('img/mime/small/' + ext + '.png')),
-            )
-            for ext in ICON_EXTENSIONS
-        )) +
-        '};'
-    )
-
-
-def build_icons_js_debug():
-    with app.app_context():
-        app.debug = True
-        return build_icons_js()
 
 
 def upload_assets():

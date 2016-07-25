@@ -19,8 +19,6 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'fluffy-build-icons-js = fluffy.assets:build_icons_js',
-            'fluffy-build-icons-js-debug = fluffy.assets:build_icons_js_debug',
             'fluffy-upload-assets = fluffy.assets:upload_assets',
         ],
     },

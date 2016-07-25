@@ -77,16 +77,15 @@
         } else {
             document.getElementById("oldBrowserMessage").style.display = "block";
         }
+
+        var icons = {
+            {% for extension in icon_extensions %}
+                {{extension | tojson | safe}}: {{asset_url('img/mime/small/' + extension + '.png') | tojson | safe}},
+            {% endfor %}
+        };
     </script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-
-    {% if app.debug %}
-        <script src="{{asset_url('js/icons.debug.js')}}"></script>
-    {% else %}
-        <script src="{{asset_url('js/icons.js')}}"></script>
-    {% endif %}
-
     <script src="{{asset_url('js/home.js')}}"></script>
 {% endblock %}
 

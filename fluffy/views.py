@@ -11,6 +11,7 @@ from fluffy.models import FileTooLargeError
 from fluffy.models import HtmlToStore
 from fluffy.models import UploadedFile
 from fluffy.utils import human_size
+from fluffy.utils import ICON_EXTENSIONS
 from fluffy.utils import ONE_MB
 
 
@@ -25,6 +26,7 @@ def home():
         ),
         text=text,
         wrapper_classes='start-on-paste' if (text or 'text' in request.args) else '',
+        icon_extensions=ICON_EXTENSIONS,
     )
 
 

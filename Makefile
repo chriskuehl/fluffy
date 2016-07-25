@@ -16,17 +16,11 @@ fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 ASSET_FILES := $(shell find fluffy/static -type f -not -name '*.hash')
 ASSET_HASHES := $(addsuffix .hash,$(ASSET_FILES))
 
-fluffy/static/js/icons.js: $(VENV) fluffy/static/img/mime/small fluffy/assets.py settings.py $(filter fluffy/static/img/mime/small/%,$(ASSET_HASHES))
-	$(BIN)/fluffy-build-icons-js > $@
-
-fluffy/static/js/icons.debug.js: fluffy/static/js/icons.js
-	$(BIN)/fluffy-build-icons-js-debug > $@
-
 fluffy/static/%.hash: fluffy/static/%
 	sha256sum $^ | awk '{print $$1}' > $@
 
 .PHONY: assets
-assets: fluffy/static/app.css.hash fluffy/static/js/icons.debug.js.hash fluffy/static/js/icons.js.hash $(ASSET_HASHES)
+assets: fluffy/static/app.css.hash $(ASSET_HASHES)
 
 .PHONY: upload-assets
 upload-assets: assets $(VENV)
