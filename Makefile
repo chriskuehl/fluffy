@@ -71,7 +71,7 @@ clean:
 	rm -rf $(VENV)
 
 .PHONY: release
-release: $(VENV)
+release: $(VENV) assets
 	# server
 	$(BIN)/python setup.py sdist
 	$(BIN)/python setup.py bdist_wheel
