@@ -44,15 +44,18 @@ def upload():
                 if uf.num_bytes < ONE_MB and not uf.probably_binary:
                     # We can't know for sure it's utf8, so this might fail.
                     # If so, we just won't make a pastebin for this file.
-                    text = uf.full_content.decode('utf8')
-                    with HtmlToStore.from_html(render_template(
-                        'paste.html',
-                        text=text,
-                        lexer=guess_lexer(text, None),
-                        raw_url=app.config['FILE_URL'].format(name=uf.name),
-                    )) as pb:
-                        get_backend().store_html(pb)
-                        print(pb)
+                    try:
+                        text = uf.full_content.decode('utf8')
+                    except UnicodeDecodeError:
+                        pass
+                    else:
+                        with HtmlToStore.from_html(render_template(
+                            'paste.html',
+                            text=text,
+                            lexer=guess_lexer(text, None),
+                            raw_url=app.config['FILE_URL'].format(name=uf.name),
+                        )) as pb:
+                            get_backend().store_html(pb)
 
             uploaded_files.append((uf, pb))
         except FileTooLargeError:
