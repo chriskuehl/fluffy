@@ -4,7 +4,7 @@
 
 {% block content %}
     <div id="files">
-        {% for file in uploads %}
+        {% for (file, pb) in uploads %}
             <div class="file">
                 <div class="detailHolder">
                     <div class="icon">
@@ -14,6 +14,9 @@
                         <h2>{{file.human_name|trim_filename(16)}}</h2>
                         <p>
                             <a href="{{file.download_url}}" class="download">Direct Link</a>
+                            {% if pb %}
+                                <a href="{{pb.url}}" class="view-paste">View Text</a>
+                            {% endif %}
                             &nbsp;&nbsp;  {{file.num_bytes|human_size}}
                         </p>
                     </div>

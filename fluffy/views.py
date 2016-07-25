@@ -36,7 +36,23 @@ def upload():
         try:
             with UploadedFile.from_http_file(f) as uf:
                 get_backend().store_object(uf)
-            uploaded_files.append(uf)
+
+                # If it looks like text, make a pastebin as well.
+                pb = None
+                if uf.num_bytes < ONE_MB and not uf.probably_binary:
+                    # We can't know for sure it's utf8, so this might fail.
+                    # If so, we just won't make a pastebin for this file.
+                    text = uf.full_content.decode('utf8')
+                    with HtmlToStore.from_html(render_template(
+                        'paste.html',
+                        text=text,
+                        lexer=guess_lexer(text, None),
+                        raw_url=app.config['FILE_URL'].format(name=uf.name),
+                    )) as pb:
+                        get_backend().store_html(pb)
+                        print(pb)
+
+            uploaded_files.append((uf, pb))
         except FileTooLargeError:
             return jsonify({
                 'success': False,

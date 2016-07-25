@@ -105,6 +105,12 @@ class UploadedFile(namedtuple('UploadedFile', (
         return p
 
     @cached_property
+    def full_content(self):
+        content = self.open_file.read()
+        self.open_file.seek(0)
+        return content
+
+    @cached_property
     def mimetype(self):
         mime, _ = mimetypes.guess_type(self.name)
         if (
@@ -140,6 +146,10 @@ class HtmlToStore(namedtuple('HtmlToStore', (
     @property
     def mimetype(self):
         return 'text/html'
+
+    @cached_property
+    def url(self):
+        return app.config['HTML_URL'].format(name=self.name)
 
 
 class FileTooLargeError(Exception):

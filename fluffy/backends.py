@@ -22,6 +22,7 @@ class FileBackend:
         path = app.config['STORAGE_BACKEND'][path_key].format(name=obj.name)
         with open(path, 'wb') as f:
             shutil.copyfileobj(obj.open_file, f)
+            obj.open_file.seek(0)
 
     def store_object(self, obj):
         self._store('object_path', obj)
@@ -41,6 +42,7 @@ class S3Backend:
             Body=obj.open_file,
             ContentType=obj.mimetype,
         )
+        obj.open_file.seek(0)
 
     store_object = _store
     store_html = _store
