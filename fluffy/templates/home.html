@@ -81,7 +81,7 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 
-    {% if app %}
+    {% if app.debug %}
         <script src="{{asset_url('js/icons.debug.js')}}"></script>
     {% else %}
         <script src="{{asset_url('js/icons.js')}}"></script>
