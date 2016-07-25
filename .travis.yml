@@ -1,4 +1,5 @@
 language: python
+install: make minimal
 script: make test
 sudo: false
 cache:
