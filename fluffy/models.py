@@ -8,15 +8,19 @@ from contextlib import contextmanager
 from cached_property import cached_property
 
 from fluffy import app
+from fluffy.utils import content_is_binary
 from fluffy.utils import gen_unique_id
+from fluffy.utils import ONE_MB
 
 
 MIME_WHITELIST = frozenset([
     'application/pdf',
+    'application/x-ruby',
     'audio/',
     'image/',
     'text/plain',
     'text/x-python',
+    'text/x-sh',
     'video/',
 ])
 
@@ -95,6 +99,12 @@ class UploadedFile(namedtuple('UploadedFile', (
         return ext
 
     @cached_property
+    def probably_binary(self):
+        p = content_is_binary(self.open_file.read(ONE_MB))
+        self.open_file.seek(0)
+        return p
+
+    @cached_property
     def mimetype(self):
         mime, _ = mimetypes.guess_type(self.name)
         if (
@@ -103,9 +113,10 @@ class UploadedFile(namedtuple('UploadedFile', (
         ):
             return mime
         else:
-            if self.name.endswith('.md'):
+            if self.probably_binary:
+                return 'application/octet-stream'
+            else:
                 return 'text/plain'
-            return 'applicaton/octet-stream'
 
     @cached_property
     def download_url(self):

@@ -1,24 +1,12 @@
 # fluffy-specific configuration options
+SERVER_NAME = 'localhost:5000'
+
 # storage backend (how are the files stored after being uploaded?)
-# File backend
 STORAGE_BACKEND = {
     'name': 'file',
     'object_path': 'tmp/object/{name}',
     'html_path': 'tmp/html/{name}',
 }
-
-SERVER_NAME = 'localhost:5000'
-
-# S3 CLI backend
-# STORAGE_BACKEND = {
-#     'name': 's3',
-#
-#     'bucket': 'fluffy.cc',
-#     's3path': '{name}',
-#
-#     'asset_bucket': 'fluffy.cc',
-#     'asset_s3path': 'assets/{name}',
-# }
 
 # branding to show in heading
 BRANDING = 'fluffy'

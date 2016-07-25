@@ -13,6 +13,7 @@
 /cli/dist
 /cli/build
 /tmp
+/settings.py
 
 /fluffy/static/app.css
 /fluffy/static/js/icons.js
