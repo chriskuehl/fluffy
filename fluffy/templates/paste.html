@@ -129,11 +129,18 @@
 
             $('#paste').on('keydown', function(e) {
                 if (e.ctrlKey) {
+                    if (e.which == 46 || e.which == 8) {  // backspace and delete
+                        return false;
+                    }
                     return true;
                 }
                 if ($.inArray(e.which, whitelistedKeys) !== -1) {
                     return true;
                 }
+                return false;
+            }).on('cut paste', function(e) {
+                return false;
+            }).bind('dragover drop', function(e) {
                 return false;
             });
 
