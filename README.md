@@ -76,6 +76,12 @@ Thanks for the help!
 fluffy is released under the MIT license; see LICENSE for full details.
 
 
+#### Running locally for development
+
+To run fluffy during development, run `make venv` and then `pgctl-2015 start`.
+You should now have fluffy running at `http://localhost:5000`.
+
+
 fluffy uses awesome icon sets developed by
 [FatCow](http://www.fatcow.com/free-icons) and [Everaldo
 Coelho](http://www.everaldo.com/).

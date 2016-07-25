@@ -12,6 +12,7 @@
 /build
 /cli/dist
 /cli/build
+/tmp
 
 /fluffy/static/app.css
 /fluffy/static/**/*.hash

@@ -4,6 +4,7 @@ ckuehl-pre-commit-types==0.7.6.dev1
 coverage
 ipdb
 libsass
+pgctl
 pytest
 requests
 twine

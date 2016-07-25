@@ -7,6 +7,7 @@ Some backends can control the mimetype (S3), some can't (file). So be careful
 what you do!
 """
 import functools
+import shutil
 
 import boto3
 
@@ -17,9 +18,16 @@ from fluffy import app
 class FileBackend:
     """Storage backend which stores files and info pages on the local disk."""
 
-    def store(self, stored_file):
-        path = self.options['file_path'].format(name=stored_file.name)
-        stored_file.file.save(path)
+    def _store(self, path_key, obj):
+        path = app.config['STORAGE_BACKEND'][path_key].format(name=obj.name)
+        with open(path, 'wb') as f:
+            shutil.copyfileobj(obj.open_file, f)
+
+    def store_object(self, obj):
+        self._store('object_path', obj)
+
+    def store_html(self, obj):
+        self._store('html_path', obj)
 
 
 class S3Backend:

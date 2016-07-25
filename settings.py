@@ -3,32 +3,30 @@
 # File backend
 STORAGE_BACKEND = {
     'name': 'file',
-
-    # use {name} as a placeholder for the file name
-    'file_path': '/tmp/{name}',
-    'info_path': '/tmp/{name}.html',
+    'object_path': 'tmp/object/{name}',
+    'html_path': 'tmp/html/{name}',
 }
 
 # S3 CLI backend
-STORAGE_BACKEND = {
-    'name': 's3',
-
-    'bucket': 'fluffy.cc',
-    's3path': '{name}',
-
-    'asset_bucket': 'fluffy.cc',
-    'asset_s3path': 'assets/{name}',
-}
+# STORAGE_BACKEND = {
+#     'name': 's3',
+#
+#     'bucket': 'fluffy.cc',
+#     's3path': '{name}',
+#
+#     'asset_bucket': 'fluffy.cc',
+#     'asset_s3path': 'assets/{name}',
+# }
 
 # branding to show in heading
 BRANDING = 'fluffy'
 
 # URL patterns
 HOME_URL = 'http://localhost:5000/'
-FILE_URL = 'https://i.fluffy.cc/{name}'
-HTML_URL = 'https://i.fluffy.cc/{name}'
+FILE_URL = 'http://localhost:5001/object/{name}'
+HTML_URL = 'http://localhost:5001/html/{name}'
 
-STATIC_ASSETS_URL = 'https://i.fluffy.cc/assets/{name}'
+STATIC_ASSETS_URL = 'http://localhost:5000/{name}'
 
 # abuse contact email address
 ABUSE_CONTACT = 'abuse@example.com'

@@ -1,0 +1,3 @@
+#!/bin/bash -eux
+mkdir -p ../../tmp/{object,html}
+exec cd ../../tmp ../venv/bin/python -m http.server 5001
