@@ -15,4 +15,6 @@
 /tmp
 
 /fluffy/static/app.css
+/fluffy/static/js/icons.js
+/fluffy/static/js/icons.debug.js
 /fluffy/static/**/*.hash

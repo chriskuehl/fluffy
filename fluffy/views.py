@@ -49,7 +49,6 @@ def upload():
     with HtmlToStore.from_html(render_template(
         'details.html',
         uploads=uploaded_files,
-        allow_debug=False,
     )) as details_obj:
         get_backend().store_html(details_obj)
 
@@ -79,7 +78,6 @@ def paste():
         'paste.html',
         text=text,
         lexer=guess_lexer(text, request.form['language']),
-        allow_debug=False,
         raw_url=app.config['FILE_URL'].format(name=uf.name),
     )) as paste_obj:
         get_backend().store_html(paste_obj)

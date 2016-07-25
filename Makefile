@@ -4,15 +4,22 @@ DOCKER_TAG := ckuehl/fluffy-server
 
 export FLUFFY_SETTINGS := $(PWD)/settings.py
 
-.PHONY: all
-all: $(VENV)
+.PHONY: minimal
+minimal: $(VENV) assets
 
 $(VENV): setup.py cli/setup.py requirements.txt requirements-dev.txt
 	vendor/venv-update venv= -p python3.4 venv install= -r requirements.txt -r requirements-dev.txt
 
-
 fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/sassc fluffy/static/scss/app.scss $@
+
+
+fluffy/static/js/icons.js: $(VENV) fluffy/static/img/mime/small fluffy/assets.py settings.py
+	$(BIN)/fluffy-build-icons-js > $@
+
+
+fluffy/static/js/icons.debug.js: $(VENV) fluffy/static/img/mime/small fluffy/assets.py settings.py
+	$(BIN)/fluffy-build-icons-js-debug > $@
 
 
 ASSET_FILES := $(shell find fluffy/static -type f -not -name '*.hash')
@@ -22,7 +29,7 @@ fluffy/static/%.hash: fluffy/static/%
 	sha256sum $^ | awk '{print $$1}' > $@
 
 .PHONY: assets
-assets: fluffy/static/app.css.hash $(ASSET_HASHES)
+assets: fluffy/static/app.css.hash fluffy/static/js/icons.js.hash $(ASSET_HASHES)
 
 .PHONY: upload-assets
 upload-assets: assets $(VENV)

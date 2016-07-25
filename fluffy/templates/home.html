@@ -77,8 +77,14 @@
         }
     </script>
 
-    <!-- TODO: can we factor out jQuery? -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+    {% if app %}
+        <script src="{{asset_url('js/icons.debug.js')}}"></script>
+    {% else %}
+        <script src="{{asset_url('js/icons.js')}}"></script>
+    {% endif %}
+
     <script src="{{asset_url('js/home.js')}}"></script>
 {% endblock %}
 

@@ -15,7 +15,7 @@ def defaults():
     from fluffy.assets import asset_url as real_asset_url
     return {
         'abuse_contact': app.config['ABUSE_CONTACT'],
-        'allow_debug': True,
+        'app': app,
         'asset_url': real_asset_url,
         'branding': app.config['BRANDING'],
         'home_url': app.config['HOME_URL'],

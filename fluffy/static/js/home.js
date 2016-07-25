@@ -1,10 +1,3 @@
-// extensions which have icons available
-var ICON_EXTENSIONS = [
-    "7z", "ai", "bmp", "doc", "docx", "gif", "gz", "html",
-    "jpeg", "jpg", "midi", "mp3", "odf", "odt", "pdf", "png", "psd", "rar",
-    "rtf", "svg", "tar", "txt", "wav", "xls", "zip"
-];
-
 var fileIndex = 0;
 var allFiles = [];
 
@@ -36,12 +29,6 @@ $(document).ready(function() {
                 transitioningModes = false;
             });
         }
-        /*
-        $('body').toggleClass('pastebin-mode', null, 200, 'swing', function() {
-            alert('callback!');
-            transitioningModes = false;
-        });
-        */
     });
 
     // browse button
@@ -515,12 +502,7 @@ function canUpload() {
 function getIcon(fileName) {
     var parts = fileName.split(".");
     var extension = parts[parts.length - 1].toLowerCase();
-
-    if (ICON_EXTENSIONS.indexOf(extension) == -1) {
-        extension = "unknown";
-    }
-
-    return "/static/img/mime/small/" + extension + ".png";
+    return icons[extension] || icons['unknown'];
 }
 
 /**

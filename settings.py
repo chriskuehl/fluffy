@@ -7,6 +7,8 @@ STORAGE_BACKEND = {
     'html_path': 'tmp/html/{name}',
 }
 
+SERVER_NAME = 'localhost:5000'
+
 # S3 CLI backend
 # STORAGE_BACKEND = {
 #     'name': 's3',

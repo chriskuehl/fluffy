@@ -1,2 +1,2 @@
 #!/bin/bash -eux
-exec make venv
+exec make minimal

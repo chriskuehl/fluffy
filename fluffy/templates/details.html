@@ -1,7 +1,4 @@
 {% set page_name = 'details' %}
-{# This templates gets uploaded as HTML to the CDN; #}
-{# Debug mode will always give us invalid relative URLs. #}
-{% set allow_debug = False %}
 
 {% extends 'layouts/base.html' %}
 
@@ -11,7 +8,7 @@
             <div class="file">
                 <div class="detailHolder">
                     <div class="icon">
-                        <img src="/static/img/mime/large/{{ file.extension|icon_for_extension }}.png" />
+                        <img src="{{asset_url('img/mime/large/' + file.extension|icon_for_extension)}}.png" />
                     </div>
                     <div class="details">
                         <h2>{{file.human_name|trim_filename(16)}}</h2>
