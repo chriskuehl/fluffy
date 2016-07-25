@@ -14,10 +14,10 @@ fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/sassc fluffy/static/scss/app.scss $@
 
 
-fluffy/static/js/icons.js: $(VENV) fluffy/static/img/mime/small fluffy/assets.py settings.py
+fluffy/static/js/icons.js: $(VENV) fluffy/static/img/mime/small fluffy/assets.py settings.py $(filter fluffy/static/img/mime/small/,$(ASSET_HASHES))
 	$(BIN)/fluffy-build-icons-js > $@
 
-fluffy/static/js/icons.debug.js: $(VENV) fluffy/static/img/mime/small fluffy/assets.py settings.py
+fluffy/static/js/icons.debug.js: fluffy/static/js/icons.js
 	$(BIN)/fluffy-build-icons-js-debug > $@
 
 
