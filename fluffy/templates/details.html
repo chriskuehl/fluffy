@@ -8,7 +8,7 @@
             <div class="file">
                 <div class="detailHolder">
                     <div class="icon">
-                        <img src="{{asset_url('img/mime/large/' + file.extension|icon_for_extension)}}.png" />
+                        <img src="{{asset_url('img/mime/large/' + (file.extension|icon_for_extension) + '.png')}}" />
                     </div>
                     <div class="details">
                         <h2>{{file.human_name|trim_filename(16)}}</h2>
