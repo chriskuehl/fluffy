@@ -17,7 +17,6 @@ fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 fluffy/static/js/icons.js: $(VENV) fluffy/static/img/mime/small fluffy/assets.py settings.py
 	$(BIN)/fluffy-build-icons-js > $@
 
-
 fluffy/static/js/icons.debug.js: $(VENV) fluffy/static/img/mime/small fluffy/assets.py settings.py
 	$(BIN)/fluffy-build-icons-js-debug > $@
 
@@ -69,6 +68,17 @@ docker-run: docker-image
 .PHONY: clean
 clean:
 	rm -rf $(VENV)
+
+.PHONY: release
+release: $(VENV)
+	# server
+	$(BIN)/python setup.py sdist
+	$(BIN)/python setup.py bdist_wheel
+	$(BIN)/twine upload --skip-existing dist/*
+	# cli
+	cd cli && ../$(BIN)/python setup.py sdist
+	cd cli && ../$(BIN)/python setup.py bdist_wheel
+	cd cli && ../$(BIN)/twine upload --skip-existing dist/*
 
 .PHONY: update-requirements
 update-requirements:
