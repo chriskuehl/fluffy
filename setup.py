@@ -1,9 +1,12 @@
 from setuptools import find_packages
 from setuptools import setup
 
+from fluffy import version
+
+
 setup(
     name='fluffy-server',
-    version='1.7.0',
+    version=version,
     author='Chris Kuehl',
     author_email='ckuehl@ocf.berkeley.edu',
     packages=find_packages(),

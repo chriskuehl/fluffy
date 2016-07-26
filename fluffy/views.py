@@ -3,7 +3,7 @@ from flask import redirect
 from flask import render_template
 from flask import request
 
-from fluffy import app
+from fluffy.app import app
 from fluffy.backends import get_backend
 from fluffy.highlighting import guess_lexer
 from fluffy.highlighting import UI_LANGUAGES_MAP

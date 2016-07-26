@@ -6,7 +6,7 @@ from pathlib import Path
 
 from flask import url_for
 
-from fluffy import app
+from fluffy.app import app
 
 
 PROJECT_ROOT = Path(__file__).parent

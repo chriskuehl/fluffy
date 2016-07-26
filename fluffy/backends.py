@@ -11,7 +11,7 @@ import shutil
 
 import boto3
 
-from fluffy import app
+from fluffy.app import app
 
 
 # TODO: FileBackend is broken

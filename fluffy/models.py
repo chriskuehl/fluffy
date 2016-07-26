@@ -7,7 +7,7 @@ from contextlib import contextmanager
 
 from cached_property import cached_property
 
-from fluffy import app
+from fluffy.app import app
 from fluffy.utils import content_is_binary
 from fluffy.utils import gen_unique_id
 from fluffy.utils import ONE_MB

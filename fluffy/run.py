@@ -2,7 +2,7 @@ import os.path
 
 from flask import render_template
 
-from fluffy import app
+from fluffy.app import app
 from fluffy.highlighting import guess_lexer
 
 # import views so the decorators run

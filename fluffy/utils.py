@@ -1,7 +1,7 @@
 import os
 import random
 
-from fluffy import app
+from fluffy.app import app
 
 ONE_KB = 2**10
 ONE_MB = 2**20

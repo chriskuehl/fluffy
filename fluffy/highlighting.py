@@ -3,7 +3,7 @@ import pygments.lexers
 from pygments.formatters import HtmlFormatter
 from pygments.styles import get_style_by_name
 
-from fluffy import app
+from fluffy.app import app
 
 
 # We purposefully don't list all possible languages, and instead just the ones
@@ -37,13 +37,14 @@ _pygments_formatter = HtmlFormatter(
 
 
 def guess_lexer(text, language):
+    lexer_opts = {'stripnl': False}
     try:
-        return pygments.lexers.get_lexer_by_name(language, stripnl=False)
+        return pygments.lexers.get_lexer_by_name(language, **lexer_opts)
     except pygments.util.ClassNotFound:
         try:
-            return pygments.lexers.guess_lexer(text, stripnl=False)
+            return pygments.lexers.guess_lexer(text, **lexer_opts)
         except pygments.util.ClassNotFound:
-            return pygments.lexers.get_lexer_by_name('python', stripnl=False)
+            return pygments.lexers.get_lexer_by_name('python', **lexer_opts)
 
 
 @app.template_filter()
