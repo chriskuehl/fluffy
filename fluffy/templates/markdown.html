@@ -1,0 +1,13 @@
+{% extends 'paste.html' %}
+
+{% block info %}
+    {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of Markdown
+{% endblock info %}
+
+{% block paste %}
+    <div class="text">
+        {{text|markdown|safe}}
+    </div>
+{% endblock %}
+
+{% block inline_js %}{% endblock %}

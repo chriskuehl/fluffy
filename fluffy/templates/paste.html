@@ -8,7 +8,9 @@
 {% block content %}
     <div class="paste-toolbar">
         <div class="info">
-            {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of {{lexer.name}}
+            {% block info %}
+                {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of {{lexer.name}}
+            {% endblock %}
         </div>
         <a class="button" href="{{raw_url}}">
             Raw Text
@@ -22,14 +24,16 @@
         <div style="clear: both;"></div>
     </div>
     <div id="paste">
-        <div class="line-numbers">
-            {% for i in range(1, num_lines(text) + 1) %}
-                <a id="LL{{i}}">{{i}}</a>
-            {% endfor %}
-        </div>
-        <div class="text" contenteditable="true" spellcheck="false">
-            {{text|highlight(lexer)|safe}}</pre>
-        </div>
+        {% block paste %}
+            <div class="line-numbers">
+                {% for i in range(1, num_lines(text) + 1) %}
+                    <a id="LL{{i}}">{{i}}</a>
+                {% endfor %}
+            </div>
+            <div class="text" contenteditable="true" spellcheck="false">
+                {{text|highlight(lexer)|safe}}</pre>
+            </div>
+        {% endblock %}
     </div>
 {% endblock %}
 

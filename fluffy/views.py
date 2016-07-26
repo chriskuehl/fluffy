@@ -95,13 +95,22 @@ def paste():
     with UploadedFile.from_text(text) as uf:
         get_backend().store_object(uf)
 
-    with HtmlToStore.from_html(render_template(
-        'paste.html',
-        text=text,
-        lexer=guess_lexer(text, request.form['language']),
-        raw_url=app.config['FILE_URL'].format(name=uf.name),
-    )) as paste_obj:
-        get_backend().store_html(paste_obj)
+    lang = request.form['language']
+    if lang != 'rendered-markdown':
+        with HtmlToStore.from_html(render_template(
+            'paste.html',
+            text=text,
+            lexer=guess_lexer(text, lang),
+            raw_url=app.config['FILE_URL'].format(name=uf.name),
+        )) as paste_obj:
+            get_backend().store_html(paste_obj)
+    else:
+        with HtmlToStore.from_html(render_template(
+            'markdown.html',
+            text=text,
+            raw_url=app.config['FILE_URL'].format(name=uf.name),
+        )) as paste_obj:
+            get_backend().store_html(paste_obj)
 
     url = app.config['HTML_URL'].format(name=paste_obj.name)
     return redirect(url)
