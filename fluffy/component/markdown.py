@@ -3,8 +3,8 @@ import re
 import mistune
 
 from fluffy.app import app
-from fluffy.highlighting import guess_lexer
-from fluffy.highlighting import highlight
+from fluffy.component.highlighting import guess_lexer
+from fluffy.component.highlighting import highlight
 
 
 class HtmlCommentsInlineLexerMixin:

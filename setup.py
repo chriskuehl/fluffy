@@ -23,7 +23,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'fluffy-upload-assets = fluffy.assets:upload_assets',
+            'fluffy-upload-assets = fluffy.component.assets:upload_assets',
         ],
     },
 )

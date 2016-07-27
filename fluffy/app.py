@@ -14,7 +14,7 @@ app.logger.setLevel(logging.DEBUG)
 
 @app.context_processor
 def defaults():
-    from fluffy.assets import asset_url as real_asset_url
+    from fluffy.component.assets import asset_url as real_asset_url
     return {
         'abuse_contact': app.config['ABUSE_CONTACT'],
         'app': app,

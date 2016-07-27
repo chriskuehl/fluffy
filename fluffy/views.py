@@ -4,9 +4,9 @@ from flask import render_template
 from flask import request
 
 from fluffy.app import app
-from fluffy.backends import get_backend
-from fluffy.highlighting import guess_lexer
-from fluffy.highlighting import UI_LANGUAGES_MAP
+from fluffy.component.backends import get_backend
+from fluffy.component.highlighting import guess_lexer
+from fluffy.component.highlighting import UI_LANGUAGES_MAP
 from fluffy.models import FileTooLargeError
 from fluffy.models import HtmlToStore
 from fluffy.models import UploadedFile

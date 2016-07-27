@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import render_template
 
 from fluffy.app import app
-from fluffy.highlighting import guess_lexer
+from fluffy.component.highlighting import guess_lexer
 
 # import views so the decorators run
 import fluffy.views  # noreorder # noqa
