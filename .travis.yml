@@ -5,6 +5,9 @@ sudo: false
 cache:
     directories:
         - $HOME/venv
+        - $HOME/.pip
+        - $HOME/.pre-commit
+        - $HOME/.cache
 addons:
     apt:
         sources:
