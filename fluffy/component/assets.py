@@ -9,7 +9,7 @@ from flask import url_for
 from fluffy.app import app
 
 
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
 STATIC_ROOT = PROJECT_ROOT / 'static'
 
 

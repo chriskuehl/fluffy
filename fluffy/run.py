@@ -12,7 +12,7 @@ import fluffy.views  # noreorder # noqa
 TESTING_DIR = Path(__file__).parent.parent / 'testing'
 
 
-def debug():
+def debug():  # pragma: no cover
 
     @app.route('/test/paste')
     def view_paste():

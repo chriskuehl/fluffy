@@ -2,6 +2,9 @@
 -e ./cli
 
 coverage
+coverage-enable-subprocess
+ephemeral-port-reserve
+gunicorn
 ipdb
 libsass
 pgctl

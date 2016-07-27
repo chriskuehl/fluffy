@@ -2,7 +2,7 @@ VENV := venv
 BIN := $(VENV)/bin
 DOCKER_TAG := ckuehl/fluffy-server
 
-export FLUFFY_SETTINGS := $(PWD)/settings.py
+export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 
 .PHONY: minimal
 minimal: $(VENV) assets settings.py
@@ -44,7 +44,8 @@ dev: $(VENV) fluffy/static/app.css
 .PHONY: test
 test: $(VENV)
 	$(BIN)/coverage erase
-	$(BIN)/coverage run $(BIN)/py.test -vv tests/
+	COVERAGE_PROCESS_START=$(CURDIR)/.coveragerc \
+		$(BIN)/py.test -vv tests/
 	$(BIN)/coverage combine
 	$(BIN)/coverage report
 	$(BIN)/pre-commit install -f --install-hooks

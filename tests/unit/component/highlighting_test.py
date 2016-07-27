@@ -1,8 +1,8 @@
 import pygments.lexers
 import pytest
 
-from fluffy.highlighting import guess_lexer
-from fluffy.highlighting import UI_LANGUAGES_MAP
+from fluffy.component.highlighting import guess_lexer
+from fluffy.component.highlighting import UI_LANGUAGES_MAP
 
 
 @pytest.mark.parametrize('language', UI_LANGUAGES_MAP)

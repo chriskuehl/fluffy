@@ -1,9 +1,10 @@
 [run]
 parallel = True
 branch = True
+data_file = .coverage
+source =
+    fluffy
+    tests
 
 [report]
 show_missing = True
-include =
-    fluffy/*
-    tests/*
