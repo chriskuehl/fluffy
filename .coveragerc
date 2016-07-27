@@ -3,6 +3,7 @@ parallel = True
 branch = True
 data_file = .coverage
 source =
+    cli
     fluffy
     tests
 
