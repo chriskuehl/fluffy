@@ -1,6 +1,7 @@
 import io
 import re
 
+import mock
 import pytest
 import requests
 
@@ -14,17 +15,79 @@ FILE_CONTENT_TESTCASES = (
 )
 
 
+def _urls_from_details(details):
+    """Return list of URLs to objects from details page source."""
+    return re.findall(
+        r'<a href="(http://localhost:\d+/object/[^"]+\.bin)"',
+        details,
+    )
+
+
+def _assert_url_matches_content(url, content):
+    req = requests.get(url)
+    assert req.content == content
+
+
 @pytest.mark.parametrize('content', FILE_CONTENT_TESTCASES)
 def test_single_file_upload(content, running_server):
     req = requests.post(
         running_server['home'] + '/upload',
-        files={'file': ('ohai.bin', io.BytesIO(content), None, None)},
+        files=[('file', ('ohai.bin', io.BytesIO(content), None, None))],
     )
     assert req.status_code == 200
     assert 'ohai.bin' in req.text
 
-    m = re.search(r'<a href="(http://localhost:\d+/object/[^"]+\.bin)"', req.text)
-    assert m, req.text
+    url, = _urls_from_details(req.text)
+    _assert_url_matches_content(url, content)
 
-    req = requests.get(m.group(1))
-    assert req.content == content
+
+@pytest.mark.parametrize('content', FILE_CONTENT_TESTCASES)
+def test_single_file_upload_json(content, running_server):
+    req = requests.post(
+        running_server['home'] + '/upload?json',
+        files=[('file', ('ohai.bin', io.BytesIO(content), None, None))],
+    )
+    assert req.status_code == 200
+    assert req.json() == {'success': True, 'redirect': mock.ANY}
+
+    req = requests.get(req.json()['redirect'])
+    assert req.status_code == 200
+    url, = _urls_from_details(req.text)
+    _assert_url_matches_content(url, content)
+
+
+def test_multiple_files_upload(running_server):
+    files = [
+        ('file', ('ohai{}.bin'.format(i), io.BytesIO(content), None, None))
+        for i, content in enumerate(FILE_CONTENT_TESTCASES)
+    ]
+    req = requests.post(
+        running_server['home'] + '/upload',
+        files=files,
+    )
+    assert req.status_code == 200
+    urls = _urls_from_details(req.text)
+    for i, content in enumerate(FILE_CONTENT_TESTCASES):
+        assert 'ohai{}.bin'.format(i) in req.text
+        _assert_url_matches_content(urls[i], content)
+
+
+def test_multiple_files_upload_json(running_server):
+    files = [
+        ('file', ('ohai{}.bin'.format(i), io.BytesIO(content), None, None))
+        for i, content in enumerate(FILE_CONTENT_TESTCASES)
+    ]
+    req = requests.post(
+        running_server['home'] + '/upload?json',
+        files=files,
+    )
+    assert req.status_code == 200
+    assert req.json() == {'success': True, 'redirect': mock.ANY}
+
+    req = requests.get(req.json()['redirect'])
+    assert req.status_code == 200
+
+    urls = _urls_from_details(req.text)
+    for i, content in enumerate(FILE_CONTENT_TESTCASES):
+        assert 'ohai{}.bin'.format(i) in req.text
+        _assert_url_matches_content(urls[i], content)
