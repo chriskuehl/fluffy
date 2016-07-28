@@ -15,7 +15,7 @@ FILE_CONTENT_TESTCASES = (
 def urls_from_details(details):
     """Return list of URLs to objects from details page source."""
     return re.findall(
-        r'<a href="(http://localhost:\d+/object/[^"]+\.bin)"',
+        r'<a href="(http://localhost:\d+/object/[^"]+)"',
         details,
     )
 

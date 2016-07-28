@@ -71,7 +71,7 @@ def running_server():
             'fluffy.run:app',
         ),
         env={
-            'COVERAGE_PROCESS_START': os.environ.get('COVERAGE_PROCESS_START'),
+            'COVERAGE_PROCESS_START': os.environ.get('COVERAGE_PROCESS_START', ''),
             'FLUFFY_SETTINGS': settings_path,
         },
     )

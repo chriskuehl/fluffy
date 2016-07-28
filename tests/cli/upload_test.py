@@ -39,6 +39,20 @@ def test_single_file_upload(content, running_server, tmpdir):
     assert_url_matches_content(url, content)
 
 
+@pytest.mark.parametrize('content', FILE_CONTENT_TESTCASES)
+@pytest.mark.usefixtures('cli_on_path')
+def test_single_file_upload_from_stdin(content, running_server):
+    info_url = subprocess.check_output(
+        ('fput', '--server', running_server['home'], '-'),
+        input=content,
+    ).strip()
+
+    req = requests.get(info_url)
+    assert req.status_code == 200
+    url, = urls_from_details(req.text)
+    assert_url_matches_content(url, content)
+
+
 @pytest.mark.usefixtures('cli_on_path')
 def test_multiple_file_upload(running_server, tmpdir):
     paths = []
