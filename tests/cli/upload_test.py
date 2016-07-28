@@ -1,5 +1,8 @@
+import os
 import subprocess
+import sys
 
+import mock
 import pytest
 import requests
 
@@ -8,7 +11,21 @@ from testing import FILE_CONTENT_TESTCASES
 from testing import urls_from_details
 
 
+@pytest.yield_fixture
+def cli_on_path():
+    with mock.patch.dict(
+            os.environ,
+            {
+                'PATH': '{}:{}'.format(
+                    os.path.dirname(sys.executable), os.environ['PATH'],
+                ),
+            },
+    ):
+        yield
+
+
 @pytest.mark.parametrize('content', FILE_CONTENT_TESTCASES)
+@pytest.mark.usefixtures('cli_on_path')
 def test_single_file_upload(content, running_server, tmpdir):
     path = tmpdir.join('ohai.bin')
     path.write(content)
@@ -22,6 +39,7 @@ def test_single_file_upload(content, running_server, tmpdir):
     assert_url_matches_content(url, content)
 
 
+@pytest.mark.usefixtures('cli_on_path')
 def test_multiple_file_upload(running_server, tmpdir):
     paths = []
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
