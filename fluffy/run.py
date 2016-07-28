@@ -18,7 +18,7 @@ def debug():  # pragma: no cover
     def view_paste():
         return render_template(
             'paste.html',
-            text=(TESTING_DIR / 'code.py').open().read(),
+            text=(TESTING_DIR / 'files' / 'code.py').open().read(),
             lexer=guess_lexer('', 'python'),
             edit_url='#edit',
             raw_url='#raw',
@@ -28,7 +28,7 @@ def debug():  # pragma: no cover
     def view_markdown():
         return render_template(
             'markdown.html',
-            text=(TESTING_DIR / 'markdown.md').open().read(),
+            text=(TESTING_DIR / 'files' / 'markdown.md').open().read(),
             edit_url='#edit',
             raw_url='#raw',
         )

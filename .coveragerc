@@ -6,6 +6,7 @@ source =
     cli
     fluffy
     tests
+    testing
 
 [report]
 show_missing = True
