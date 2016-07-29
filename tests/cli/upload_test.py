@@ -28,7 +28,7 @@ def cli_on_path():
 @pytest.mark.usefixtures('cli_on_path')
 def test_single_file_upload(content, running_server, tmpdir):
     path = tmpdir.join('ohai.bin')
-    path.write(content)
+    path.write(content, 'wb')
     info_url = subprocess.check_output(
         ('fput', '--server', running_server['home'], path.strpath),
     ).strip()
@@ -58,7 +58,7 @@ def test_multiple_file_upload(running_server, tmpdir):
     paths = []
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
         path = tmpdir.join('ohai{}.bin'.format(i))
-        path.write(content)
+        path.write(content, 'wb')
         paths.append(path.strpath)
 
     info_url = subprocess.check_output(

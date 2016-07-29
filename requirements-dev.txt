@@ -11,6 +11,7 @@ libsass
 mock
 pgctl
 pre-commit
+pyquery
 pytest
 requests
 twine

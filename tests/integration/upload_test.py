@@ -3,9 +3,13 @@ import io
 import mock
 import pytest
 import requests
+from pyquery import PyQuery as pq
 
 from testing import assert_url_matches_content
+from testing import BINARY_TESTCASES
 from testing import FILE_CONTENT_TESTCASES
+from testing import paste_urls_from_details
+from testing import PLAINTEXT_TESTCASES
 from testing import urls_from_details
 
 
@@ -72,3 +76,29 @@ def test_multiple_files_upload_json(running_server):
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
         assert 'ohai{}.bin'.format(i) in req.text
         assert_url_matches_content(urls[i], content)
+
+
+@pytest.mark.parametrize('content', PLAINTEXT_TESTCASES)
+def test_plaintext_files_are_also_pasted(content, running_server):
+    req = requests.post(
+        running_server['home'] + '/upload',
+        files=[('file', ('ohai.bin', io.StringIO(content), None, None))],
+    )
+    assert req.status_code == 200
+    url, = paste_urls_from_details(req.text)
+
+    req = requests.get(url)
+    assert (
+        pq(req.content.decode('utf8')).find('input[name=text]').attr('value') ==
+        content
+    )
+
+
+@pytest.mark.parametrize('content', BINARY_TESTCASES)
+def test_binary_files_are_not_pasted(content, running_server):
+    req = requests.post(
+        running_server['home'] + '/upload',
+        files=[('file', ('ohai.bin', io.BytesIO(content), None, None))],
+    )
+    assert req.status_code == 200
+    assert paste_urls_from_details(req.text) == []

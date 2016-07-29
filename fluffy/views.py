@@ -90,7 +90,7 @@ def paste():
     text = request.form['text']
 
     # TODO: make this better
-    assert 1 <= len(text) <= ONE_MB, len(text)
+    assert 0 <= len(text) <= ONE_MB, len(text)
 
     with UploadedFile.from_text(text) as uf:
         get_backend().store_object(uf)

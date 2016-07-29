@@ -19,7 +19,7 @@ def bold(text):
 
 
 def upload(server, paths):
-    files = (('file', sys.stdin if path == '-' else open(path, 'rb')) for path in paths)
+    files = (('file', sys.stdin.buffer if path == '-' else open(path, 'rb')) for path in paths)
     req = requests.post(
         server + '/upload',
         files=files,
