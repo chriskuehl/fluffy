@@ -5,7 +5,8 @@ from flask import render_template
 from fluffy.app import app
 from fluffy.component.highlighting import guess_lexer
 
-# import views so the decorators run
+# imports so the decorators run :(
+import fluffy.component.markdown  # noreorder # noqa
 import fluffy.views  # noreorder # noqa
 
 

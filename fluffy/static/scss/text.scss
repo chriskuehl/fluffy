@@ -1,0 +1,46 @@
+.page-paste, .page-markdown {
+    .paste-toolbar {
+        background-color: #e0e0e0;
+        padding: 8px;
+        font-size: 14px;
+        color: #333;
+
+        .info {
+            float: left;
+            margin-top: 8px;
+            margin-left: 5px;
+        }
+
+        input[type=submit].button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: "Open Sans", Helvetica, Arial, sans-serif;
+            line-height: 14px;
+        }
+
+        .button {
+            float: right;
+            font-size: 14px;
+            background-color: #f3f3f3 !important;
+            margin-left: 8px;
+            padding: 8px;
+            text-decoration: none;
+            color: #333;
+
+            &:hover {
+                opacity: 0.8;
+            }
+        }
+    }
+
+    #container {
+        width: 960px;
+    }
+
+    #paste {
+        font-size: 14px;
+        position: relative;
+        background-color: white;
+    }
+}

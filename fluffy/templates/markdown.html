@@ -1,10 +1,11 @@
-{% extends 'paste.html' %}
+{% set page_name = 'markdown' %}
+{% extends 'layouts/text.html' %}
 
 {% block info %}
     {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of Markdown
 {% endblock info %}
 
-{% block paste %}
+{% block text %}
     <div class="text">
         {{text|markdown|safe}}
     </div>

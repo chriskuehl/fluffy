@@ -36,8 +36,11 @@ _pygments_formatter = HtmlFormatter(
 )
 
 
-def guess_lexer(text, language):
+def guess_lexer(text, language, opts=None):
     lexer_opts = {'stripnl': False}
+    if opts:
+        lexer_opts = dict(lexer_opts, **opts)
+
     try:
         return pygments.lexers.get_lexer_by_name(language, **lexer_opts)
     except pygments.util.ClassNotFound:

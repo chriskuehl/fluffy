@@ -39,7 +39,7 @@ class CodeRendererMixin:
     def block_code(self, code, lang):
         return highlight(
             code,
-            guess_lexer(code, lang),
+            guess_lexer(code, lang, opts={'stripnl': True}),
         )
 
 

@@ -1,8 +1,10 @@
 @import 'reset';
 
-@import 'home';
 @import 'details';
+@import 'home';
+@import 'markdown';
 @import 'paste';
+@import 'text';
 
 body {
     background-color: #005178;
@@ -33,7 +35,7 @@ h1, h2, h3, h4, h5, p {
     margin-bottom: 10px;
 }
 
-h1 {
+h1.site-header {
     text-align: center;
     font-size: 72px;
     font-weight: bold;

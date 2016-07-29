@@ -1,0 +1,26 @@
+{% extends 'layouts/base.html' %}
+
+{% block head_extra %}
+    <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:500,700' rel='stylesheet' type='text/css'>
+{% endblock %}
+
+{% block content %}
+    <div class="paste-toolbar">
+        <div class="info">
+            {% block info %}{% endblock %}
+        </div>
+        <a class="button" href="{{raw_url}}">
+            Raw Text
+        </a>
+
+        <form method="POST" action="{{home_url}}">
+            <input type="hidden" name="text" value="{{text}}" />
+            <input type="submit" class="button" value="Copy &amp; Edit" />
+        </form>
+
+        <div style="clear: both;"></div>
+    </div>
+    <div id="paste">
+        {% block text %}{% endblock %}
+    </div>
+{% endblock %}
