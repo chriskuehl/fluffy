@@ -14,7 +14,6 @@ import boto3
 from fluffy.app import app
 
 
-# TODO: FileBackend is broken
 class FileBackend:
     """Storage backend which stores files and info pages on the local disk."""
 
@@ -35,8 +34,9 @@ class S3Backend:
     """Storage backend which uploads to S3 using boto3."""
 
     def _store(self, obj):
-        # S3 lets us specify mimetypes per file :D
-        s3 = boto3.resource('s3')
+        # We always use a new session in case the keys have been rotated on disk.
+        session = boto3.session.Session()
+        s3 = session.resource('s3')
         s3.Bucket(app.config['STORAGE_BACKEND']['bucket']).put_object(
             Key=app.config['STORAGE_BACKEND']['s3path'].format(name=obj.name),
             Body=obj.open_file,
@@ -44,6 +44,7 @@ class S3Backend:
         )
         obj.open_file.seek(0)
 
+    # S3 lets us specify mimetypes per file :D
     store_object = _store
     store_html = _store
 
