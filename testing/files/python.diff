@@ -1,0 +1,59 @@
+commit 6826e7c277ff7f6278f44bcf64c5997e3ab808af
+Author:     Chris Kuehl <ckuehl@ocf.berkeley.edu>
+AuthorDate: Thu Jul 28 19:39:44 2016 -0400
+Commit:     Chris Kuehl <ckuehl@ocf.berkeley.edu>
+CommitDate: Thu Jul 28 19:39:44 2016 -0400
+
+    Add a test for file uploading for stdin file uploads from cli
+
+diff --git a/testing/__init__.py b/testing/__init__.py
+index 11eb271..9e81177 100644
+--- a/testing/__init__.py
++++ b/testing/__init__.py
+@@ -15,7 +15,7 @@ FILE_CONTENT_TESTCASES = (
+ def urls_from_details(details):
+     """Return list of URLs to objects from details page source."""
+     return re.findall(
+-        r'<a href="(http://localhost:\d+/object/[^"]+\.bin)"',
++        r'<a href="(http://localhost:\d+/object/[^"]+)"',
+         details,
+     )
+ 
+diff --git a/tests/cli/upload_test.py b/tests/cli/upload_test.py
+index 93cd9b0..371b434 100644
+--- a/tests/cli/upload_test.py
++++ b/tests/cli/upload_test.py
+@@ -39,6 +39,20 @@ def test_single_file_upload(content, running_server, tmpdir):
+     assert_url_matches_content(url, content)
+ 
+ 
++@pytest.mark.parametrize('content', FILE_CONTENT_TESTCASES)
++@pytest.mark.usefixtures('cli_on_path')
++def test_single_file_upload_from_stdin(content, running_server):
++    info_url = subprocess.check_output(
++        ('fput', '--server', running_server['home'], '-'),
++        input=content,
++    ).strip()
++
++    req = requests.get(info_url)
++    assert req.status_code == 200
++    url, = urls_from_details(req.text)
++    assert_url_matches_content(url, content)
++
++
+ @pytest.mark.usefixtures('cli_on_path')
+ def test_multiple_file_upload(running_server, tmpdir):
+     paths = []
+diff --git a/tests/conftest.py b/tests/conftest.py
+index 2bb3e26..7743a2e 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -71,7 +71,7 @@ def running_server():
+             'fluffy.run:app',
+         ),
+         env={
+-            'COVERAGE_PROCESS_START': os.environ.get('COVERAGE_PROCESS_START'),
++            'COVERAGE_PROCESS_START': os.environ.get('COVERAGE_PROCESS_START', ''),
+             'FLUFFY_SETTINGS': settings_path,
+         },
+     )

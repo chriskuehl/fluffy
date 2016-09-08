@@ -51,6 +51,22 @@
                     &.selected {
                         background-color: #fff3d3;
                     }
+
+                    &.diff-add {
+                        background-color: #e2ffe2;
+
+                        &.selected {
+                            background-color: #e8ffbc;
+                        }
+                    }
+
+                    &.diff-remove {
+                        background-color: #ffe5e5;
+
+                        &.selected {
+                            background-color: #ffdfbf;
+                        }
+                    }
                 }
             }
         }

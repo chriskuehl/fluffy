@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import render_template
 
 from fluffy.app import app
-from fluffy.component.highlighting import guess_lexer
+from fluffy.component.highlighting import get_highlighter
 
 # imports so the decorators run :(
 import fluffy.component.markdown  # noreorder # noqa
@@ -20,7 +20,18 @@ def debug():  # pragma: no cover
         return render_template(
             'paste.html',
             text=(TESTING_DIR / 'files' / 'code.py').open().read(),
-            lexer=guess_lexer('', 'python'),
+            highlighter=get_highlighter('', 'python'),
+            edit_url='#edit',
+            raw_url='#raw',
+        )
+
+    @app.route('/test/diff')
+    def view_diff():
+        text = (TESTING_DIR / 'files' / 'python.diff').open().read()
+        return render_template(
+            'paste.html',
+            text=text,
+            highlighter=get_highlighter(text, None),
             edit_url='#edit',
             raw_url='#raw',
         )

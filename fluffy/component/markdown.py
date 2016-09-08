@@ -4,7 +4,7 @@ import mistune
 
 from fluffy.app import app
 from fluffy.component.highlighting import guess_lexer
-from fluffy.component.highlighting import highlight
+from fluffy.component.highlighting import PygmentsHighlighter
 
 
 class HtmlCommentsInlineLexerMixin:
@@ -37,10 +37,9 @@ class CodeRendererMixin:
     """Render highlighted code."""
 
     def block_code(self, code, lang):
-        return highlight(
-            code,
+        return PygmentsHighlighter(
             guess_lexer(code, lang, opts={'stripnl': True}),
-        )
+        ).highlight(code)
 
 
 class FluffyMarkdownRenderer(

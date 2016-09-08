@@ -5,7 +5,7 @@ from flask import request
 
 from fluffy.app import app
 from fluffy.component.backends import get_backend
-from fluffy.component.highlighting import guess_lexer
+from fluffy.component.highlighting import get_highlighter
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
 from fluffy.models import FileTooLargeError
 from fluffy.models import HtmlToStore
@@ -52,7 +52,7 @@ def upload():
                         with HtmlToStore.from_html(render_template(
                             'paste.html',
                             text=text,
-                            lexer=guess_lexer(text, None),
+                            highlighter=get_highlighter(text, None),
                             raw_url=app.config['FILE_URL'].format(name=uf.name),
                         )) as pb:
                             get_backend().store_html(pb)
@@ -100,7 +100,7 @@ def paste():
         with HtmlToStore.from_html(render_template(
             'paste.html',
             text=text,
-            lexer=guess_lexer(text, lang),
+            highlighter=get_highlighter(text, lang),
             raw_url=app.config['FILE_URL'].format(name=uf.name),
         )) as paste_obj:
             get_backend().store_html(paste_obj)

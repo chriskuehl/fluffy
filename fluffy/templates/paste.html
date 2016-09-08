@@ -2,7 +2,7 @@
 {% extends 'layouts/text.html' %}
 
 {% block info %}
-    {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of {{lexer.name}}
+    {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of {{highlighter.name}}
 {% endblock %}
 
 {% block text %}
@@ -12,7 +12,7 @@
         {% endfor %}
     </div>
     <div class="text" contenteditable="true" spellcheck="false">
-        {{text|highlight(lexer)|safe}}</pre>
+        {{highlighter.highlight(text)|safe}}</pre>
     </div>
 {% endblock %}
 
