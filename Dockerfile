@@ -4,12 +4,14 @@ RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates \
+        gcc \
         libxml2-dev \
         libxslt1-dev \
         python3 \
         python3-dev \
         virtualenv \
         wget \
+        zlib1g-dev \
     && apt-get clean
 RUN wget -O /tmp/dumb-init.deb \
         https://github.com/Yelp/dumb-init/releases/download/v1.1.1/dumb-init_1.1.1_amd64.deb \
