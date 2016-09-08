@@ -4,6 +4,8 @@ RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates \
+        libxml2-dev \
+        libxslt1-dev \
         python3 \
         python3-dev \
         virtualenv \
