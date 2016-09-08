@@ -27,7 +27,7 @@ RUN virtualenv -ppython3 /srv/fluffy/venv \
     && /srv/fluffy/venv/bin/pip install gunicorn==19.6
 
 EXPOSE 8000
-ENV FLUFFY_SETTINGS /opt/fluffy/settings.py
+ENV FLUFFY_SETTINGS /opt/fluffy/settings/prod_s3.py
 ENV PYTHONUNBUFFERED TRUE
 CMD [ \
     "/usr/bin/dumb-init", "--", \
