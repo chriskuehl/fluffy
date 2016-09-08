@@ -17,6 +17,7 @@ setup(
         'flask',
         'mistune',
         'pygments',
+        'pyquery',
     },
     classifiers={
         'Programming Language :: Python :: 3',

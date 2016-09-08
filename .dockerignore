@@ -2,3 +2,4 @@ venv
 .git
 .tox
 *.swp
+playground
