@@ -13,7 +13,6 @@
             float: left;
             line-height: 1.25em;
             text-align: right;
-            margin-right: 5px;
 
 
             a {
@@ -41,6 +40,18 @@
 
             pre {
                 overflow-x: auto;
+            }
+
+            .highlight > pre {
+                // These are line spans (sadly, no class is output by pygments)
+                & > span {
+                    padding-left: 5px;
+                    display: block;
+
+                    &.selected {
+                        background-color: #fff3d3;
+                    }
+                }
             }
         }
     }

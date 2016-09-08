@@ -32,6 +32,8 @@ UI_LANGUAGES_MAP = {
 
 _pygments_formatter = HtmlFormatter(
     noclasses=True,
+    linespans='line',
+    nobackground=True,
     style=get_style_by_name('xcode'),
 )
 

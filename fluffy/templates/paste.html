@@ -37,6 +37,9 @@
         }
 
         function selectedLines() {
+            /**
+             * @return {array} list of currently selected line numbers
+            */
             var h = window.location.hash || '#';
             if (h.substring(0, 1) === '#') {
                 h = h.substring(1);
@@ -77,7 +80,25 @@
                 setState = -1;
             });
 
+            function updateLineClasses(num, isSelected) {
+                /**
+                 * Add or remove "selected" classes from the line number and its line.
+                 */
+                var els = $('#LL' + num + ',#line-' + num);
+                if (isSelected) {
+                    els.addClass('selected');
+                } else {
+                    els.removeClass('selected');
+                }
+            }
+
             function maybeChangeState(el) {
+                /**
+                 * Possibly change the state of a line number.
+                 *
+                 * Depending on the current mode of the drag (either highlight
+                 * or un-highlight), we update this row to match.
+                 */
                 if (setState === -1) {
                     return;
                 }
@@ -87,12 +108,12 @@
                 var idx = selected.indexOf(line);
 
                 if (idx === -1 && setState === 1) {
-                    el.addClass('selected');
+                    updateLineClasses(line, true);
                     selected.push(line);
                     updateSelectedHash(selected);
                 } else if (idx !== -1 && setState === 0) {
-                    el.removeClass('selected');
                     selected.splice(idx, 1);
+                    updateLineClasses(line, false);
                     updateSelectedHash(selected);
                 }
                 return false;
@@ -133,10 +154,10 @@
             var hasMovedDown = false;
             for (var i = 0; i < selected.length; i++) {
                 var line = selected[i];
-                var e = $('#LL' + line);
-                e.addClass('selected');
+                updateLineClasses(line, true);
 
                 if (!hasMovedDown) {
+                    var e = $('#LL' + line);
                     hasMovedDown = true;
                     if ($('body').scrollTop() == 0) {
                         $('body').scrollTop(e.offset().top - 50);
