@@ -103,7 +103,12 @@
                 }
                 window.location.hash = '#' + selected.join(',');
             } else {
-                window.location.hash = '';
+                // hack (for old browsers that don't support pushState) because
+                // removing entirely causes a scroll to the top
+                window.location.hash = '_';
+
+                // for new browsers, use pushState to remove the hash entirely
+                history.replaceState('', document.title, window.location.pathname);
             }
         }
 
