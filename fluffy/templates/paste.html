@@ -52,20 +52,54 @@
                 if (el.substring(0, 1) !== 'L') {
                     continue;
                 }
-                el = parseInt(el.substring(1));
-                if (el >= 1 && selected.indexOf(el) === -1) {
-                    selected.push(el);
+
+                var parts = el.substring(1).split('-');
+                if (parts.length == 1) {
+                    parts.push(parts[0]);
                 }
+                if (parts.length == 2) {
+                    parts[0] = parseInt(parts[0]);
+                    parts[1] = parseInt(parts[1]);
+
+                    for (var num = parts[0]; num <= parts[1]; num++) {
+                        if (num >= 1 && selected.indexOf(num) === -1) {
+                            selected.push(num);
+                        }
+                    }
+                }
+
             }
             realSort(selected);
             return selected;
         }
 
         function updateSelectedHash(selected) {
+            function rangeFromNumber(num) {
+                var range = ('' + num).split('-').map(function(i) {
+                    return parseInt(i);
+                });
+
+                if (range.length == 1) {
+                    range.push(range[0]);
+                }
+
+                return range;
+            }
+
             if (selected.length > 0) {
                 realSort(selected);
-                for (var i = 0; i < selected.length; i++) {
+                for (var i = selected.length - 1; i >= 0; i--) {
+                    var cur = rangeFromNumber(selected[i]);
                     selected[i] = 'L' + selected[i];
+
+                    // see if we can combine with the previous one
+                    if (i > 0) {
+                        var prev = rangeFromNumber(selected[i - 1]);
+                        if (prev[1] == cur[0] - 1) {
+                            selected[i - 1] = prev[0] + '-' + cur[1];
+                            selected.splice(i, 1);
+                        }
+                    }
                 }
                 window.location.hash = '#' + selected.join(',');
             } else {
