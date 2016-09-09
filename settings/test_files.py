@@ -1,6 +1,4 @@
 # fluffy-specific configuration options
-SERVER_NAME = '{server_name}'
-
 # storage backend (how are the files stored after being uploaded?)
 STORAGE_BACKEND = {{
     'name': 'file',

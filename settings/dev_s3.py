@@ -1,6 +1,4 @@
 # fluffy-specific configuration options
-SERVER_NAME = 'localhost:5000'
-
 # storage backend (how are the files stored after being uploaded?)
 STORAGE_BACKEND = {
     'name': 's3',
