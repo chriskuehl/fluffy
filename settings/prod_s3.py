@@ -21,7 +21,7 @@ HTML_URL = 'https://i.fluffy.cc/{name}'
 STATIC_ASSETS_URL = 'https://i.fluffy.cc/assets/{name}'
 
 # abuse contact email address
-ABUSE_CONTACT = 'abuse@example.com'
+ABUSE_CONTACT = 'abuse@fluffy.cc'
 
 # max upload size per file (in bytes)
 MAX_UPLOAD_SIZE = 10 * 1048576  # 10 MB
