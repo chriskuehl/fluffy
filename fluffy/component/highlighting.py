@@ -96,7 +96,7 @@ def strip_diff_things(text):
 
     for line in text.splitlines():
         if line.startswith((
-            'diff --git'
+            'diff --git',
             '--- ',
             '+++ ',
             'index ',
@@ -107,7 +107,7 @@ def strip_diff_things(text):
         if line.startswith(('+', '-')):
             line = line[1:]
 
-        s += line
+        s += line + '\n'
 
     return s
 
