@@ -69,7 +69,12 @@ class DiffHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
             line = pq(line)
             assert line.attr('id').startswith('line-')
 
-            text = pq(line).text()
+            el = pq(line)
+
+            # .text() doesn't include whitespace before it, but .html() does
+            h = el.html()
+            text = h[:len(h) - len(h.lstrip())] + el.text()
+
             if text.startswith('+'):
                 line.addClass('diff-add')
             elif text.startswith('-'):
@@ -101,6 +106,11 @@ def strip_diff_things(text):
             '+++ ',
             'index ',
             '@@ ',
+            'Author:',
+            'AuthorDate:',
+            'Commit:',
+            'CommitDate:',
+            'commit ',
         )):
             continue
 
@@ -115,11 +125,16 @@ def strip_diff_things(text):
 def get_highlighter(text, language):
     lexer = guess_lexer(text, language)
 
-    if lexer.name != language:
+    if (
+            lexer is None or
+            language is None or
+            lexer.name.lower() != language.lower() or
+            lexer.name.lower() == 'diff'
+    ):
         # If it wasn't a perfect match, then we had to guess a language.
         # Pygments diff highlighting isn't too great, so we try to handle that
         # ourselves a bit.
-        if looks_like_diff(text):
+        if lexer.name.lower() == 'diff' or looks_like_diff(text):
             return DiffHighlighter(
                 guess_lexer(strip_diff_things(text), None),
             )

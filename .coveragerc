@@ -7,6 +7,8 @@ source =
     fluffy
     tests
     testing
+omit =
+    cli/setup.py
 
 [report]
 show_missing = True
