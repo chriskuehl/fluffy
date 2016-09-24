@@ -15,7 +15,7 @@ fluffy is a Flask-based web application that allows you to upload arbitrary
 files to the web. Once you upload the files, you get a link to the file which
 you can share.
 
-The reference instance of fluffy is online at [fluffy.cc](http://fluffy.cc/).
+The reference instance of fluffy is online at [fluffy.cc](https://fluffy.cc/).
 You can also run your own!
 
 
