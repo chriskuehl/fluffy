@@ -14,7 +14,7 @@ STORAGE_BACKEND = {
 BRANDING = 'fluffy'
 
 # URL patterns
-HOME_URL = 'http://fluffy.cc/'
+HOME_URL = 'https://fluffy.cc/'
 FILE_URL = 'https://i.fluffy.cc/{name}'
 HTML_URL = 'https://i.fluffy.cc/{name}'
 
