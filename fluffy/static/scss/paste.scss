@@ -1,4 +1,12 @@
 .page-paste {
+    #container {
+        width: auto;
+
+        $margin: 100px;
+        margin-left: $margin;
+        margin-right: $margin;
+    }
+
     #paste {
         font-family: 'Source Code Pro', monospace;
 

@@ -1,6 +1,10 @@
 $source-code-font: 'Source Code Pro', monospace;
 
 .page-markdown {
+    #container {
+        width: 960px;
+    }
+
     .text {
         padding: 10px;
         line-height: 1.4em;
