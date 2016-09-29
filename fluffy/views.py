@@ -25,7 +25,7 @@ def home():
             key=lambda key_val: key_val[1],
         ),
         text=text,
-        wrapper_classes='start-on-paste' if (text or 'text' in request.args) else '',
+        extra_html_classes='start-on-paste' if (text or 'text' in request.args) else '',
         icon_extensions=ICON_EXTENSIONS,
     )
 

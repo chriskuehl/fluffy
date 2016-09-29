@@ -16,14 +16,18 @@ $(document).ready(function() {
 
         transitioningModes = true;
         var duration = 200;
-        var pb = $('.pastebinForm'), fh = $('#file-holder');
+        var pb = $('.pastebinForm'),
+            fh = $('#file-holder'),
+            container = $('#container');
 
         if (fh.is(':visible')) {
+            container.animate({'width': '960px'}, duration);
             fh.slideUp(duration);
             pb.slideDown(duration, function() {
                 transitioningModes = false;
             });
         } else {
+            container.animate({'width': '580px'}, duration);
             pb.slideUp(duration);
             fh.slideDown(duration, function() {
                 transitioningModes = false;
