@@ -46,8 +46,11 @@ def paste(server, path, language):
 
 
 def upload_main(argv=None):
-    parser = argparse.ArgumentParser(description='Upload files to fluffy')
-    parser.add_argument('--server', default='http://fluffy.cc', type=str, help='server to upload to')
+    parser = argparse.ArgumentParser(
+        description='Upload files to fluffy',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument('--server', default='https://fluffy.cc', type=str, help='server to upload to')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('file', type=str, nargs='+', help='path to file(s) to upload', default='-')
     args = parser.parse_args(argv)
@@ -55,10 +58,13 @@ def upload_main(argv=None):
 
 
 def paste_main(argv=None):
-    parser = argparse.ArgumentParser(description='Paste text to fluffy')
-    parser.add_argument('--server', default='http://fluffy.cc', type=str, help='server to upload to')
+    parser = argparse.ArgumentParser(
+        description='Paste text to fluffy',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument('--server', default='https://fluffy.cc', type=str, help='server to upload to')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
-    parser.add_argument('-l', '--language', type=str, default='autodetect')
+    parser.add_argument('-l', '--language', type=str, default='autodetect', help='language for syntax highlighting')
     parser.add_argument('file', type=str, nargs='?', help='path to file to paste', default='-')
     args = parser.parse_args(argv)
     return paste(args.server, args.file, args.language)
