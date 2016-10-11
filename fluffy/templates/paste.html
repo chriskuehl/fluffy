@@ -199,7 +199,8 @@
                     var e = $('#LL' + line);
                     hasMovedDown = true;
                     if ($('body').scrollTop() == 0) {
-                        $('body').scrollTop(e.offset().top - 50);
+                        // Chrome needs body, Firefox needs html :\
+                        $('html, body').scrollTop(e.offset().top - 50);
                     }
                 }
             }
