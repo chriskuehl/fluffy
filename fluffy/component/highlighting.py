@@ -17,6 +17,7 @@ UI_LANGUAGES_MAP = {
     'cheetah': 'Cheetah',
     'diff': 'Diff',
     'groovy': 'Groovy',
+    'haskell': 'Haskell',
     'html': 'HTML',
     'java': 'Java',
     'javascript': 'JavaScript',
