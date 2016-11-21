@@ -69,7 +69,7 @@ $(document).ready(function() {
 
     // default use pastefile handler
     $(document).on("paste", pastefile);
-    
+
     // uploading
     $("#upload").click(function() {
         if (! uploading) {
