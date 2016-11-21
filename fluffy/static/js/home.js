@@ -72,7 +72,7 @@ $(document).ready(function() {
             for (var i = 0; i < dt.items.length; i ++) {
                 var file = dt.items[i].getAsFile();
                 if (file) {
-                    file.name = "pastedata";
+                    file.name = "pastedata" + i;
                     // if it's an image (most likely scenario for paste)
                     // we can just guess the extension based on MIME type
                     if (file.type.indexOf("image/") > -1) {
