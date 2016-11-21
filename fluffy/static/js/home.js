@@ -8,6 +8,8 @@ var uploadSamples = [];
 
 var transitioningModes = false;
 
+var IMAGE_EXTENSIONS = ["png", "jpeg", "gif"];
+
 $(document).ready(function() {
     $('.switch-modes a').click(function() {
         if (transitioningModes) {
@@ -60,6 +62,31 @@ $(document).ready(function() {
             }
         } else {
             alert("Sorry, your browser doesn't seem to support file dropping.");
+        }
+    });
+    
+    // pasting files
+    // http://stackoverflow.com/a/6338207
+    document.addEventListener("paste", function(e) {
+        console.log("recv paste");
+        var dt = (e.clipboardData || e.originalEvent.clipboardData);
+        if (dt) {
+            for (var i = 0; i < dt.items.length; i ++) {
+                var file = dt.items[i].getAsFile();
+                // this is really stupid, we need to read the file
+                // into an arraybuffer and then make a new Blob
+                // that has the data and all of the nice metadata we need
+                var filereader = new FileReader();
+                filereader.onload = function(event) {
+                    var data = filereader.result;
+                    console.log(data);
+                    var blob = new Blob([filereader.result], {type: file.type});
+                    blob.name = "test.png";
+                    console.log("queued file");
+                    queueFile(blob);
+                }
+                filereader.readAsArrayBuffer(file);
+            }
         }
     });
 
@@ -370,7 +397,7 @@ function getHumanSize(size) {
 function getFormData() {
     var formData = new FormData();
     for (var i = 0; i < allFiles.length; i ++) {
-        formData.append("file", allFiles[i]);
+        formData.append("file", allFiles[i], allFiles[i].name);
     }
     return formData;
 }
