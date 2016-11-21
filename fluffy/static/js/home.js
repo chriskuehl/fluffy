@@ -73,20 +73,21 @@ $(document).ready(function() {
         if (dt) {
             for (var i = 0; i < dt.items.length; i ++) {
                 var file = dt.items[i].getAsFile();
-                // this is really stupid, we need to read the file
-                // into an arraybuffer and then make a new Blob
-                // that has the data and all of the nice metadata we need
-                var filereader = new FileReader();
-                filereader.onload = function(event) {
-                    var data = filereader.result;
-                    console.log(data);
-                    var blob = new Blob([filereader.result], {type: file.type});
-                    blob.name = "test.png";
-                    console.log("queued file");
-                    queueFile(blob);
+                if (file) {
+                    file.name = "pastedata";
+                    // if it's an image (most likely scenario for paste)
+                    // we can just guess the extension based on MIME type
+                    if (file.type.indexOf("image/") > -1) {
+                        var ext = file.type.split("/")[1];
+                        if (IMAGE_EXTENSIONS.indexOf(ext) > -1) {
+                            file.name = file.name + "." + ext;
+                        }
+                    }
+                    queueFile(file);
                 }
-                filereader.readAsArrayBuffer(file);
             }
+            // just perform a click?
+            $("#upload").click();
         }
     });
 
