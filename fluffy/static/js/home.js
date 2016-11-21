@@ -67,8 +67,10 @@ $(document).ready(function() {
         }
     });
 
-    // default use pastefile handler
-    $(document).on("paste", pastefile);
+    // default use pastefile handler, if we are not in paste mode
+    if ($("#file-holder").is(":visible")) {
+        $(document).on("paste", pastefile);
+    }
 
     // uploading
     $("#upload").click(function() {
