@@ -66,9 +66,7 @@ $(document).ready(function() {
     });
     
     // pasting files
-    // http://stackoverflow.com/a/6338207
     document.addEventListener("paste", function(e) {
-        console.log("recv paste");
         var dt = (e.clipboardData || e.originalEvent.clipboardData);
         if (dt) {
             for (var i = 0; i < dt.items.length; i ++) {
