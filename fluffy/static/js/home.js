@@ -11,6 +11,8 @@ var transitioningModes = false;
 var IMAGE_EXTENSIONS = ["png", "jpeg", "gif"];
 
 $(document).ready(function() {
+    var fh = $('#file-holder');
+
     $('.switch-modes a').click(function() {
         if (transitioningModes) {
             return;
@@ -19,7 +21,6 @@ $(document).ready(function() {
         transitioningModes = true;
         var duration = 200;
         var pb = $('.pastebinForm'),
-            fh = $('#file-holder'),
             container = $('#container');
 
         if (fh.is(':visible')) {
@@ -27,14 +28,12 @@ $(document).ready(function() {
             fh.slideUp(duration);
             pb.slideDown(duration, function() {
                 transitioningModes = false;
-                $(document).off("paste", pastefile);
             });
         } else {
             container.animate({'width': '580px'}, duration);
             pb.slideUp(duration);
             fh.slideDown(duration, function() {
                 transitioningModes = false;
-                $(document).on("paste", pastefile);
             });
         }
     });
@@ -67,10 +66,12 @@ $(document).ready(function() {
         }
     });
 
-    // default use pastefile handler, if we are not in paste mode
-    if ($("#file-holder").is(":visible")) {
-        $(document).on("paste", pastefile);
-    }
+    // paste onto the page
+    $(document).on('paste', function(e) {
+        if (fh.is(':visible')) {
+            return pastefile(e);
+        }
+    });
 
     // uploading
     $("#upload").click(function() {
@@ -106,7 +107,7 @@ function pastefile(e) {
         if (! canUpload()) {
             return alert("For pasting text, please paste as source code instead.");
         }
-        // just perform a click?
+        // just perform a click
         $("#upload").click();
     }
 }
