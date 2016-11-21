@@ -7,11 +7,42 @@ var uploadRequest;
 var uploadSamples = [];
 
 var transitioningModes = false;
+var TRANSITION_DURATION = 200;
 
 var IMAGE_EXTENSIONS = ["png", "jpeg", "gif"];
 
+var fh, pb, container;
+
+
+function transitionToText(callback) {
+    container.animate({'width': '960px'}, TRANSITION_DURATION);
+    fh.slideUp(TRANSITION_DURATION);
+    pb.slideDown(TRANSITION_DURATION, function() {
+        transitioningModes = false;
+        if (callback) {
+            callback();
+        }
+    });
+}
+
+
+function transitionToUpload(callback) {
+    container.animate({'width': '580px'}, TRANSITION_DURATION);
+    pb.slideUp(TRANSITION_DURATION);
+    fh.slideDown(TRANSITION_DURATION, function() {
+        transitioningModes = false;
+        if (callback) {
+            callback();
+        }
+    });
+}
+
+
 $(document).ready(function() {
-    var fh = $('#file-holder');
+    fh = $('#file-holder');
+    pb = $('.pastebinForm');
+    container = $('#container');
+
 
     $('.switch-modes a').click(function() {
         if (transitioningModes) {
@@ -19,22 +50,10 @@ $(document).ready(function() {
         }
 
         transitioningModes = true;
-        var duration = 200;
-        var pb = $('.pastebinForm'),
-            container = $('#container');
-
         if (fh.is(':visible')) {
-            container.animate({'width': '960px'}, duration);
-            fh.slideUp(duration);
-            pb.slideDown(duration, function() {
-                transitioningModes = false;
-            });
+            transitionToText();
         } else {
-            container.animate({'width': '580px'}, duration);
-            pb.slideUp(duration);
-            fh.slideDown(duration, function() {
-                transitioningModes = false;
-            });
+            transitionToUpload();
         }
     });
 
@@ -89,26 +108,37 @@ $(document).ready(function() {
 function pastefile(e) {
     var dt = (e.clipboardData || e.originalEvent.clipboardData);
     if (dt) {
-        for (var i = 0; i < dt.items.length; i ++) {
-            var file = dt.items[i].getAsFile();
-            if (file) {
-                file.name = "pastedata" + i;
-                // if it's an image (most likely scenario for paste)
-                // we can just guess the extension based on MIME type
-                if (file.type.indexOf("image/") > -1) {
-                    var ext = file.type.split("/")[1];
-                    if (IMAGE_EXTENSIONS.indexOf(ext) > -1) {
-                        file.name = file.name + "." + ext;
+        if (dt.items.length === 1 && dt.items[0].type === 'text/plain') {
+            // user is trying to paste text
+            dt.items[0].getAsString(function(text) {
+                $('#text').text(text);
+                transitionToText(function() {
+                    $('#paste').click();
+                });
+            });
+        } else {
+            // dunno what they're trying to paste, hopefully a file
+            for (var i = 0; i < dt.items.length; i ++) {
+                var file = dt.items[i].getAsFile();
+                if (file) {
+                    file.name = "pastedata" + i;
+                    // if it's an image (most likely scenario for paste)
+                    // we can just guess the extension based on MIME type
+                    if (file.type.indexOf("image/") > -1) {
+                        var ext = file.type.split("/")[1];
+                        if (IMAGE_EXTENSIONS.indexOf(ext) > -1) {
+                            file.name = file.name + "." + ext;
+                        }
                     }
+                    queueFile(file);
                 }
-                queueFile(file);
             }
+            if (! canUpload()) {
+                return alert("Sorry, don't know how to deal with whatever you pasted on the page.");
+            }
+            // just perform a click
+            $("#upload").click();
         }
-        if (! canUpload()) {
-            return alert("For pasting text, please paste as source code instead.");
-        }
-        // just perform a click
-        $("#upload").click();
     }
 }
 /**
