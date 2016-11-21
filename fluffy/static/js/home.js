@@ -27,12 +27,14 @@ $(document).ready(function() {
             fh.slideUp(duration);
             pb.slideDown(duration, function() {
                 transitioningModes = false;
+                $(document).off("paste", pastefile);
             });
         } else {
             container.animate({'width': '580px'}, duration);
             pb.slideUp(duration);
             fh.slideDown(duration, function() {
                 transitioningModes = false;
+                $(document).on("paste", pastefile);
             });
         }
     });
@@ -64,31 +66,10 @@ $(document).ready(function() {
             alert("Sorry, your browser doesn't seem to support file dropping.");
         }
     });
-    
-    // pasting files
-    document.addEventListener("paste", function(e) {
-        var dt = (e.clipboardData || e.originalEvent.clipboardData);
-        if (dt) {
-            for (var i = 0; i < dt.items.length; i ++) {
-                var file = dt.items[i].getAsFile();
-                if (file) {
-                    file.name = "pastedata" + i;
-                    // if it's an image (most likely scenario for paste)
-                    // we can just guess the extension based on MIME type
-                    if (file.type.indexOf("image/") > -1) {
-                        var ext = file.type.split("/")[1];
-                        if (IMAGE_EXTENSIONS.indexOf(ext) > -1) {
-                            file.name = file.name + "." + ext;
-                        }
-                    }
-                    queueFile(file);
-                }
-            }
-            // just perform a click?
-            $("#upload").click();
-        }
-    });
 
+    // default use pastefile handler
+    $(document).on("paste", pastefile);
+    
     // uploading
     $("#upload").click(function() {
         if (! uploading) {
@@ -99,6 +80,34 @@ $(document).ready(function() {
     });
 });
 
+
+// Event handler for pasting files. Disabled when the pastebin form is in use.
+// Targeted toward uploading images similar to imgur
+function pastefile(e) {
+    var dt = (e.clipboardData || e.originalEvent.clipboardData);
+    if (dt) {
+        for (var i = 0; i < dt.items.length; i ++) {
+            var file = dt.items[i].getAsFile();
+            if (file) {
+                file.name = "pastedata" + i;
+                // if it's an image (most likely scenario for paste)
+                // we can just guess the extension based on MIME type
+                if (file.type.indexOf("image/") > -1) {
+                    var ext = file.type.split("/")[1];
+                    if (IMAGE_EXTENSIONS.indexOf(ext) > -1) {
+                        file.name = file.name + "." + ext;
+                    }
+                }
+                queueFile(file);
+            }
+        }
+        if (! canUpload()) {
+            return alert("For pasting text, please paste as source code instead.");
+        }
+        // just perform a click?
+        $("#upload").click();
+    }
+}
 /**
  * Upload the queued files via XHR. Takes care of updating the UI (displaying
  * progress, hiding remove buttons, etc.)
