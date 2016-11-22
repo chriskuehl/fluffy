@@ -108,13 +108,12 @@ $(document).ready(function() {
 function pastefile(e) {
     var dt = (e.clipboardData || e.originalEvent.clipboardData);
     if (dt) {
-        if (dt.items.length === 1 && dt.items[0].type === 'text/plain') {
+        if (dt.items.length > 0 && dt.items[0].kind === 'string') {
             // user is trying to paste text
-            dt.items[0].getAsString(function(text) {
-                $('#text').text(text);
-                transitionToText(function() {
-                    $('#paste').click();
-                });
+            var text = dt.getData('text/plain');
+            $('#text').text(text);
+            transitionToText(function() {
+                $('#paste').click();
             });
         } else {
             // dunno what they're trying to paste, hopefully a file
