@@ -112,9 +112,7 @@ function pastefile(e) {
             // user is trying to paste text
             var text = dt.getData('text/plain');
             $('#text').text(text);
-            transitionToText(function() {
-                $('#paste').click();
-            });
+            transitionToText();
         } else {
             // dunno what they're trying to paste, hopefully a file
             for (var i = 0; i < dt.items.length; i ++) {
@@ -135,8 +133,6 @@ function pastefile(e) {
             if (! canUpload()) {
                 return alert("Sorry, don't know how to deal with whatever you pasted on the page.");
             }
-            // just perform a click
-            $("#upload").click();
         }
     }
 }
