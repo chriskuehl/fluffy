@@ -108,7 +108,19 @@ $(document).ready(function() {
 function pastefile(e) {
     var dt = (e.clipboardData || e.originalEvent.clipboardData);
     if (dt) {
-        if (dt.items.length > 0 && dt.items[0].kind === 'string') {
+        // When copying an image from the web, often there's one item like
+        // "text/html" at the start, but then an image later on.
+        //
+        // By contrast, copying text sometimes results in several items, but
+        // they're all of kind "string".
+        var allStrings = true;
+        for (var i = 0; i < dt.items.length; i++) {
+            if (dt.items[i].kind !== 'string') {
+                allStrings = false;
+            }
+        }
+
+        if (dt.items.length > 0 && allStrings) {
             // user is trying to paste text
             var text = dt.getData('text/plain');
             $('#text').text(text);
