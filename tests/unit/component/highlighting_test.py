@@ -123,6 +123,11 @@ def test_get_highlighter_pygments(text, language, expected):
     (EXAMPLE_DIFF, None, pygments.lexers.get_lexer_by_name('python')),
     (EXAMPLE_DIFF, 'diff', pygments.lexers.get_lexer_by_name('python')),
     (EXAMPLE_C, 'diff', pygments.lexers.get_lexer_by_name('c')),
+
+    # requesting a diff language
+    (EXAMPLE_DIFF, 'diff-c', pygments.lexers.get_lexer_by_name('c')),
+    # bogus language
+    (EXAMPLE_DIFF, 'diff-lolidonotexist', pygments.lexers.get_lexer_by_name('python')),
 ))
 def test_get_highlighter_diff(text, language, expected):
     h = get_highlighter(text, language)

@@ -126,18 +126,25 @@ def strip_diff_things(text):
 def get_highlighter(text, language):
     lexer = guess_lexer(text, language)
 
+    diff_requested = (language or '').startswith('diff-')
     if (
+            diff_requested or
             lexer is None or
             language is None or
             lexer.name.lower() != language.lower() or
             lexer.name.lower() == 'diff'
     ):
+        if diff_requested:
+            _, requested_diff_language = language.split('-', 1)
+        else:
+            requested_diff_language = None
+
         # If it wasn't a perfect match, then we had to guess a language.
         # Pygments diff highlighting isn't too great, so we try to handle that
         # ourselves a bit.
-        if lexer.name.lower() == 'diff' or looks_like_diff(text):
+        if diff_requested or lexer.name.lower() == 'diff' or looks_like_diff(text):
             return DiffHighlighter(
-                guess_lexer(strip_diff_things(text), None),
+                guess_lexer(strip_diff_things(text), requested_diff_language),
             )
 
     return PygmentsHighlighter(lexer)
