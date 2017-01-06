@@ -171,7 +171,7 @@
             });
 
             $('#paste').on('keydown', function(e) {
-                if (e.ctrlKey) {
+                if (e.ctrlKey || e.metaKey) {
                     if (e.which == 46 || e.which == 8) {  // backspace and delete
                         return false;
                     }
