@@ -3,13 +3,32 @@
 
 It can be invoked directly, but is intended to be invoked by two aliases,
 "fput" and "fpb". fput uploads files, fpb pastes text.
+
+To install the cli, run `pip install fluffy`.
 """
 import argparse
+import json
+import os.path
 import re
 import sys
 
 import requests
 from fluffy_cli import __version__
+
+DESCRIPTION = '''\
+fluffy is a simple file-sharing web app. You can upload files, or paste text.
+
+By default, the public instance of fluffy is used: https://fluffy.cc
+
+If you'd like to instead use a different instance (for example, one run
+internally by your company), you can specify the --server option.
+
+To make that permanent, you can create a config file with contents similar to:
+
+    {"server": "https://fluffy.my.corp"}
+
+This file can be placed at either /etc/fluffy.json or ~/.config/fluffy.json.
+'''
 
 
 def bold(text):
@@ -17,6 +36,26 @@ def bold(text):
         return '\033[1m{}\033[0m'.format(text)
     else:
         return text
+
+
+def get_config():
+    config = {'server': 'https://fluffy.cc'}
+    for path in ('/etc/fluffy.json', os.path.expanduser('~/.config/fluffy.json')):
+        try:
+            with open(path) as f:
+                j = json.load(f)
+                if not isinstance(j, dict):
+                    raise ValueError(
+                        'Expected to parse dict, but the JSON was type "{}" instead.'.format(type(j)),
+                    )
+                for key, value in j.items():
+                    config[key] = value
+        except FileNotFoundError:
+            pass
+        except Exception:
+            print(bold('Error parsing config file "{}". Is it valid JSON?'.format(path)))
+            raise
+    return config
 
 
 def upload(server, paths):
@@ -71,12 +110,20 @@ def paste(server, path, language, highlight_regex):
     print(bold(location))
 
 
+class FluffyArgFormatter(
+        argparse.ArgumentDefaultsHelpFormatter,
+        argparse.RawDescriptionHelpFormatter,
+):
+    pass
+
+
 def upload_main(argv=None):
+    config = get_config()
     parser = argparse.ArgumentParser(
-        description='Upload files to fluffy',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='Upload files to fluffy.\n\n' + DESCRIPTION,
+        formatter_class=FluffyArgFormatter,
     )
-    parser.add_argument('--server', default='https://fluffy.cc', type=str, help='server to upload to')
+    parser.add_argument('--server', default=config['server'], type=str, help='server to upload to')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('file', type=str, nargs='+', help='path to file(s) to upload', default='-')
     args = parser.parse_args(argv)
@@ -84,11 +131,12 @@ def upload_main(argv=None):
 
 
 def paste_main(argv=None):
+    config = get_config()
     parser = argparse.ArgumentParser(
-        description='Paste text to fluffy',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='Paste text to fluffy.\n\n' + DESCRIPTION,
+        formatter_class=FluffyArgFormatter,
     )
-    parser.add_argument('--server', default='https://fluffy.cc', type=str, help='server to upload to')
+    parser.add_argument('--server', default=config['server'], type=str, help='server to upload to')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('-l', '--language', type=str, default='autodetect', help='language for syntax highlighting')
     parser.add_argument('-r', '--regex', type=re.compile, help='regex of lines to highlight')
