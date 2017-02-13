@@ -1,5 +1,7 @@
 @import 'reset';
 
+$mobile-width: 767px;
+
 @import 'details';
 @import 'home';
 @import 'markdown';
@@ -29,6 +31,16 @@ p.error {
     border-radius: 5px;
 
     background-color: #ACF0F2;
+
+    @media screen and (max-width: $mobile-width) {
+        width: auto;
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-radius: 0;
+    }
 }
 
 h1, h2, h3, h4, h5, p {
@@ -58,6 +70,7 @@ h1 a {
     margin-bottom: 30px;
 
     color: #7EA9AD;
+    padding: 0 20px;
 }
 
 .footer a {

@@ -186,6 +186,9 @@
 
          #container {
             width: 960px;
+            @media screen and (max-width: $mobile-width) {
+                width: auto;
+            }
         }
     }
 
