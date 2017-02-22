@@ -22,6 +22,7 @@ UI_LANGUAGES_MAP = {
     'java': 'Java',
     'javascript': 'JavaScript',
     'json': 'JSON',
+    'lua': 'Lua',
     'makefile': 'Makefile',
     'objective-c': 'Objective-C',
     'php': 'PHP',
