@@ -112,7 +112,9 @@ def paste():
     with contextlib.ExitStack() as ctx:
         objects = []
 
-        uf = ctx.enter_context(UploadedFile.from_text(text))
+        # Browsers always send \r\n for the pasted text, which leads to bad
+        # newlines when curling the raw text (#28).
+        uf = ctx.enter_context(UploadedFile.from_text(text.replace('\r\n', '\n')))
         objects.append(uf)
 
         lang = request.form['language']
