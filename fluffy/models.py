@@ -125,7 +125,7 @@ class UploadedFile(namedtuple('UploadedFile', (
                 return 'text/plain'
 
     @cached_property
-    def download_url(self):
+    def url(self):
         return app.config['FILE_URL'].format(name=self.name)
 
 
