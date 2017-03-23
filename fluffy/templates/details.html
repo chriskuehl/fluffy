@@ -13,7 +13,7 @@
                     <div class="details">
                         <h2>{{file.human_name|trim_filename(16)}}</h2>
                         <p>
-                            <a href="{{file.download_url}}" class="download">Direct Link</a>
+                            <a href="{{file.url}}" class="download">Direct Link</a>
                             {% if pb %}
                                 <a href="{{pb.url}}" class="view-paste">View Text</a>
                             {% endif %}

@@ -1,3 +1,5 @@
+import contextlib
+
 from flask import jsonify
 from flask import redirect
 from flask import render_template
@@ -30,14 +32,27 @@ def home():
     )
 
 
+def upload_objects(objects):
+    links = sorted(obj.url for obj in objects)
+    for obj in objects:
+        if isinstance(obj, HtmlToStore):
+            get_backend().store_html(obj, links)
+        else:
+            get_backend().store_object(obj, links)
+
+
 @app.route('/upload', methods={'POST'})
 def upload():
     """Process an upload and return JSON status."""
     uploaded_files = []
-    for f in request.files.getlist('file'):
-        try:
-            with UploadedFile.from_http_file(f) as uf:
-                get_backend().store_object(uf)
+
+    with contextlib.ExitStack() as ctx:
+        objects = []
+
+        for f in request.files.getlist('file'):
+            try:
+                uf = ctx.enter_context(UploadedFile.from_http_file(f))
+                objects.append(uf)
 
                 # If it looks like text, make a pastebin as well.
                 pb = None
@@ -49,39 +64,41 @@ def upload():
                     except UnicodeDecodeError:
                         pass
                     else:
-                        with HtmlToStore.from_html(render_template(
+                        pb = ctx.enter_context(HtmlToStore.from_html(render_template(
                             'paste.html',
                             text=text,
                             highlighter=get_highlighter(text, None),
                             raw_url=app.config['FILE_URL'].format(name=uf.name),
-                        )) as pb:
-                            get_backend().store_html(pb)
+                        )))
+                        objects.append(pb)
 
-            uploaded_files.append((uf, pb))
-        except FileTooLargeError:
-            return jsonify({
-                'success': False,
-                'error': '{} exceeded the maximum file size limit of {}'.format(
-                    f.filename,
-                    human_size(app.config['MAX_UPLOAD_SIZE']),
-                ),
-            })
+                uploaded_files.append((uf, pb))
+            except FileTooLargeError:
+                return jsonify({
+                    'success': False,
+                    'error': '{} exceeded the maximum file size limit of {}'.format(
+                        f.filename,
+                        human_size(app.config['MAX_UPLOAD_SIZE']),
+                    ),
+                })
 
-    with HtmlToStore.from_html(render_template(
-        'details.html',
-        uploads=uploaded_files,
-    )) as details_obj:
-        get_backend().store_html(details_obj)
+        details_obj = ctx.enter_context(
+            HtmlToStore.from_html(render_template(
+                'details.html',
+                uploads=uploaded_files,
+            )),
+        )
+        objects.append(details_obj)
 
-    url = app.config['HTML_URL'].format(name=details_obj.name)
+        upload_objects(objects)
 
     if 'json' in request.args:
         return jsonify({
             'success': True,
-            'redirect': url,
+            'redirect': details_obj.url,
         })
     else:
-        return redirect(url)
+        return redirect(details_obj.url)
 
 
 @app.route('/paste', methods={'POST'})
@@ -92,25 +109,29 @@ def paste():
     # TODO: make this better
     assert 0 <= len(text) <= ONE_MB, len(text)
 
-    with UploadedFile.from_text(text) as uf:
-        get_backend().store_object(uf)
+    with contextlib.ExitStack() as ctx:
+        objects = []
 
-    lang = request.form['language']
-    if lang != 'rendered-markdown':
-        with HtmlToStore.from_html(render_template(
-            'paste.html',
-            text=text,
-            highlighter=get_highlighter(text, lang),
-            raw_url=app.config['FILE_URL'].format(name=uf.name),
-        )) as paste_obj:
-            get_backend().store_html(paste_obj)
-    else:
-        with HtmlToStore.from_html(render_template(
-            'markdown.html',
-            text=text,
-            raw_url=app.config['FILE_URL'].format(name=uf.name),
-        )) as paste_obj:
-            get_backend().store_html(paste_obj)
+        uf = ctx.enter_context(UploadedFile.from_text(text))
+        objects.append(uf)
 
-    url = app.config['HTML_URL'].format(name=paste_obj.name)
-    return redirect(url)
+        lang = request.form['language']
+        if lang != 'rendered-markdown':
+            paste_obj = ctx.enter_context(HtmlToStore.from_html(render_template(
+                'paste.html',
+                text=text,
+                highlighter=get_highlighter(text, lang),
+                raw_url=app.config['FILE_URL'].format(name=uf.name),
+            )))
+            objects.append(paste_obj)
+        else:
+            paste_obj = ctx.enter_context(HtmlToStore.from_html(render_template(
+                'markdown.html',
+                text=text,
+                raw_url=app.config['FILE_URL'].format(name=uf.name),
+            )))
+            objects.append(paste_obj)
+
+        upload_objects(objects)
+
+    return redirect(paste_obj.url)
