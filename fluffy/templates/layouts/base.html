@@ -21,6 +21,12 @@
             </div>
         </div>
 
+        {% if custom_footer_html is not none %}
+            <div class="footer custom-footer">
+                {{custom_footer_html|safe}}
+            </div>
+        {% endif %}
+
         <p class="footer">
             fluffy v{{fluffy_version}} is free and open-source software, available for you <a href="https://github.com/chriskuehl/fluffy">on GitHub</a>.<br />
             Icons generously provided by <a href="http://www.fatcow.com/free-icons">FatCow</a> and <a href="https://commons.wikimedia.org/wiki/Crystal_Clear">Everaldo Coelho</a>.<br />

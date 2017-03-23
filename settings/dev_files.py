@@ -6,8 +6,9 @@ STORAGE_BACKEND = {
     'html_path': 'tmp/html/{name}',
 }
 
-# branding to show in heading
+# branding
 BRANDING = 'fluffy'
+CUSTOM_FOOTER_HTML = None
 
 # URL patterns
 HOME_URL = 'http://localhost:5000/'

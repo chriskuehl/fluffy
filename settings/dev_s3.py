@@ -10,8 +10,9 @@ STORAGE_BACKEND = {
     'asset_s3path': 'assets/{name}',
 }
 
-# branding to show in heading
+# branding
 BRANDING = 'fluffy'
+CUSTOM_FOOTER_HTML = None
 
 # URL patterns
 HOME_URL = 'http://localhost:5000/'
