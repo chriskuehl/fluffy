@@ -22,14 +22,17 @@ UI_LANGUAGES_MAP = {
     'java': 'Java',
     'javascript': 'JavaScript',
     'json': 'JSON',
+    'kotlin': 'Kotlin',
     'lua': 'Lua',
     'makefile': 'Makefile',
     'objective-c': 'Objective-C',
     'php': 'PHP',
     'python3': 'Python',
     'ruby': 'Ruby',
+    'rust': 'Rust',
     'scala': 'Scala',
     'sql': 'SQL',
+    'swift': 'Swift',
     'yaml': 'YAML',
 }
 
