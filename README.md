@@ -82,7 +82,7 @@ sure to uncomment whichever storage backend you wish to use. There's no
 database, so setup is very simple.
 
 Once you've adjusted the configuration, you can deploy fluffy the way you
-deploy any Flask app. fluffy is tested with Python version 3.4.
+deploy any Flask app. fluffy is tested with Python versions 3.5 and 3.6.
 
 
 ### Command-line uploading tools

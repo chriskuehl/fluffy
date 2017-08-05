@@ -1,35 +1,41 @@
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    sha: 3fa02652357ff0dbb42b5bc78c673b7bc105fcf3
+    sha: v0.9.1
     hooks:
     -   id: autopep8-wrapper
-        language_version: python3
         exclude: ^vendor/
     -   id: check-added-large-files
     -   id: check-docstring-first
-        language_version: python3
+    -   id: check-executables-have-shebangs
     -   id: check-json
     -   id: check-merge-conflict
     -   id: check-xml
     -   id: check-yaml
     -   id: debug-statements
-        language_version: python3
     -   id: detect-private-key
     -   id: double-quote-string-fixer
-        language_version: python3
     -   id: end-of-file-fixer
     -   id: flake8
-        language_version: python3
         exclude: ^vendor/
     -   id: name-tests-test
     -   id: requirements-txt-fixer
     -   id: trailing-whitespace
 -   repo: https://github.com/asottile/reorder_python_imports
-    sha: b022734351abe44d0b05a71a4fa1175287c59b49
+    sha: v0.3.5
     hooks:
     -   id: reorder-python-imports
-        language_version: python3
+-   repo: https://github.com/asottile/add-trailing-comma
+    sha: v0.6.4
+    hooks:
+    -   id: add-trailing-comma
+        args: [--py35-plus]
+        exclude: ^vendor/
+-   repo: https://github.com/asottile/pyupgrade
+    sha: v1.1.4
+    hooks:
+    -   id: pyupgrade
+        args: [--py3-plus]
+        exclude: ^vendor/
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
-    sha: 0f5055d31f39ea3ac1f5335a0cca320200cd0c51
+    sha: v1.0.1
     hooks:
     -   id: remove-tabs
-        language_version: python2.7

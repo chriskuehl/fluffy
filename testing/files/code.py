@@ -40,12 +40,18 @@ class ObjectToStore:
         raise NotImplementedError()
 
 
-class UploadedFile(namedtuple('UploadedFile', (
-        'human_name',
-        'num_bytes',
-        'open_file',
-        'unique_id',
-)), ObjectToStore):
+class UploadedFile(
+    namedtuple(
+        'UploadedFile',
+        (
+            'human_name',
+            'num_bytes',
+            'open_file',
+            'unique_id',
+        ),
+    ),
+    ObjectToStore,
+):
 
     @classmethod
     @contextmanager
@@ -129,10 +135,16 @@ class UploadedFile(namedtuple('UploadedFile', (
         return app.config['FILE_URL'].format(name=self.name)
 
 
-class HtmlToStore(namedtuple('HtmlToStore', (
-    'name',
-    'open_file',
-)), ObjectToStore):
+class HtmlToStore(
+    namedtuple(
+        'HtmlToStore',
+        (
+            'name',
+            'open_file',
+        ),
+    ),
+    ObjectToStore,
+):
 
     @classmethod
     @contextmanager

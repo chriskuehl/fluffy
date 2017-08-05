@@ -18,15 +18,15 @@ index 11eb271..9e81177 100644
 +        r'<a href="(http://localhost:\d+/object/[^"]+)"',
          details,
      )
- 
+
 diff --git a/tests/cli/upload_test.py b/tests/cli/upload_test.py
 index 93cd9b0..371b434 100644
 --- a/tests/cli/upload_test.py
 +++ b/tests/cli/upload_test.py
 @@ -39,6 +39,20 @@ def test_single_file_upload(content, running_server, tmpdir):
      assert_url_matches_content(url, content)
- 
- 
+
+
 +@pytest.mark.parametrize('content', FILE_CONTENT_TESTCASES)
 +@pytest.mark.usefixtures('cli_on_path')
 +def test_single_file_upload_from_stdin(content, running_server):
