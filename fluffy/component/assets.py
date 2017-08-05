@@ -69,7 +69,7 @@ def upload_assets():
                         name=name_for_asset(
                             os.path.relpath(asset_path, str(STATIC_ROOT)),
                         ),
-                    )
+                    ),
                 ))
 
     print('=' * 50)

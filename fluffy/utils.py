@@ -57,7 +57,7 @@ def gen_unique_id():
 ICON_EXTENSIONS = frozenset((
     '7z', 'ai', 'bmp', 'doc', 'docx', 'gif', 'gz', 'html',
     'jpeg', 'jpg', 'midi', 'mp3', 'odf', 'odt', 'pdf', 'png', 'psd', 'rar',
-    'rtf', 'svg', 'tar', 'txt', 'wav', 'xls', 'zip', 'unknown'
+    'rtf', 'svg', 'tar', 'txt', 'wav', 'xls', 'zip', 'unknown',
 ))
 
 

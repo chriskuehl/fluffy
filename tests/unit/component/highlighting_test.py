@@ -74,15 +74,17 @@ def test_guess_lexer_falls_back_to_python():
     assert guess_lexer('what language even is this', None).name == 'Python'
 
 
-@pytest.mark.parametrize(('text', 'expected'), (
-    ('', False),
-    (
-        'some simple\n'
-        'text is here\n',
-        False,
+@pytest.mark.parametrize(
+    ('text', 'expected'), (
+        ('', False),
+        (
+            'some simple\n'
+            'text is here\n',
+            False,
+        ),
+        (EXAMPLE_DIFF, True),
     ),
-    (EXAMPLE_DIFF, True),
-))
+)
 def test_looks_like_diff(text, expected):
     assert looks_like_diff(text) is expected
 
@@ -107,28 +109,32 @@ def test_strip_diff_things():
 '''
 
 
-@pytest.mark.parametrize(('text', 'language', 'expected'), (
-    (EXAMPLE_C, 'c', pygments.lexers.get_lexer_by_name('c')),
-    (EXAMPLE_C, 'does not exist', pygments.lexers.get_lexer_by_name('c')),
-    (EXAMPLE_C, None, pygments.lexers.get_lexer_by_name('c')),
-    (EXAMPLE_DIFF, 'c', pygments.lexers.get_lexer_by_name('c')),
-))
+@pytest.mark.parametrize(
+    ('text', 'language', 'expected'), (
+        (EXAMPLE_C, 'c', pygments.lexers.get_lexer_by_name('c')),
+        (EXAMPLE_C, 'does not exist', pygments.lexers.get_lexer_by_name('c')),
+        (EXAMPLE_C, None, pygments.lexers.get_lexer_by_name('c')),
+        (EXAMPLE_DIFF, 'c', pygments.lexers.get_lexer_by_name('c')),
+    ),
+)
 def test_get_highlighter_pygments(text, language, expected):
     h = get_highlighter(text, language)
     assert isinstance(h, PygmentsHighlighter)
     assert type(h.lexer) is type(expected)
 
 
-@pytest.mark.parametrize(('text', 'language', 'expected'), (
-    (EXAMPLE_DIFF, None, pygments.lexers.get_lexer_by_name('python')),
-    (EXAMPLE_DIFF, 'diff', pygments.lexers.get_lexer_by_name('python')),
-    (EXAMPLE_C, 'diff', pygments.lexers.get_lexer_by_name('c')),
+@pytest.mark.parametrize(
+    ('text', 'language', 'expected'), (
+        (EXAMPLE_DIFF, None, pygments.lexers.get_lexer_by_name('python')),
+        (EXAMPLE_DIFF, 'diff', pygments.lexers.get_lexer_by_name('python')),
+        (EXAMPLE_C, 'diff', pygments.lexers.get_lexer_by_name('c')),
 
-    # requesting a diff language
-    (EXAMPLE_DIFF, 'diff-c', pygments.lexers.get_lexer_by_name('c')),
-    # bogus language
-    (EXAMPLE_DIFF, 'diff-lolidonotexist', pygments.lexers.get_lexer_by_name('python')),
-))
+        # requesting a diff language
+        (EXAMPLE_DIFF, 'diff-c', pygments.lexers.get_lexer_by_name('c')),
+        # bogus language
+        (EXAMPLE_DIFF, 'diff-lolidonotexist', pygments.lexers.get_lexer_by_name('python')),
+    ),
+)
 def test_get_highlighter_diff(text, language, expected):
     h = get_highlighter(text, language)
     assert isinstance(h, DiffHighlighter)

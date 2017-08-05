@@ -103,7 +103,7 @@ def paste(server, path, language, highlight_regex):
                 'L{}'.format(
                     '{}-{}'.format(*match)
                     if match[0] != match[1]
-                    else match[0]
+                    else match[0],
                 ) for match in squashed
             )
 
