@@ -36,6 +36,17 @@ def debug():  # pragma: no cover
             raw_url='#raw',
         )
 
+    @app.route('/test/ansi-color')
+    def view_ansi_color():
+        text = (TESTING_DIR / 'files' / 'ansi-color').open().read()
+        return render_template(
+            'paste.html',
+            text=text,
+            highlighter=get_highlighter(text, None),
+            edit_url='#edit',
+            raw_url='#raw',
+        )
+
     @app.route('/test/markdown')
     def view_markdown():
         return render_template(

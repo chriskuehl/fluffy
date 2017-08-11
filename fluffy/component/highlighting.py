@@ -1,11 +1,15 @@
+import itertools
 import re
 from collections import namedtuple
 
 import pygments
 import pygments.lexers
+import pygments.styles.xcode
 from pygments.formatters import HtmlFormatter
-from pygments.styles import get_style_by_name
+from pygments.token import Text
 from pyquery import PyQuery as pq
+
+from fluffy.component import ansi_color
 
 
 # We purposefully don't list all possible languages, and instead just the ones
@@ -36,12 +40,56 @@ UI_LANGUAGES_MAP = {
     'yaml': 'YAML',
 }
 
+FG_COLORS = {
+    'Black': '#000000',
+    'Red': '#EF2929',
+    'Green': '#62ca00',
+    'Yellow': '#dac200',
+    'Blue': '#3465A4',
+    'Magenta': '#ce42be',
+    'Cyan': '#34E2E2',
+    'White': '#ffffff',
+}
+
+BG_COLORS = {
+    'Black': '#000000',
+    'Red': '#EF2929',
+    'Green': '#8AE234',
+    'Yellow': '#FCE94F',
+    'Blue': '#3465A4',
+    'Magenta': '#c509c5',
+    'Cyan': '#34E2E2',
+    'White': '#ffffff',
+}
+
+
+class FluffyStyle(pygments.styles.xcode.XcodeStyle):
+
+    styles = dict(pygments.styles.xcode.XcodeStyle.styles)
+
+    # Add ANSI color token definitions.
+    for bold, fg_color, bg_color in itertools.product(
+        (False, True),
+        {None} | set(FG_COLORS),
+        {None} | set(BG_COLORS),
+    ):
+        token = ansi_color.token_from_lexer_state(bold, fg_color, bg_color)
+        if token is not Text:
+            value = ''
+            if bold:
+                value += ' bold'
+            if fg_color:
+                value += ' ' + FG_COLORS[fg_color]
+            if bg_color:
+                value += ' bg:' + BG_COLORS[bg_color]
+            styles[token] = value.strip()
+
 
 _pygments_formatter = HtmlFormatter(
     noclasses=True,
     linespans='line',
     nobackground=True,
-    style=get_style_by_name('xcode'),
+    style=FluffyStyle,
 )
 
 
@@ -52,7 +100,8 @@ class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
         return self.lexer.name
 
     def highlight(self, text):
-        return _highlight(text, self.lexer)
+        text = _highlight(text, self.lexer)
+        return text
 
 
 class DiffHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
@@ -94,6 +143,11 @@ def looks_like_diff(text):
     return bool(re.search(r'^diff --git ', text, re.MULTILINE))
 
 
+def looks_like_ansi_color(text):
+    """Return whether the text looks like it has ANSI color codes."""
+    return '\x1b[' in text
+
+
 def strip_diff_things(text):
     """Remove things from the text that make it look like a diff.
 
@@ -131,7 +185,13 @@ def get_highlighter(text, language):
     lexer = guess_lexer(text, language)
 
     diff_requested = (language or '').startswith('diff-')
+
     if (
+            language == 'ansi-color' or
+            (language is None and looks_like_ansi_color(text))
+    ):
+        lexer = ansi_color.AnsiColorLexer()
+    elif (
             diff_requested or
             lexer is None or
             language is None or
