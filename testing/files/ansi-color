@@ -1,0 +1,36 @@
+total 232K
+drwxr-xr-x    2 root root 4.0K Aug  8 14:53 [0m[01;34mbin[0m
+drwxr-xr-x    3 root root 4.0K Aug  8 14:53 [01;34mboot[0m
+drwxr-xr-x   16 root root 6.4K Aug  7 17:01 [01;34mdev[0m
+drwxr-xr-x    2 root root 4.0K Jul  3 15:17 [01;34mdist[0m
+drwxr-xr-x    2 root root 4.0K Jul 14 16:25 [01;34mdne[0m
+drwxr-xr-x  130 root root  12K Aug 10 13:35 [01;34metc[0m
+drwxr-xr-x    3 root root 4.0K Jul 14 16:26 [01;34mfoo[0m
+drwxr-xr-x    3 root root 4.0K Jun 22 16:59 [01;34mhome[0m
+lrwxrwxrwx    1 root root   30 Jun 30 16:40 [01;36minitrd.img[0m -> boot/initrd.img-4.4.0-1022-aws
+drwxr-xr-x    2 root root 4.0K Jul  3 15:17 [01;34mitest[0m
+drwxr-xr-x   18 root root 4.0K Jul  4 01:40 [01;34mlib[0m
+drwxr-xr-x    2 root root 4.0K Jul  5 08:40 [01;34mlib64[0m
+drwx------    2 root root  16K Jun 27  2016 [01;34mlost+found[0m
+drwxr-xr-x    2 root root 4.0K Jun 27  2016 [01;34mmedia[0m
+drwxr-xr-x    2 root root 4.0K Jun 27  2016 [01;34mmnt[0m
+drwxr-xr-x   23 root root 4.0K Feb  4  2017 [01;34mnail[0m
+drwxr-xr-x   11 root root 4.0K Feb  6  2017 [01;34mopt[0m
+dr-xr-xr-x 2121 root root    0 Jul  3 10:22 [01;34mproc[0m
+drwx------    5 root root 4.0K Aug 10 08:44 [01;34mroot[0m
+drwxr-xr-x   35 root root 1.3K Aug 10 13:41 [01;34mrun[0m
+drwxr-xr-x    2 root root  12K Aug  8 14:53 [01;34msbin[0m
+lrwxrwxrwx    1 root root   13 Feb  4  2017 [01;36mscratch[0m -> /nail/scratch
+drwxr-xr-x    2 root root 4.0K Jun 27  2016 [01;34msrv[0m
+dr-xr-xr-x   13 root root    0 Jul  7 22:17 [01;34msys[0m
+-rwxr-xr-x  1 ckuehl ckuehl  304 Nov 15  2015 [01;32mtest.py[0m
+drwxrwxrwt 2523 root root 120K Aug 10 13:47 [30;42mtmp[0m
+drwxr-xr-x   15 root root 4.0K Aug  2 16:40 [01;34musr[0m
+drwxr-xr-x   16 root root 4.0K Aug  3 13:25 [01;34mvar[0m
+lrwxrwxrwx    1 root root   27 Jun 30 16:40 [01;36mvmlinuz[0m -> boot/vmlinuz-4.4.0-1022-aws
+total 1.4G
+
+[1;30mhello world [1;31mhello world [1;32mhello world [1;33mhello world [1;34mhello world [1;35mhello world [1;36mhello world [1;37mhello world
+[22;30mhello world [22;31mhello world [22;32mhello world [22;33mhello world [22;34mhello world [22;35mhello world [22;36mhello world [22;37mhello world
+[1;40mhello world [1;41mhello world [1;42mhello world [1;43mhello world [1;44mhello world [1;45mhello world [1;46mhello world [1;47mhello world
+[22;40mhello world [22;41mhello world [22;42mhello world [22;43mhello world [22;44mhello world [22;45mhello world [22;46mhello world [22;47mhello world
