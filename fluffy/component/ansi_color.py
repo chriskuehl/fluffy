@@ -43,7 +43,6 @@ def token_from_lexer_state(bold, fg_color, bg_color):
     if token_name == '':
         return Text
     else:
-        print(token_name)
         return getattr(Color, token_name)
 
 

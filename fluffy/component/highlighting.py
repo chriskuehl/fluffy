@@ -188,7 +188,7 @@ def get_highlighter(text, language):
 
     if (
             language == 'ansi-color' or
-            (language is None and looks_like_ansi_color(text))
+            (language in {None, 'autodetect'} and looks_like_ansi_color(text))
     ):
         lexer = ansi_color.AnsiColorLexer()
     elif (
