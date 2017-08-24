@@ -14,10 +14,12 @@ from fluffy.utils import ONE_MB
 
 
 MIME_WHITELIST = frozenset([
+    'application/javascript',
     'application/pdf',
     'application/x-ruby',
     'audio/',
     'image/',
+    'text/css',
     'text/plain',
     'text/x-python',
     'text/x-sh',
