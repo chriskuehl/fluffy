@@ -24,7 +24,7 @@ STATIC_ASSETS_URL = 'https://i.fluffy.cc/assets/{name}'
 ABUSE_CONTACT = 'abuse@fluffy.cc'
 
 # max upload size per file (in bytes)
-MAX_UPLOAD_SIZE = 20 * 1048576  # 10 MB
+MAX_UPLOAD_SIZE = 20 * 1048576
 
 # max size Flask will accept; maybe a little larger?
 MAX_CONTENT_LENGTH = MAX_UPLOAD_SIZE * 2
