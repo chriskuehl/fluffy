@@ -131,7 +131,11 @@ def upload_main(argv=None):
     parser.add_argument('--auth', dest='auth', action='store_true', help='use HTTP Basic auth')
     parser.add_argument('--no-auth', dest='auth', action='store_false', help='do not use HTTP Basic auth')
     parser.set_defaults(auth=config.get('auth', False))
-    parser.add_argument('-u', '--username', type=str, default=config.get('username', getpass.getuser()), help='username for HTTP Basic auth')
+    parser.add_argument(
+        '-u', '--username', type=str,
+        default=config.get('username', getpass.getuser()),
+        help='username for HTTP Basic auth',
+    )
     parser.add_argument('file', type=str, nargs='+', help='path to file(s) to upload', default='-')
     args = parser.parse_args(argv)
     auth = None
@@ -153,7 +157,11 @@ def paste_main(argv=None):
     parser.add_argument('--auth', dest='auth', action='store_true', help='use HTTP Basic auth')
     parser.add_argument('--no-auth', dest='auth', action='store_false', help='do not use HTTP Basic auth')
     parser.set_defaults(auth=config.get('auth', False))
-    parser.add_argument('-u', '--username', type=str, default=config.get('username', getpass.getuser()), help='username for HTTP Basic auth')
+    parser.add_argument(
+        '-u', '--username', type=str,
+        default=config.get('username', getpass.getuser()),
+        help='username for HTTP Basic auth',
+    )
     parser.add_argument('file', type=str, nargs='?', help='path to file to paste', default='-')
     args = parser.parse_args(argv)
     auth = None
