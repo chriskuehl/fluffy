@@ -7,6 +7,7 @@ It can be invoked directly, but is intended to be invoked by two aliases,
 To install the cli, run `pip install fluffy`.
 """
 import argparse
+import getpass
 import json
 import os.path
 import re
@@ -58,18 +59,19 @@ def get_config():
     return config
 
 
-def upload(server, paths):
+def upload(server, paths, auth):
     files = (('file', sys.stdin.buffer if path == '-' else open(path, 'rb')) for path in paths)
     req = requests.post(
         server + '/upload',
         files=files,
         allow_redirects=False,
+        auth=auth,
     )
     assert req.status_code in (301, 302), req.status_code
     print(bold(req.headers['Location']))
 
 
-def paste(server, path, language, highlight_regex):
+def paste(server, path, language, highlight_regex, auth):
     if path == '-':
         content = sys.stdin.read()
     else:
@@ -80,6 +82,7 @@ def paste(server, path, language, highlight_regex):
         server + '/paste',
         data={'text': content, 'language': language},
         allow_redirects=False,
+        auth=auth,
     )
     assert req.status_code in (301, 302), req.status_code
     location = req.headers['Location']
@@ -125,9 +128,16 @@ def upload_main(argv=None):
     )
     parser.add_argument('--server', default=config['server'], type=str, help='server to upload to')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('--auth', dest='auth', action='store_true', help='use HTTP Basic auth')
+    parser.add_argument('--no-auth', dest='auth', action='store_false', help='do not use HTTP Basic auth')
+    parser.set_defaults(auth=config.get('auth', False))
+    parser.add_argument('-u', '--username', type=str, default=config.get('username', getpass.getuser()), help='username for HTTP Basic auth')
     parser.add_argument('file', type=str, nargs='+', help='path to file(s) to upload', default='-')
     args = parser.parse_args(argv)
-    return upload(args.server, args.file)
+    auth = None
+    if args.auth:
+        auth = args.username, getpass.getpass('Password for {}: '.format(args.username))
+    return upload(args.server, args.file, auth)
 
 
 def paste_main(argv=None):
@@ -140,9 +150,16 @@ def paste_main(argv=None):
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('-l', '--language', type=str, default='autodetect', help='language for syntax highlighting')
     parser.add_argument('-r', '--regex', type=re.compile, help='regex of lines to highlight')
+    parser.add_argument('--auth', dest='auth', action='store_true', help='use HTTP Basic auth')
+    parser.add_argument('--no-auth', dest='auth', action='store_false', help='do not use HTTP Basic auth')
+    parser.set_defaults(auth=config.get('auth', False))
+    parser.add_argument('-u', '--username', type=str, default=config.get('username', getpass.getuser()), help='username for HTTP Basic auth')
     parser.add_argument('file', type=str, nargs='?', help='path to file to paste', default='-')
     args = parser.parse_args(argv)
-    return paste(args.server, args.file, args.language, args.regex)
+    auth = None
+    if args.auth:
+        auth = args.username, getpass.getpass('Password for {}: '.format(args.username))
+    return paste(args.server, args.file, args.language, args.regex, auth)
 
 
 if __name__ == '__main__':
