@@ -109,15 +109,19 @@ def paste():
     """Paste and redirect."""
     text = request.form['text']
 
-    # TODO: make this better
-    assert 0 <= len(text) <= ONE_MB, len(text)
-
     with contextlib.ExitStack() as ctx:
         objects = []
 
         # Browsers always send \r\n for the pasted text, which leads to bad
         # newlines when curling the raw text (#28).
-        uf = ctx.enter_context(UploadedFile.from_text(text.replace('\r\n', '\n')))
+        try:
+            uf = ctx.enter_context(UploadedFile.from_text(text.replace('\r\n', '\n')))
+        except FileTooLargeError as ex:
+            num_bytes, = ex.args
+            return 'Exceeded the max upload size of {} (tried to paste {})'.format(
+                human_size(app.config['MAX_UPLOAD_SIZE']),
+                human_size(num_bytes),
+            ), 413
         objects.append(uf)
 
         lang = request.form['language']
