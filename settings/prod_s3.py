@@ -23,7 +23,7 @@ STATIC_ASSETS_URL = 'https://i.fluffy.cc/assets/{name}'
 # abuse contact email address
 ABUSE_CONTACT = 'report@fluffy.cc'
 
-# max upload size per file (in bytes)
+# max upload size per request (in bytes)
 MAX_UPLOAD_SIZE = 20 * 1048576
 
 # max size Flask will accept; maybe a little larger?
