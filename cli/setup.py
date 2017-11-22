@@ -8,8 +8,8 @@ def main():
         name='fluffy',
         version=__version__,
         author='Chris Kuehl',
-        author_email='ckuehl@ocf.berkeley.edu',
-        packages=find_packages(),
+        author_email='ckuehl@ckuehl.me',
+        packages=find_packages(exclude=('test*',)),
         install_requires={
             'requests',
         },
