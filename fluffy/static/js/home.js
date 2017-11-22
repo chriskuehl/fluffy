@@ -229,6 +229,12 @@ function upload() {
  * Cancels the current upload and restores the UI back to pre-upload state.
  */
 function cancelUpload() {
+    if (uploadCompleted) {
+        // We're already past the progress bar stage, now in "storing file"
+        $("#file-holder").children(":visible").animate({opacity: 1}, 350);
+        $("#loading").hide();
+        uploadCompleted = false;
+    }
     oldRequest = uploadRequest;
 
     uploading = false;
