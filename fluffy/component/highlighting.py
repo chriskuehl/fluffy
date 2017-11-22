@@ -1,4 +1,3 @@
-import itertools
 import re
 from collections import namedtuple
 
@@ -6,10 +5,8 @@ import pygments
 import pygments.lexers
 import pygments.styles.xcode
 from pygments.formatters import HtmlFormatter
-from pygments.token import Text
+from pygments_ansi_color import color_tokens
 from pyquery import PyQuery as pq
-
-from fluffy.component import ansi_color
 
 
 # We purposefully don't list all possible languages, and instead just the ones
@@ -64,25 +61,8 @@ BG_COLORS = {
 
 
 class FluffyStyle(pygments.styles.xcode.XcodeStyle):
-
     styles = dict(pygments.styles.xcode.XcodeStyle.styles)
-
-    # Add ANSI color token definitions.
-    for bold, fg_color, bg_color in itertools.product(
-        (False, True),
-        {None} | set(FG_COLORS),
-        {None} | set(BG_COLORS),
-    ):
-        token = ansi_color.token_from_lexer_state(bold, fg_color, bg_color)
-        if token is not Text:
-            value = ''
-            if bold:
-                value += ' bold'
-            if fg_color:
-                value += ' ' + FG_COLORS[fg_color]
-            if bg_color:
-                value += ' bg:' + BG_COLORS[bg_color]
-            styles[token] = value.strip()
+    styles.update(color_tokens(FG_COLORS, BG_COLORS))
 
 
 _pygments_formatter = HtmlFormatter(
@@ -182,16 +162,14 @@ def strip_diff_things(text):
 
 
 def get_highlighter(text, language):
+    if language in {None, 'autodetect'} and looks_like_ansi_color(text):
+        language = 'ansi-color'
+
     lexer = guess_lexer(text, language)
 
     diff_requested = (language or '').startswith('diff-')
 
     if (
-            language == 'ansi-color' or
-            (language in {None, 'autodetect'} and looks_like_ansi_color(text))
-    ):
-        lexer = ansi_color.AnsiColorLexer()
-    elif (
             diff_requested or
             lexer is None or
             language is None or
