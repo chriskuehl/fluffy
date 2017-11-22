@@ -127,7 +127,7 @@ function pastefile(e) {
             transitionToText();
         } else {
             // dunno what they're trying to paste, hopefully a file
-            for (var i = 0; i < dt.items.length; i ++) {
+            for (var i = 0; i < dt.items.length; i++) {
                 var file = dt.items[i].getAsFile();
                 if (file) {
                     file.name = "pastedata" + i;
@@ -155,6 +155,21 @@ function pastefile(e) {
 function upload() {
     if (! canUpload()) {
         return alert("Can't upload right now.");
+    }
+
+    // sanity check queued files
+    var totalSize = 0;
+    for (var i = 0; i < allFiles.length; i++) {
+        totalSize += allFiles[i].size;
+    }
+    if (totalSize > maxUploadSize) {
+        return alert(
+            'Sorry, you can only upload ' +
+            humanSize(maxUploadSize) +
+            ' at a time (you tried to upload ' +
+            humanSize(totalSize) +
+            ')!'
+        );
     }
 
     uploading = true;
@@ -450,7 +465,7 @@ function getHumanSize(size) {
  */
 function getFormData() {
     var formData = new FormData();
-    for (var i = 0; i < allFiles.length; i ++) {
+    for (var i = 0; i < allFiles.length; i++) {
         formData.append("file", allFiles[i], allFiles[i].name);
     }
     return formData;
@@ -633,4 +648,26 @@ function dropZoneHoverOff(e) {
 
     e.preventDefault();
     return false;
+}
+
+
+// based on fluffy.utils.human_size in Python
+var ONE_KB = Math.pow(2, 10);
+var ONE_MB = Math.pow(2, 20);
+var ONE_GB = Math.pow(2, 30);
+
+function humanSize(size) {
+    function round(n) {
+        return Math.floor((n * 10)) / 10;
+    }
+
+    if (size >= ONE_GB) {
+        return round(size / ONE_GB) + ' GiB';
+    } else if (size >= ONE_MB) {
+        return round(size / ONE_MB) + ' MiB';
+    } else if (size >= ONE_KB) {
+        return round(size / ONE_KB) + ' KiB';
+    } else {
+        return size + ' ' + (size == 1 ? 'byte' : 'bytes');
+    }
 }

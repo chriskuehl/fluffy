@@ -84,6 +84,8 @@
                 {{extension | tojson | safe}}: {{asset_url('img/mime/small/' + extension + '.png') | tojson | safe}},
             {% endfor %}
         };
+
+        var maxUploadSize = {{max_upload_size | tojson | safe}};
     </script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>

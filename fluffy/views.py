@@ -29,6 +29,7 @@ def home():
         text=text,
         extra_html_classes='start-on-paste' if (text or 'text' in request.args) else '',
         icon_extensions=ICON_EXTENSIONS,
+        max_upload_size=app.config['MAX_UPLOAD_SIZE'],
     )
 
 
