@@ -1,5 +1,6 @@
+repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    sha: v0.9.1
+    sha: v1.1.1
     hooks:
     -   id: autopep8-wrapper
         exclude: ^vendor/
@@ -30,12 +31,12 @@
         args: [--py35-plus]
         exclude: ^vendor/
 -   repo: https://github.com/asottile/pyupgrade
-    sha: v1.1.4
+    sha: v1.2.0
     hooks:
     -   id: pyupgrade
         args: [--py3-plus]
         exclude: ^vendor/
 -   repo: https://github.com/Lucas-C/pre-commit-hooks
-    sha: v1.0.1
+    sha: v1.1.4
     hooks:
     -   id: remove-tabs
