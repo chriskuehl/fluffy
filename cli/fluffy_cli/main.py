@@ -67,8 +67,12 @@ def upload(server, paths, auth):
         allow_redirects=False,
         auth=auth,
     )
-    assert req.status_code in (301, 302), req.status_code
-    print(bold(req.headers['Location']))
+    if req.status_code not in (301, 302):
+        print('Failed to upload (status code {}):'.format(req.status_code))
+        print(req.text)
+        return 1
+    else:
+        print(bold(req.headers['Location']))
 
 
 def paste(server, path, language, highlight_regex, auth):
@@ -84,33 +88,36 @@ def paste(server, path, language, highlight_regex, auth):
         allow_redirects=False,
         auth=auth,
     )
-    assert req.status_code in (301, 302), req.status_code
-    location = req.headers['Location']
+    if req.status_code not in (301, 302):
+        print('Failed to paste (status code {}):'.format(req.status_code))
+        print(req.text)
+        return 1
+    else:
+        location = req.headers['Location']
+        if highlight_regex:
+            matches = []
+            for i, line in enumerate(content.splitlines()):
+                if highlight_regex.search(line):
+                    matches.append(i + 1)
 
-    if highlight_regex:
-        matches = []
-        for i, line in enumerate(content.splitlines()):
-            if highlight_regex.search(line):
-                matches.append(i + 1)
+            # squash lines next to each-other
+            squashed = []
+            for match in matches:
+                if not squashed or squashed[-1][1] != match - 1:
+                    squashed.append([match, match])
+                else:
+                    squashed[-1][1] = match
 
-        # squash lines next to each-other
-        squashed = []
-        for match in matches:
-            if not squashed or squashed[-1][1] != match - 1:
-                squashed.append([match, match])
-            else:
-                squashed[-1][1] = match
+            if matches:
+                location += '#' + ','.join(
+                    'L{}'.format(
+                        '{}-{}'.format(*match)
+                        if match[0] != match[1]
+                        else match[0],
+                    ) for match in squashed
+                )
 
-        if matches:
-            location += '#' + ','.join(
-                'L{}'.format(
-                    '{}-{}'.format(*match)
-                    if match[0] != match[1]
-                    else match[0],
-                ) for match in squashed
-            )
-
-    print(bold(location))
+        print(bold(location))
 
 
 class FluffyArgFormatter(

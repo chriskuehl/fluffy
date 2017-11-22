@@ -65,7 +65,7 @@ class UploadedFile(
             f.save(tf)
             num_bytes = f.tell()
             if num_bytes > app.config['MAX_UPLOAD_SIZE']:
-                raise FileTooLargeError()
+                raise FileTooLargeError(num_bytes)
             tf.seek(0)
 
             yield cls(
@@ -81,7 +81,7 @@ class UploadedFile(
         with io.BytesIO(text.encode('utf8')) as open_file:
             num_bytes = len(text)
             if num_bytes > app.config['MAX_UPLOAD_SIZE']:
-                raise FileTooLargeError()
+                raise FileTooLargeError(num_bytes)
 
             yield cls(
                 human_name='plaintext.txt',

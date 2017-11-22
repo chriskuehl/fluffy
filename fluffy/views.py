@@ -74,14 +74,16 @@ def upload():
                         objects.append(pb)
 
                 uploaded_files.append((uf, pb))
-            except FileTooLargeError:
+            except FileTooLargeError as ex:
+                num_bytes, = ex.args
                 return jsonify({
                     'success': False,
-                    'error': '{} exceeded the maximum file size limit of {}'.format(
+                    'error': '{} ({}) exceeded the maximum file size limit of {}'.format(
                         f.filename,
+                        human_size(num_bytes),
                         human_size(app.config['MAX_UPLOAD_SIZE']),
                     ),
-                })
+                }), 413
 
         details_obj = ctx.enter_context(
             HtmlToStore.from_html(render_template(

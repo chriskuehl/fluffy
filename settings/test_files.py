@@ -24,4 +24,4 @@ ABUSE_CONTACT = 'abuse@example.com'
 MAX_UPLOAD_SIZE = 10 * 1048576  # 10 MB
 
 # max size Flask will accept; maybe a little larger?
-MAX_CONTENT_LENGTH = MAX_UPLOAD_SIZE * 2
+MAX_CONTENT_LENGTH = MAX_UPLOAD_SIZE * 10
