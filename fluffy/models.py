@@ -6,11 +6,10 @@ from collections import namedtuple
 from contextlib import contextmanager
 
 from cached_property import cached_property
+from identify import identify
 
 from fluffy.app import app
-from fluffy.utils import content_is_binary
 from fluffy.utils import gen_unique_id
-from fluffy.utils import ONE_MB
 
 
 MIME_WHITELIST = frozenset([
@@ -108,7 +107,7 @@ class UploadedFile(
 
     @cached_property
     def probably_binary(self):
-        p = content_is_binary(self.open_file.read(ONE_MB))
+        p = not identify.is_text(self.open_file)
         self.open_file.seek(0)
         return p
 

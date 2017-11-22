@@ -15,6 +15,7 @@ setup(
         'boto3',
         'cached_property',
         'flask',
+        'identify',
         'mistune',
         'pygments',
         'pyquery',
