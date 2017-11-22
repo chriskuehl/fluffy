@@ -32,20 +32,6 @@ def human_size(size):
         return '{} {}'.format(size, pluralize('byte', size))
 
 
-def content_is_binary(content):
-    """Return whether the file seems to be binary.
-
-    This is roughly based on libmagic's binary/text detection:
-    https://github.com/file/file/blob/master/src/encoding.c#L203-L228
-    """
-    text_chars = (
-        bytearray([7, 8, 9, 10, 12, 13, 27]) +
-        bytearray(range(0x20, 0x7F)) +
-        bytearray(range(0x80, 0X100))
-    )
-    return bool(content.translate(None, text_chars))
-
-
 def gen_unique_id():
     return ''.join(
         random.choice(STORED_FILE_NAME_CHARS)
