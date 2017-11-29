@@ -10,12 +10,12 @@ def main():
         author='Chris Kuehl',
         author_email='ckuehl@ckuehl.me',
         packages=find_packages(exclude=('test*',)),
-        install_requires={
+        install_requires=(
             'requests',
-        },
-        classifiers={
+        ),
+        classifiers=(
             'Programming Language :: Python :: 3',
-        },
+        ),
         entry_points={
             'console_scripts': [
                 'fput = fluffy_cli.main:upload_main',
