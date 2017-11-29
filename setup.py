@@ -11,7 +11,7 @@ setup(
     author_email='ckuehl@ckuehl.me',
     packages=find_packages(exclude=('test*',)),
     include_package_data=True,
-    install_requires={
+    install_requires=(
         'boto3',
         'cached_property',
         'flask',
@@ -20,12 +20,12 @@ setup(
         'pygments',
         'pygments-ansi-color',
         'pyquery',
-    },
-    classifiers={
+    ),
+    classifiers=(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-    },
+    ),
     entry_points={
         'console_scripts': [
             'fluffy-upload-assets = fluffy.component.assets:upload_assets',
