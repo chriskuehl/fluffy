@@ -99,6 +99,13 @@ def upload():
         return jsonify({
             'success': True,
             'redirect': details_obj.url,
+            'uploaded_files': {
+                uf.human_name: {
+                    'raw': uf.url,
+                    'paste': pb.url if pb is not None else None,
+                }
+                for uf, pb in uploaded_files
+            },
         })
     else:
         return redirect(details_obj.url)
