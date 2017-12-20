@@ -5,8 +5,9 @@ import pygments
 import pygments.lexers
 import pygments.styles.xcode
 from pygments.formatters import HtmlFormatter
-from pygments_ansi_color import color_tokens
 from pyquery import PyQuery as pq
+
+from fluffy.component.styles import DEFAULT_STYLE
 
 
 # We purposefully don't list all possible languages, and instead just the ones
@@ -37,39 +38,11 @@ UI_LANGUAGES_MAP = {
     'yaml': 'YAML',
 }
 
-FG_COLORS = {
-    'Black': '#000000',
-    'Red': '#EF2929',
-    'Green': '#62ca00',
-    'Yellow': '#dac200',
-    'Blue': '#3465A4',
-    'Magenta': '#ce42be',
-    'Cyan': '#34E2E2',
-    'White': '#ffffff',
-}
-
-BG_COLORS = {
-    'Black': '#000000',
-    'Red': '#EF2929',
-    'Green': '#8AE234',
-    'Yellow': '#FCE94F',
-    'Blue': '#3465A4',
-    'Magenta': '#c509c5',
-    'Cyan': '#34E2E2',
-    'White': '#ffffff',
-}
-
-
-class FluffyStyle(pygments.styles.xcode.XcodeStyle):
-    styles = dict(pygments.styles.xcode.XcodeStyle.styles)
-    styles.update(color_tokens(FG_COLORS, BG_COLORS))
-
 
 _pygments_formatter = HtmlFormatter(
-    noclasses=True,
+    noclasses=False,
     linespans='line',
-    nobackground=True,
-    style=FluffyStyle,
+    style=DEFAULT_STYLE,
 )
 
 

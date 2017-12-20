@@ -1,4 +1,12 @@
 .page-paste {
+    #style {
+        float: right;
+        height: 30px;
+        padding-left: 5px;
+        @media screen and (max-width: $mobile-width) {
+            display: none;
+        }
+    }
     #container {
         width: auto;
 
@@ -60,6 +68,8 @@
             }
 
             .highlight > pre {
+                line-height: 125%;
+
                 // These are line spans (sadly, no class is output by pygments)
                 & > span {
                     padding-left: 5px;

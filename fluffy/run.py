@@ -4,6 +4,7 @@ from flask import render_template
 
 from fluffy.app import app
 from fluffy.component.highlighting import get_highlighter
+from fluffy.component.styles import STYLES_BY_CATEGORY
 
 # imports so the decorators run :(
 import fluffy.component.markdown  # noreorder # noqa
@@ -23,6 +24,7 @@ def debug():  # pragma: no cover
             highlighter=get_highlighter('', 'python'),
             edit_url='#edit',
             raw_url='#raw',
+            styles=STYLES_BY_CATEGORY,
         )
 
     @app.route('/test/diff')
@@ -34,6 +36,7 @@ def debug():  # pragma: no cover
             highlighter=get_highlighter(text, None),
             edit_url='#edit',
             raw_url='#raw',
+            styles=STYLES_BY_CATEGORY,
         )
 
     @app.route('/test/ansi-color')
@@ -45,6 +48,7 @@ def debug():  # pragma: no cover
             highlighter=get_highlighter(text, None),
             edit_url='#edit',
             raw_url='#raw',
+            styles=STYLES_BY_CATEGORY,
         )
 
     @app.route('/test/markdown')
