@@ -27,8 +27,48 @@ BG_COLORS_LIGHT = {
     'White': '#ffffff',
 }
 
+FG_COLORS_DARK = {
+    'Black': '#555753',
+    'Red': '#FF5C5C',
+    'Green': '#8AE234',
+    'Yellow': '#FCE94F',
+    'Blue': '#8FB6E1',
+    'Magenta': '#FF80F1',
+    'Cyan': '#34E2E2',
+    'White': '#EEEEEC',
+}
 
-def _make_style(*, name=None, base, fg_colors, bg_colors):
+BG_COLORS_DARK = {
+    'Black': '#555753',
+    'Red': '#F03D3D',
+    'Green': '#6ABC1B',
+    'Yellow': '#CEB917',
+    'Blue': '#6392C6',
+    'Magenta': '#FF80F1',
+    'Cyan': '#2FC0C0',
+    'White': '#BFBFBF',
+}
+
+
+def _make_style(
+        *,
+        name=None,
+        base,
+        fg_colors=FG_COLORS_LIGHT,
+        bg_colors=BG_COLORS_LIGHT,
+        toolbar_fg_color='#333',
+        toolbar_bg_color='#e0e0e0',
+        border_color='#eee',
+        line_numbers_fg_color='#222',
+        line_numbers_bg_color='#fafafa',
+        line_numbers_hover_bg_color='#ffeaaf',
+        line_numbers_selected_bg_color='#ffe18e',
+        selected_line_bg_color='#fff3d3',
+        diff_add_line_bg_color='#e2ffe2',
+        diff_add_selected_line_bg_color='#e8ffbc',
+        diff_remove_line_bg_color='#ffe5e5',
+        diff_remove_selected_line_bg_color='#ffdfbf'
+):
     base_style = pygments.styles.get_style_by_name(base)
     new_styles = dict(base_style.styles)
     new_styles.update(color_tokens(fg_colors, bg_colors))
@@ -38,6 +78,18 @@ def _make_style(*, name=None, base, fg_colors, bg_colors):
         {
             'name': name or base,
             'styles': new_styles,
+            'toolbar_fg_color': toolbar_fg_color,
+            'toolbar_bg_color': toolbar_bg_color,
+            'border_color': border_color,
+            'line_numbers_fg_color': line_numbers_fg_color,
+            'line_numbers_bg_color': line_numbers_bg_color,
+            'line_numbers_hover_bg_color': line_numbers_hover_bg_color,
+            'line_numbers_selected_bg_color': line_numbers_selected_bg_color,
+            'selected_line_bg_color': selected_line_bg_color,
+            'diff_add_line_bg_color': diff_add_line_bg_color,
+            'diff_add_selected_line_bg_color': diff_add_selected_line_bg_color,
+            'diff_remove_line_bg_color': diff_remove_line_bg_color,
+            'diff_remove_selected_line_bg_color': diff_remove_selected_line_bg_color,
         },
     )
 
@@ -45,8 +97,6 @@ def _make_style(*, name=None, base, fg_colors, bg_colors):
 DEFAULT_STYLE = _make_style(
     name='default',
     base='xcode',
-    fg_colors=FG_COLORS_LIGHT,
-    bg_colors=BG_COLORS_LIGHT,
 )
 
 STYLES_BY_CATEGORY = {
@@ -55,8 +105,6 @@ STYLES_BY_CATEGORY = {
             DEFAULT_STYLE,
             _make_style(
                 base='pastie',
-                fg_colors=FG_COLORS_LIGHT,
-                bg_colors=BG_COLORS_LIGHT,
             ),
         ),
         key=operator.attrgetter('name'),
@@ -65,13 +113,18 @@ STYLES_BY_CATEGORY = {
         (
             _make_style(
                 base='monokai',
-                fg_colors=FG_COLORS_LIGHT,
-                bg_colors=BG_COLORS_LIGHT,
-            ),
-            _make_style(
-                base='native',
-                fg_colors=FG_COLORS_LIGHT,
-                bg_colors=BG_COLORS_LIGHT,
+                fg_colors=FG_COLORS_DARK,
+                bg_colors=BG_COLORS_DARK,
+                border_color='#454545',
+                line_numbers_fg_color='#999',
+                line_numbers_bg_color='#272822',
+                line_numbers_hover_bg_color='#8D8D8D',
+                line_numbers_selected_bg_color='#5F5F5F',
+                selected_line_bg_color='#545454',
+                diff_add_line_bg_color='#478D47',
+                diff_add_selected_line_bg_color='#8ea169',
+                diff_remove_line_bg_color='#c96767',
+                diff_remove_selected_line_bg_color='#ffa3a3',
             ),
         ),
         key=operator.attrgetter('name'),
@@ -82,7 +135,46 @@ STYLES_BY_CATEGORY = {
 def main():
     for styles in STYLES_BY_CATEGORY.values():
         for style in styles:
-            print(HtmlFormatter(style=style).get_style_defs('.highlight-{} .highlight'.format(style.name)))
+            prefix = '.highlight-{}'.format(style.name)
+            print(HtmlFormatter(style=style).get_style_defs(prefix + ' .highlight'))
+            print(
+                '{prefix} .line-numbers {{'
+                '  background-color: {style.line_numbers_bg_color};'
+                '  border-color: {style.border_color};'
+                '}}'
+                '{prefix} .text {{'
+                '  background-color: {style.border_color};'
+                '}}'
+                '{prefix} .line-numbers a {{'
+                '  color: {style.line_numbers_fg_color};'
+                '}}'
+                '{prefix} .line-numbers a:hover {{'
+                '  background-color: {style.line_numbers_hover_bg_color} !important;'
+                '}}'
+                '{prefix} .line-numbers a.selected {{'
+                '  background-color: {style.line_numbers_selected_bg_color};'
+                '}}'
+                '{prefix} .paste-toolbar {{'
+                '  background-color: {style.toolbar_bg_color};'
+                '  color: {style.toolbar_fg_color};'
+                '}}'
+                '{prefix} .text .highlight > pre > span.selected {{'
+                '  background-color: {style.selected_line_bg_color};'
+                '}}'
+                '{prefix} .text .highlight > pre > span.diff-add {{'
+                '  background-color: {style.diff_add_line_bg_color};'
+                '}}'
+                '{prefix} .text .highlight > pre > span.diff-add.selected {{'
+                '  background-color: {style.diff_add_selected_line_bg_color};'
+                '}}'
+                '{prefix} .text .highlight > pre > span.diff-remove {{'
+                '  background-color: {style.diff_remove_line_bg_color};'
+                '}}'
+                '{prefix} .text .highlight > pre > span.diff-remove.selected {{'
+                '  background-color: {style.diff_remove_selected_line_bg_color};'
+                '}}'
+                ''.format(prefix=prefix, style=style),
+            )
 
 
 if __name__ == '__main__':
