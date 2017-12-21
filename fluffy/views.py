@@ -9,6 +9,7 @@ from fluffy.app import app
 from fluffy.component.backends import get_backend
 from fluffy.component.highlighting import get_highlighter
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
+from fluffy.component.styles import STYLES_BY_CATEGORY
 from fluffy.models import FileTooLargeError
 from fluffy.models import HtmlToStore
 from fluffy.models import UploadedFile
@@ -70,6 +71,7 @@ def upload():
                             text=text,
                             highlighter=get_highlighter(text, None),
                             raw_url=app.config['FILE_URL'].format(name=uf.name),
+                            styles=STYLES_BY_CATEGORY,
                         )))
                         objects.append(pb)
 
@@ -138,6 +140,7 @@ def paste():
                 text=text,
                 highlighter=get_highlighter(text, lang),
                 raw_url=app.config['FILE_URL'].format(name=uf.name),
+                styles=STYLES_BY_CATEGORY,
             )))
             objects.append(paste_obj)
         else:
