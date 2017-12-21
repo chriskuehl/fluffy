@@ -1,8 +1,43 @@
 {% set page_name = 'paste' %}
 {% extends 'layouts/text.html' %}
 
+{% block extra_head %}
+    <link rel="stylesheet" href="{{asset_url('pygments.css')}}" />
+{% endblock %}
+
 {% block info %}
     {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of {{highlighter.name}}
+{% endblock %}
+
+{% block highlight_start %}
+    <script>
+        function changeStyleTo(style) {
+            document.getElementById('highlightContainer').className = 'highlight-' + style;
+            if (hasStorage) {
+                localStorage.setItem('preferredStyle', style);
+            }
+        }
+
+        // https://mathiasbynens.be/notes/localstorage-pattern
+        var hasStorage = (function() {
+            try {
+                localStorage.setItem('_test', '_test');
+                localStorage.removeItem('_test');
+                return true;
+            } catch (exception) {
+                console.log(exception);
+                return false;
+            }
+        }());
+
+        var preferredStyle = null;
+        if (hasStorage) {
+            preferredStyle = localStorage.getItem('preferredStyle');
+            if (preferredStyle !== null) {
+                changeStyleTo(preferredStyle);
+            }
+        }
+    </script>
 {% endblock %}
 
 {% block text %}
@@ -12,8 +47,31 @@
         {% endfor %}
     </div>
     <div class="text" contenteditable="true" spellcheck="false">
-        {{highlighter.highlight(text)|safe}}</pre>
+        {{highlighter.highlight(text)|safe}}
     </div>
+{% endblock %}
+
+{% block extra_toolbar %}
+    <select id="style">
+        {% for category, styles in styles.items()|sort %}
+            <optgroup label="{{category}}">
+                {% for style in styles %}
+                    <option
+                      value="{{style.name}}"
+                      {% if style.name == 'default' %}
+                          selected="selected"
+                      {% endif %}
+                    >{{style.name}}</option>
+                {% endfor %}
+            </optgroup>
+        {% endfor %}
+    </select>
+
+    <script>
+        if (preferredStyle !== null) {
+            document.getElementById('style').value = preferredStyle;
+        }
+    </script>
 {% endblock %}
 
 {% block inline_js %}
@@ -204,6 +262,10 @@
                     }
                 }
             }
+
+            $('#style').change(function() {
+                changeStyleTo($(this).val());
+            });
         });
     </script>
 {% endblock %}

@@ -19,6 +19,7 @@ setup(
         'mistune',
         'pygments',
         'pygments-ansi-color',
+        'pygments-style-solarized',
         'pyquery',
     ),
     classifiers=(

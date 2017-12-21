@@ -33,7 +33,16 @@ def test_single_file_upload_json(content, running_server):
         files=[('file', ('ohai.bin', io.BytesIO(content), None, None))],
     )
     assert req.status_code == 200
-    assert req.json() == {'success': True, 'redirect': mock.ANY}
+    assert req.json() == {
+        'success': True,
+        'redirect': mock.ANY,
+        'uploaded_files': {
+            'ohai.bin': {
+                'paste': mock.ANY,
+                'raw': mock.ANY,
+            },
+        },
+    }
 
     req = requests.get(req.json()['redirect'])
     assert req.status_code == 200
@@ -67,7 +76,14 @@ def test_multiple_files_upload_json(running_server):
         files=files,
     )
     assert req.status_code == 200
-    assert req.json() == {'success': True, 'redirect': mock.ANY}
+    assert req.json() == {
+        'success': True,
+        'redirect': mock.ANY,
+        'uploaded_files': {
+            'ohai{}.bin'.format(i): {'paste': mock.ANY, 'raw': mock.ANY}
+            for i in range(len(FILE_CONTENT_TESTCASES))
+        },
+    }
 
     req = requests.get(req.json()['redirect'])
     assert req.status_code == 200

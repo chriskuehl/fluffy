@@ -13,6 +13,9 @@ $(VENV): setup.py cli/setup.py requirements.txt requirements-dev.txt
 fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/sassc fluffy/static/scss/app.scss $@
 
+fluffy/static/pygments.css: $(VENV) fluffy/component/styles.py
+	$(BIN)/python -m fluffy.component.styles > $@
+
 ASSET_FILES := $(shell find fluffy/static -type f -not -name '*.hash')
 ASSET_HASHES := $(addsuffix .hash,$(ASSET_FILES))
 
@@ -20,7 +23,7 @@ fluffy/static/%.hash: fluffy/static/%
 	sha256sum $^ | awk '{print $$1}' > $@
 
 .PHONY: assets
-assets: fluffy/static/app.css.hash $(ASSET_HASHES)
+assets: fluffy/static/app.css.hash fluffy/static/pygments.css.hash $(ASSET_HASHES)
 
 .PHONY: upload-assets
 upload-assets: assets $(VENV)

@@ -106,6 +106,50 @@ To run fluffy during development, run `make venv` and then `pgctl start`.
 You should now have fluffy running at `http://localhost:5000`.
 
 
+### FAQ
+#### Why are there only certain languages in the dropdown? Can I add more?
+
+Since it's just a normal `<option>` dropdown now, I didn't want to have all
+hundreds of languages that Pygments supports, as I thought that would make the
+UI worse for little benefit. Instead, currently there's a hand-picked list of
+languages that I thought were most popular (but it's definitely biased toward
+what I use!).
+
+In the long term, I'd love to replace the dropdown with something smarter
+(maybe a JS dropdown with all the possible languages, featuring the most
+popular at the top, but with all available below, or with autocomplete or
+something).
+
+In the medium term, definitely feel free to open an issue or send a PR to add
+another language. I'll happily merge it.
+
+As a workaround, note that the "automatically detect" can detect languages not
+in the dropdown (but it's not very accurate much of the time, unfortunately).
+Additionally, if you use the CLI, you can pass `-l <language>` and use any
+language supported by Pygments.
+
+
+#### Why are there only a few themes to choose from in the pastebin?
+
+Mostly it's just lack of time to add more. If you have a Pygments theme you
+like, please open an issue or PR, I'll definitely help get it added.
+
+Primarily the reasons are:
+
+* There are a lot of Pygments themes and many of them are (imo) low-quality or
+  extremely similar. I thought it was better to hand-curate them and have a
+  small-ish number, rather than a large number where it's hard to find the
+  really good themes.
+
+* It's not quite as easy as just adding the style name to a list. Fluffy also
+  needs to know colors to use for borders, line numbers, highlights, diff
+  highlights, hover versions of all of these, ANSI color codes that work, etc.
+  There's something like 30 constants to set per theme.
+
+* With the current implementation, every new theme bloats the CSS a little
+  more. (There's probably a technical solution to this.)
+
+
 fluffy uses awesome icon sets developed by
 [FatCow](http://www.fatcow.com/free-icons) and
 [Everaldo Coelho](http://www.everaldo.com/).

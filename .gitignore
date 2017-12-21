@@ -16,4 +16,5 @@
 /settings.py
 
 /fluffy/static/app.css
+/fluffy/static/pygments.css
 /fluffy/static/**/*.hash
