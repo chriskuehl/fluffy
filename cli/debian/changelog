@@ -1,0 +1,5 @@
+fluffy (1.6.0) unstable; urgency=medium
+
+  * Initial Debian release.
+
+ -- Chris Kuehl <ckuehl@raziel.ckuehl.me>  Fri, 19 Jan 2018 23:01:01 -0800
