@@ -78,6 +78,7 @@ release: $(VENV) assets
 	cd cli && ../$(BIN)/python setup.py sdist
 	cd cli && ../$(BIN)/python setup.py bdist_wheel
 	cd cli && ../$(BIN)/twine upload --skip-existing dist/*
+	cd cli && debuild -us -uc -b
 
 .PHONY: update-requirements
 update-requirements:

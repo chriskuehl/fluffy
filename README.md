@@ -91,6 +91,11 @@ Two tools, `fput` and `fpb`, are provided. They can be installed with `pip
 install fluffy` and used from the command line. Use `--help` with either tool
 for more information.
 
+Additionally, Debian packages for the command-line tools are available in the
+[GitHub releases tab](https://github.com/chriskuehl/fluffy/releases). These
+packages contain no binary components and should be compatible with most
+releases of Debian and Ubuntu.
+
 
 ### Contributing, license, and credits
 
