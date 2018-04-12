@@ -8,13 +8,13 @@ This repository contains the [Puppet][puppet] modules used to maintain and
 configure the servers and desktops used by the [Open Computing Facility][ocf]
 at UC Berkeley.
 
-These modules are generally intended to be used on the latest [Debian][debian]
-stable release, though probably also work on Debian-derived distros (such as
-[Ubuntu][ubuntu]).
-
-This README outlines development practices for OCF volunteer staff members. If
-you're a member of the UC Berkeley community and interested in getting
-involved, [check us out][about-staff]!
+> These modules are generally intended to be used on the latest [Debian][debian]
+> stable release, though probably also work on Debian-derived distros (such as
+> [Ubuntu][ubuntu]).
+>
+> This README outlines development practices for OCF volunteer staff members. If
+> you're a member of the UC Berkeley community and interested in getting
+> involved, [check us out][about-staff]!
 
 ## Making and testing changes
 ### Your puppet environment

@@ -34,6 +34,12 @@ $source-code-font: 'Source Code Pro', monospace;
         h5 { font-size: 14px; }
         h6 { font-size: 14px; color: #777; }
 
+        blockquote {
+            color: #555;
+            padding: 0 15px;
+            border-left: solid 5px #ddd;
+        }
+
         $source-code-bg-color: #f6f6f6;
 
         pre {
