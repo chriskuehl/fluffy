@@ -14,6 +14,7 @@ from fluffy.utils import gen_unique_id
 
 MIME_WHITELIST = frozenset([
     'application/javascript',
+    'application/json',
     'application/pdf',
     'application/x-ruby',
     'audio/',
