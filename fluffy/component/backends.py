@@ -24,17 +24,17 @@ class FileBackend:
             obj.open_file.seek(0)
 
     # TODO: support links for file backend somehow?
-    def store_object(self, obj, links):
+    def store_object(self, obj, links, metadata_url):
         self._store('object_path', obj)
 
-    def store_html(self, obj, links):
+    def store_html(self, obj, links, metadata_url):
         self._store('html_path', obj)
 
 
 class S3Backend:
     """Storage backend which uploads to S3 using boto3."""
 
-    def _store(self, obj, links):
+    def _store(self, obj, links, metadata_url):
         # We always use a new session in case the keys have been rotated on disk.
         session = boto3.session.Session()
         s3 = session.resource('s3')
@@ -44,6 +44,7 @@ class S3Backend:
             ContentType=obj.mimetype,
             Metadata={
                 'fluffy-links': '; '.join(links),
+                'fluffy-metadata': metadata_url or '',
             },
         )
         obj.open_file.seek(0)

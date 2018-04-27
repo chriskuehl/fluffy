@@ -76,14 +76,14 @@ class UploadedFile(
 
     @classmethod
     @contextmanager
-    def from_text(cls, text):
+    def from_text(cls, text, human_name='plaintext.txt'):
         with io.BytesIO(text.encode('utf8')) as open_file:
             num_bytes = len(text)
             if num_bytes > app.config['MAX_UPLOAD_SIZE']:
                 raise FileTooLargeError(num_bytes)
 
             yield cls(
-                human_name='plaintext.txt',
+                human_name=human_name,
                 num_bytes=num_bytes,
                 open_file=open_file,
                 unique_id=gen_unique_id(),

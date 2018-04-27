@@ -1,10 +1,13 @@
 import contextlib
+import json
+import time
 
 from flask import jsonify
 from flask import redirect
 from flask import render_template
 from flask import request
 
+from fluffy import version
 from fluffy.app import app
 from fluffy.component.backends import get_backend
 from fluffy.component.highlighting import get_highlighter
@@ -34,13 +37,14 @@ def home():
     )
 
 
-def upload_objects(objects):
+def upload_objects(objects, metadata_url=None):
+    # TODO: make metadata_url mandatory (need to support it for uploads too)
     links = sorted(obj.url for obj in objects)
     for obj in objects:
         if isinstance(obj, HtmlToStore):
-            get_backend().store_html(obj, links)
+            get_backend().store_html(obj, links, metadata_url)
         else:
-            get_backend().store_object(obj, links)
+            get_backend().store_object(obj, links, metadata_url)
 
 
 @app.route('/upload', methods={'POST'})
@@ -117,14 +121,16 @@ def upload():
 def paste():
     """Paste and redirect."""
     text = request.form['text']
+    # Browsers always send \r\n for the pasted text, which leads to bad
+    # newlines when curling the raw text (#28).
+    transformed_text = text.replace('\r\n', '\n')
 
     with contextlib.ExitStack() as ctx:
         objects = []
 
-        # Browsers always send \r\n for the pasted text, which leads to bad
-        # newlines when curling the raw text (#28).
+        # Raw text object
         try:
-            uf = ctx.enter_context(UploadedFile.from_text(text.replace('\r\n', '\n')))
+            uf = ctx.enter_context(UploadedFile.from_text(transformed_text))
         except FileTooLargeError as ex:
             num_bytes, = ex.args
             return 'Exceeded the max upload size of {} (tried to paste {})'.format(
@@ -133,17 +139,21 @@ def paste():
             ), 413
         objects.append(uf)
 
+        # HTML view (Markdown or paste)
         lang = request.form['language']
         if lang != 'rendered-markdown':
+            highlighter = get_highlighter(text, lang)
+            lang_title = highlighter.name
             paste_obj = ctx.enter_context(HtmlToStore.from_html(render_template(
                 'paste.html',
                 text=text,
-                highlighter=get_highlighter(text, lang),
+                highlighter=highlighter,
                 raw_url=app.config['FILE_URL'].format(name=uf.name),
                 styles=STYLES_BY_CATEGORY,
             )))
             objects.append(paste_obj)
         else:
+            lang_title = 'Rendered Markdown'
             paste_obj = ctx.enter_context(HtmlToStore.from_html(render_template(
                 'markdown.html',
                 text=text,
@@ -151,6 +161,31 @@ def paste():
             )))
             objects.append(paste_obj)
 
-        upload_objects(objects)
+        print(lang_title)
+
+        # Metadata JSON object
+        metadata = {
+            'server_version': version,
+            'uploaded_files': {
+                'html': paste_obj.url,
+                'raw': uf.url,
+            },
+            'timestamp': time.time(),
+            'upload_type': 'paste',
+            'paste_details': {
+                'language': {
+                    'title': lang_title,
+                },
+                'num_lines': len(transformed_text.splitlines()),
+                'raw_text': transformed_text,
+            },
+        }
+        metadata_obj = ctx.enter_context(UploadedFile.from_text(
+            json.dumps(metadata, indent=4, sort_keys=True),
+            human_name='metadata.json',
+        ))
+        objects.append(metadata_obj)
+
+        upload_objects(objects, metadata_url=metadata_obj.url)
 
     return redirect(paste_obj.url)
