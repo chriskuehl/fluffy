@@ -46,6 +46,9 @@ class S3Backend:
                 'fluffy-links': '; '.join(links),
                 'fluffy-metadata': metadata_url or '',
             },
+            # Allow the bucket owner to control the object, for cases where the
+            # bucket is owned by a different account.
+            ACL='bucket-owner-full-control',
         )
         obj.open_file.seek(0)
 
