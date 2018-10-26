@@ -161,8 +161,6 @@ def paste():
             )))
             objects.append(paste_obj)
 
-        print(lang_title)
-
         # Metadata JSON object
         metadata = {
             'server_version': version,
