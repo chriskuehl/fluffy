@@ -188,4 +188,17 @@ def paste():
 
         upload_objects(objects, metadata_url=metadata_obj.url)
 
-    return redirect(paste_obj.url)
+    if 'json' in request.args:
+        return jsonify({
+            'success': True,
+            'redirect': paste_obj.url,
+            'uploaded_files': {
+                'paste': {
+                    'raw': uf.url,
+                    'paste': paste_obj.url,
+                    'metadata': metadata_obj.url,
+                },
+            },
+        })
+    else:
+        return redirect(paste_obj.url)
