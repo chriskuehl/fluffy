@@ -9,7 +9,7 @@ setup(
     version=version,
     author='Chris Kuehl',
     author_email='ckuehl@ckuehl.me',
-    packages=find_packages(exclude=('test*',)),
+    packages=find_packages(exclude=('test*', 'playground')),
     include_package_data=True,
     install_requires=(
         'boto3',
