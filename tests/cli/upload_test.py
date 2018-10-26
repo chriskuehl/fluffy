@@ -1,27 +1,11 @@
-import os
 import subprocess
-import sys
 
-import mock
 import pytest
 import requests
 
 from testing import assert_url_matches_content
 from testing import FILE_CONTENT_TESTCASES
 from testing import urls_from_details
-
-
-@pytest.yield_fixture
-def cli_on_path():
-    with mock.patch.dict(
-            os.environ,
-            {
-                'PATH': '{}:{}'.format(
-                    os.path.dirname(sys.executable), os.environ['PATH'],
-                ),
-            },
-    ):
-        yield
 
 
 @pytest.mark.parametrize('content', FILE_CONTENT_TESTCASES)
@@ -71,3 +55,17 @@ def test_multiple_file_upload(running_server, tmpdir):
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
         assert 'ohai{}.bin'.format(i) in req.text
         assert_url_matches_content(urls[i], content)
+
+
+@pytest.mark.usefixtures('cli_on_path')
+def test_file_upload_with_direct_link(running_server, tmpdir):
+    paths = []
+    for i, content in enumerate(FILE_CONTENT_TESTCASES):
+        path = tmpdir.join('ohai{}.bin'.format(i))
+        path.write(content, 'wb')
+        paths.append(path.strpath)
+
+    direct_links = subprocess.check_output(
+        ('fput', '--server', running_server['home'], '--direct-link') + tuple(paths),
+    ).splitlines()
+    assert len(direct_links) == len(paths)

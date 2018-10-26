@@ -40,6 +40,15 @@ def paste_urls_from_details(details):
     )
 
 
+def raw_text_url_from_paste_html(paste_html):
+    """Return raw text URL from a paste page source."""
+    url, = re.findall(
+        r'<a class="button" href="(http://localhost:\d+/object/[^"]+)">\s+Raw Text',
+        paste_html,
+    )
+    return url
+
+
 def assert_url_matches_content(url, content):
     req = requests.get(url)
     assert req.content == content
