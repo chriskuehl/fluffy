@@ -5,9 +5,9 @@
 /*.buildinfo
 /*.changes
 /*.deb
-/.cache
 /.coverage
 /.coverage.*
+/.pytest_cache
 /.tox
 /build
 /cli/build

@@ -6,12 +6,5 @@ sudo: false
 cache:
     directories:
         - $HOME/venv
-        - $HOME/.pip
-        - $HOME/.pre-commit
-        - $HOME/.cache
-addons:
-    apt:
-        sources:
-            - deadsnakes
-        packages:
-            - python3.4-dev
+        - $HOME/.cache/pip
+        - $HOME/.cache/pre-commit
