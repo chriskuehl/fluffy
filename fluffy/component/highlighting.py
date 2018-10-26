@@ -1,7 +1,6 @@
 import re
 from collections import namedtuple
 
-import pygments
 import pygments.lexers
 import pygments.styles.xcode
 from pygments.formatters import HtmlFormatter
@@ -174,9 +173,17 @@ def guess_lexer(text, language, opts=None):
         return pygments.lexers.get_lexer_by_name(language, **lexer_opts)
     except pygments.util.ClassNotFound:
         try:
-            return pygments.lexers.guess_lexer(text, **lexer_opts)
+            lexer = pygments.lexers.guess_lexer(text, **lexer_opts)
+            # Newer versions of Pygments will virtually always fall back to
+            # TextLexer due to its 0.01 priority (which is what it returns on
+            # analyzing any text).
+            if not isinstance(lexer, pygments.lexers.TextLexer):
+                return lexer
         except pygments.util.ClassNotFound:
-            return pygments.lexers.get_lexer_by_name('python', **lexer_opts)
+            pass
+
+    # Default to Python, it highlights most things reasonably.
+    return pygments.lexers.get_lexer_by_name('python', **lexer_opts)
 
 
 def _highlight(text, lexer):
