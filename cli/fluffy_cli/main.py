@@ -59,23 +59,28 @@ def get_config():
     return config
 
 
-def upload(server, paths, auth):
+def upload(server, paths, auth, direct_link):
     files = (('file', sys.stdin.buffer if path == '-' else open(path, 'rb')) for path in paths)
     req = requests.post(
-        server + '/upload',
+        server + '/upload?json',
         files=files,
         allow_redirects=False,
         auth=auth,
     )
-    if req.status_code not in (301, 302):
+    if req.status_code != 200:
         print('Failed to upload (status code {}):'.format(req.status_code))
         print(req.text)
         return 1
     else:
-        print(bold(req.headers['Location']))
+        resp = req.json()
+        if direct_link:
+            for filename, details in resp['uploaded_files'].items():
+                print(bold(details['raw']))
+        else:
+            print(bold(resp['redirect']))
 
 
-def paste(server, path, language, highlight_regex, auth):
+def paste(server, path, language, highlight_regex, auth, direct_link):
     if path == '-':
         content = sys.stdin.read()
     else:
@@ -83,17 +88,23 @@ def paste(server, path, language, highlight_regex, auth):
             content = f.read()
 
     req = requests.post(
-        server + '/paste',
+        server + '/paste?json',
         data={'text': content, 'language': language},
         allow_redirects=False,
         auth=auth,
     )
-    if req.status_code not in (301, 302):
+    if req.status_code != 200:
         print('Failed to paste (status code {}):'.format(req.status_code))
         print(req.text)
         return 1
     else:
-        location = req.headers['Location']
+        resp = req.json()
+
+        if direct_link:
+            location = resp['uploaded_files']['paste']['raw']
+        else:
+            location = resp['redirect']
+
         if highlight_regex:
             matches = []
             for i, line in enumerate(content.splitlines()):
@@ -143,12 +154,13 @@ def upload_main(argv=None):
         default=config.get('username', getpass.getuser()),
         help='username for HTTP Basic auth',
     )
+    parser.add_argument('--direct-link', action='store_true', help='return direct links to the uploads')
     parser.add_argument('file', type=str, nargs='+', help='path to file(s) to upload', default='-')
     args = parser.parse_args(argv)
     auth = None
     if args.auth:
         auth = args.username, getpass.getpass('Password for {}: '.format(args.username))
-    return upload(args.server, args.file, auth)
+    return upload(args.server, args.file, auth, args.direct_link)
 
 
 def paste_main(argv=None):
@@ -169,12 +181,13 @@ def paste_main(argv=None):
         default=config.get('username', getpass.getuser()),
         help='username for HTTP Basic auth',
     )
+    parser.add_argument('--direct-link', action='store_true', help='return a direct link to the text (not HTML)')
     parser.add_argument('file', type=str, nargs='?', help='path to file to paste', default='-')
     args = parser.parse_args(argv)
     auth = None
     if args.auth:
         auth = args.username, getpass.getpass('Password for {}: '.format(args.username))
-    return paste(args.server, args.file, args.language, args.regex, auth)
+    return paste(args.server, args.file, args.language, args.regex, auth, args.direct_link)
 
 
 if __name__ == '__main__':
