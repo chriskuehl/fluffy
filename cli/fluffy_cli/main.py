@@ -80,9 +80,16 @@ def upload(server, paths, auth, direct_link):
             print(bold(resp['redirect']))
 
 
-def paste(server, path, language, highlight_regex, auth, direct_link):
+def paste(server, path, language, highlight_regex, auth, direct_link, tee):
+    content = ''
     if path == '-':
-        content = sys.stdin.read()
+        if tee:
+            # We should stream it
+            for line in sys.stdin:
+                content += line
+                print(line, end='')  # The line will already have a newline
+        else:
+            content = sys.stdin.read()
     else:
         with open(path) as f:
             content = f.read()
@@ -128,6 +135,8 @@ def paste(server, path, language, highlight_regex, auth, direct_link):
                     ) for match in squashed
                 )
 
+        if tee:
+            print(bold('\n---'))
         print(bold(location))
 
 
@@ -182,12 +191,13 @@ def paste_main(argv=None):
         help='username for HTTP Basic auth',
     )
     parser.add_argument('--direct-link', action='store_true', help='return a direct link to the text (not HTML)')
+    parser.add_argument('--tee', action='store_true', help='Stream the stdin to stdout before creating the paste')
     parser.add_argument('file', type=str, nargs='?', help='path to file to paste', default='-')
     args = parser.parse_args(argv)
     auth = None
     if args.auth:
         auth = args.username, getpass.getpass('Password for {}: '.format(args.username))
-    return paste(args.server, args.file, args.language, args.regex, auth, args.direct_link)
+    return paste(args.server, args.file, args.language, args.regex, auth, args.direct_link, args.tee)
 
 
 if __name__ == '__main__':
