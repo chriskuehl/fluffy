@@ -87,7 +87,7 @@ def paste(server, path, language, highlight_regex, auth, direct_link, tee):
             # We should stream it
             for line in sys.stdin:
                 content += line
-                print(line, end='')  # The line will already have a newline
+                print(line, flush=True, end='')  # The line will already have a newline
         else:
             content = sys.stdin.read()
     else:
