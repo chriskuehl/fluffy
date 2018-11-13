@@ -51,3 +51,22 @@ def test_paste_with_direct_link(running_server, tmpdir):
     req = requests.get(info_url)
     assert req.status_code == 200
     assert req.text == 'hello world!'
+
+
+@pytest.mark.usefixtures('cli_on_path')
+def test_paste_with_tee(running_server, tmpdir):
+    input_text = b'hello\nworld!'
+    output = subprocess.check_output(
+        ('fpb', '--server', running_server['home'], '--tee'),
+        input=input_text,
+    ).strip()
+
+    assert input_text in output
+    info_url = output.split(b'\n')[-1]
+    req = requests.get(info_url)
+    assert req.status_code == 200
+
+    assert_url_matches_content(
+        raw_text_url_from_paste_html(req.text),
+        input_text,
+    )
