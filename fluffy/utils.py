@@ -10,6 +10,7 @@ ONE_GB = 2**30
 STORED_FILE_NAME_LENGTH = 32
 STORED_FILE_NAME_CHARS = 'bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ0123456789'
 
+RNG = random.SystemRandom()
 
 @app.template_filter()
 def pluralize(s, num):
@@ -34,7 +35,7 @@ def human_size(size):
 
 def gen_unique_id():
     return ''.join(
-        random.choice(STORED_FILE_NAME_CHARS)
+        RNG.choice(STORED_FILE_NAME_CHARS)
         for _ in range(STORED_FILE_NAME_LENGTH)
     )
 
