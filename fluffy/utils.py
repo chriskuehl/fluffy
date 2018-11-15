@@ -12,6 +12,7 @@ STORED_FILE_NAME_CHARS = 'bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ0123456789'
 
 RNG = random.SystemRandom()
 
+
 @app.template_filter()
 def pluralize(s, num):
     # very naive
