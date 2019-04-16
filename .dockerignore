@@ -3,3 +3,6 @@ venv
 .tox
 *.swp
 playground
+*.pyc
+/testing
+/tests
