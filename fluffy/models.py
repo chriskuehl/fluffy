@@ -2,6 +2,7 @@ import io
 import mimetypes
 import os
 import tempfile
+import urllib.parse
 from collections import namedtuple
 from contextlib import contextmanager
 
@@ -12,7 +13,10 @@ from fluffy.app import app
 from fluffy.utils import gen_unique_id
 
 
-MIME_WHITELIST = frozenset([
+# Mime types which are allowed to be presented as detected.
+# TODO: I think we actually only need to prevent text/html (and any HTML
+# variants like XHTML)?
+MIME_WHITELIST = (
     'application/javascript',
     'application/json',
     'application/pdf',
@@ -24,7 +28,18 @@ MIME_WHITELIST = frozenset([
     'text/x-python',
     'text/x-sh',
     'video/',
-])
+)
+
+# Mime types which should be displayed inline in the browser, as opposed to
+# being downloaded. This is used to populate the Content-Disposition header.
+# Only binary MIMEs need to be whitelisted here, since detected non-binary
+# files are always inline.
+INLINE_DISPLAY_MIME_WHITELIST = (
+    'application/pdf',
+    'audio/',
+    'image/',
+    'video/',
+)
 
 
 class ObjectToStore:
@@ -35,6 +50,10 @@ class ObjectToStore:
 
     @property
     def mimetype(self):
+        raise NotImplementedError()
+
+    @cached_property
+    def content_disposition_header(self):
         raise NotImplementedError()
 
     @property
@@ -121,16 +140,25 @@ class UploadedFile(
     @cached_property
     def mimetype(self):
         mime, _ = mimetypes.guess_type(self.name)
-        if (
-                mime and
-                any(mime.startswith(check) for check in MIME_WHITELIST)
-        ):
+        if mime and mime.startswith(MIME_WHITELIST):
             return mime
         else:
             if self.probably_binary:
                 return 'application/octet-stream'
             else:
                 return 'text/plain'
+
+    @cached_property
+    def content_disposition_header(self):
+        if self.mimetype.startswith(INLINE_DISPLAY_MIME_WHITELIST) or not self.probably_binary:
+            render_type = 'inline'
+        else:
+            render_type = 'attachment'
+        return '{}; filename="{}"; filename*=utf-8\'\'{}'.format(
+            render_type,
+            self.human_name.replace('"', ''),
+            urllib.parse.quote(self.human_name, encoding='utf-8'),
+        )
 
     @cached_property
     def url(self):
@@ -160,6 +188,11 @@ class HtmlToStore(
     @property
     def mimetype(self):
         return 'text/html'
+
+    @property
+    def content_disposition_header(self):
+        # inline => render as HTML as opposed to downloading the HTML
+        return 'inline'
 
     @cached_property
     def url(self):
