@@ -38,7 +38,7 @@ class CodeRendererMixin:
 
     def block_code(self, code, lang):
         return PygmentsHighlighter(
-            guess_lexer(code, lang, opts={'stripnl': True}),
+            guess_lexer(code, lang, None, opts={'stripnl': True}),
         ).highlight(code)
 
 

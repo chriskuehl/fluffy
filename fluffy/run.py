@@ -21,7 +21,7 @@ def debug():  # pragma: no cover
         return render_template(
             'paste.html',
             text=(TESTING_DIR / 'files' / 'code.py').open().read(),
-            highlighter=get_highlighter('', 'python'),
+            highlighter=get_highlighter('', 'python', None),
             edit_url='#edit',
             raw_url='#raw',
             styles=STYLES_BY_CATEGORY,
@@ -33,7 +33,7 @@ def debug():  # pragma: no cover
         return render_template(
             'paste.html',
             text=text,
-            highlighter=get_highlighter(text, None),
+            highlighter=get_highlighter(text, None, None),
             edit_url='#edit',
             raw_url='#raw',
             styles=STYLES_BY_CATEGORY,
@@ -45,7 +45,7 @@ def debug():  # pragma: no cover
         return render_template(
             'paste.html',
             text=text,
-            highlighter=get_highlighter(text, None),
+            highlighter=get_highlighter(text, None, None),
             edit_url='#edit',
             raw_url='#raw',
             styles=STYLES_BY_CATEGORY,

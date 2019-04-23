@@ -133,11 +133,11 @@ def strip_diff_things(text):
     return s
 
 
-def get_highlighter(text, language):
+def get_highlighter(text, language, filename):
     if language in {None, 'autodetect'} and looks_like_ansi_color(text):
         language = 'ansi-color'
 
-    lexer = guess_lexer(text, language)
+    lexer = guess_lexer(text, language, filename)
 
     diff_requested = (language or '').startswith('diff-')
 
@@ -158,29 +158,41 @@ def get_highlighter(text, language):
         # ourselves a bit.
         if diff_requested or lexer.name.lower() == 'diff' or looks_like_diff(text):
             return DiffHighlighter(
-                guess_lexer(strip_diff_things(text), requested_diff_language),
+                guess_lexer(strip_diff_things(text), requested_diff_language, filename),
             )
 
     return PygmentsHighlighter(lexer)
 
 
-def guess_lexer(text, language, opts=None):
+def guess_lexer(text, language, filename, opts=None):
     lexer_opts = {'stripnl': False}
     if opts:
         lexer_opts = dict(lexer_opts, **opts)
 
+    # First, look for an exact lexer match name.
     try:
         return pygments.lexers.get_lexer_by_name(language, **lexer_opts)
     except pygments.util.ClassNotFound:
+        pass
+
+    # If that didn't work, if given a file name, try finding a lexer using that.
+    if filename is not None:
         try:
-            lexer = pygments.lexers.guess_lexer(text, **lexer_opts)
-            # Newer versions of Pygments will virtually always fall back to
-            # TextLexer due to its 0.01 priority (which is what it returns on
-            # analyzing any text).
-            if not isinstance(lexer, pygments.lexers.TextLexer):
-                return lexer
+            return pygments.lexers.guess_lexer_for_filename(filename, text, **lexer_opts)
         except pygments.util.ClassNotFound:
             pass
+
+    # Finally, try to guess by looking at the file content.
+    try:
+        lexer = pygments.lexers.guess_lexer(text, **lexer_opts)
+
+        # Newer versions of Pygments will virtually always fall back to
+        # TextLexer due to its 0.01 priority (which is what it returns on
+        # analyzing any text).
+        if not isinstance(lexer, pygments.lexers.TextLexer):
+            return lexer
+    except pygments.util.ClassNotFound:
+        pass
 
     # Default to Python, it highlights most things reasonably.
     return pygments.lexers.get_lexer_by_name('python', **lexer_opts)

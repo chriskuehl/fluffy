@@ -61,17 +61,24 @@ def test_ui_language_exists(language):
     assert pygments.lexers.get_lexer_by_name('python') is not None
 
 
-def test_guess_lexer_uses_valid_lang():
-    assert guess_lexer(EXAMPLE_C, 'ruby').name == 'Ruby'
+def test_guess_lexer_precedence():
+    # Prefers exact lexer name match
+    assert guess_lexer(EXAMPLE_C, 'ruby', 'my-thing.css').name == 'Ruby'
+
+    # Otherwise uses filename detection
+    assert guess_lexer(EXAMPLE_C, 'not-a-lexer', 'my-thing.css').name == 'CSS'
+
+    # Finally uses text detection
+    assert guess_lexer(EXAMPLE_C, 'not-a-lexer', 'not-a-filename-that-matches').name == 'C'
 
 
 @pytest.mark.parametrize('invalid_lang', ['herpderp', '', None, 'autodetect'])
 def test_guess_lexer_autodetects_with_invalid_lang(invalid_lang):
-    assert guess_lexer(EXAMPLE_C, invalid_lang).name == 'C'
+    assert guess_lexer(EXAMPLE_C, invalid_lang, None).name == 'C'
 
 
 def test_guess_lexer_falls_back_to_python():
-    assert guess_lexer('what language even is this', None).name == 'Python'
+    assert guess_lexer('what language even is this', None, None).name == 'Python'
 
 
 @pytest.mark.parametrize(
@@ -110,15 +117,16 @@ def test_strip_diff_things():
 
 
 @pytest.mark.parametrize(
-    ('text', 'language', 'expected'), (
-        (EXAMPLE_C, 'c', pygments.lexers.get_lexer_by_name('c')),
-        (EXAMPLE_C, 'does not exist', pygments.lexers.get_lexer_by_name('c')),
-        (EXAMPLE_C, None, pygments.lexers.get_lexer_by_name('c')),
-        (EXAMPLE_DIFF, 'c', pygments.lexers.get_lexer_by_name('c')),
+    ('text', 'language', 'filename', 'expected'), (
+        (EXAMPLE_C, 'c', None, pygments.lexers.get_lexer_by_name('c')),
+        (EXAMPLE_C, 'does not exist', None, pygments.lexers.get_lexer_by_name('c')),
+        (EXAMPLE_C, None, None, pygments.lexers.get_lexer_by_name('c')),
+        (EXAMPLE_DIFF, 'c', None, pygments.lexers.get_lexer_by_name('c')),
+        (EXAMPLE_C, None, 'my_file.rs', pygments.lexers.get_lexer_by_name('rust')),
     ),
 )
-def test_get_highlighter_pygments(text, language, expected):
-    h = get_highlighter(text, language)
+def test_get_highlighter_pygments(text, language, filename, expected):
+    h = get_highlighter(text, language, filename)
     assert isinstance(h, PygmentsHighlighter)
     assert type(h.lexer) is type(expected)
 
@@ -136,6 +144,6 @@ def test_get_highlighter_pygments(text, language, expected):
     ),
 )
 def test_get_highlighter_diff(text, language, expected):
-    h = get_highlighter(text, language)
+    h = get_highlighter(text, language, None)
     assert isinstance(h, DiffHighlighter)
     assert type(h.lexer) is type(expected)

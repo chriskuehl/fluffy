@@ -73,7 +73,7 @@ def upload():
                         pb = ctx.enter_context(HtmlToStore.from_html(render_template(
                             'paste.html',
                             text=text,
-                            highlighter=get_highlighter(text, None),
+                            highlighter=get_highlighter(text, None, uf.human_name),
                             raw_url=app.config['FILE_URL'].format(name=uf.name),
                             styles=STYLES_BY_CATEGORY,
                         )))
@@ -142,7 +142,7 @@ def paste():
         # HTML view (Markdown or paste)
         lang = request.form['language']
         if lang != 'rendered-markdown':
-            highlighter = get_highlighter(text, lang)
+            highlighter = get_highlighter(text, lang, None)
             lang_title = highlighter.name
             paste_obj = ctx.enter_context(HtmlToStore.from_html(render_template(
                 'paste.html',
