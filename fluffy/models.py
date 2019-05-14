@@ -74,6 +74,13 @@ class UploadedFile(
     ObjectToStore,
 ):
 
+    def __new__(cls, *args, **kwargs):
+        uf = super().__new__(cls, *args, **kwargs)
+        if uf.extension in app.config.get('EXTENSION_BLACKLIST', ()):
+            raise ExtensionForbiddenError(uf.extension)
+        else:
+            return uf
+
     @classmethod
     @contextmanager
     def from_http_file(cls, f):
@@ -200,4 +207,8 @@ class HtmlToStore(
 
 
 class FileTooLargeError(Exception):
+    pass
+
+
+class ExtensionForbiddenError(Exception):
     pass

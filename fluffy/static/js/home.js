@@ -213,13 +213,14 @@ function upload() {
                 return; // upload was cancelled
             }
 
-            if (xhr.status === 413) {
-                alert('Sorry! This request exceeds the maximum upload size.');
+            if (xhr.responseJSON) {
+                alert(xhr.responseJSON.error);
                 cancelUpload();
             } else {
                 // TODO: improve error handling
                 console.log("Unhandled failure: " + status + ", status=" + xhr.status + ", statusText=" + xhr.statusText);
                 alert("Sorry, an unexpected error occured.");
+                cancelUpload();
             }
         },
 
