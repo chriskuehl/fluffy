@@ -13,6 +13,7 @@ from fluffy.component.backends import get_backend
 from fluffy.component.highlighting import get_highlighter
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
 from fluffy.component.styles import STYLES_BY_CATEGORY
+from fluffy.models import ExtensionForbiddenError
 from fluffy.models import FileTooLargeError
 from fluffy.models import HtmlToStore
 from fluffy.models import UploadedFile
@@ -90,6 +91,12 @@ def upload():
                         human_size(app.config['MAX_UPLOAD_SIZE']),
                     ),
                 }), 413
+            except ExtensionForbiddenError as ex:
+                extension, = ex.args
+                return jsonify({
+                    'success': False,
+                    'error': 'Sorry, files with the extension ".{}" are not allowed.'.format(extension),
+                }), 403
 
         details_obj = ctx.enter_context(
             HtmlToStore.from_html(render_template(

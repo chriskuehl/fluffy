@@ -28,3 +28,6 @@ MAX_UPLOAD_SIZE = 20 * 1048576
 
 # max size Flask will accept; maybe a little larger?
 MAX_CONTENT_LENGTH = MAX_UPLOAD_SIZE * 10
+
+# file extensions to forbid for uploads
+EXTENSION_BLACKLIST = frozenset(('exe',))
