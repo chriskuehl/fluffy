@@ -80,8 +80,9 @@ release: $(VENV) assets
 	cd cli && ../$(BIN)/twine upload --skip-existing dist/*
 	cd cli && debuild -us -uc -b
 
-.PHONY: update-requirements
-update-requirements:
+.PHONY: upgrade-requirements
+upgrade-requirements:
+	# TODO: use upgrade-requirements instead
 	$(eval TMP := $(shell mktemp -d))
 	python ./vendor/venv-update venv= $(TMP) -ppython3 install= .
 	. $(TMP)/bin/activate && \
