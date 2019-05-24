@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <div id="highlightContainer" class="highlight-default">
+    <div id="highlightContainer" class="{% block highlight_class %}highlight-default{% endblock %}">
         {% block highlight_start %}{% endblock %}
         <div class="paste-toolbar">
             <div class="info">

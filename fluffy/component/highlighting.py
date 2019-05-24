@@ -51,12 +51,18 @@ class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
     def name(self):
         return self.lexer.name
 
+    @property
+    def is_terminal_output(self):
+        return 'ansi-color' in self.lexer.aliases
+
     def highlight(self, text):
         text = _highlight(text, self.lexer)
         return text
 
 
-class DiffHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
+class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
+
+    is_terminal_output = False
 
     @property
     def name(self):

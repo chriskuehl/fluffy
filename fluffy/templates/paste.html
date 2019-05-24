@@ -1,6 +1,20 @@
 {% set page_name = 'paste' %}
 {% extends 'layouts/text.html' %}
 
+{#
+    Terminal output gets its own preferred theme setting, since many people
+    seem to prefer a dark background for terminal output, but a light
+    background for regular code.
+#}
+{% if highlighter.is_terminal_output %}
+    {% set preferredStyleVar = 'preferredStyleTerminal' %}
+    {% set defaultStyle = 'monokai' %}
+{% else %}
+    {% set preferredStyleVar = 'preferredStyle' %}
+    {% set defaultStyle = 'default' %}
+{% endif %}
+{% block highlight_class %}highlight-{{defaultStyle}}{% endblock %}
+
 {% block extra_head %}
     <link rel="stylesheet" href="{{asset_url('pygments.css')}}" />
 {% endblock %}
@@ -11,10 +25,11 @@
 
 {% block highlight_start %}
     <script>
+        var preferredStyleVar = {{preferredStyleVar|tojson}};
         function changeStyleTo(style) {
             document.getElementById('highlightContainer').className = 'highlight-' + style;
             if (hasStorage) {
-                localStorage.setItem('preferredStyle', style);
+                localStorage.setItem(preferredStyleVar, style);
             }
         }
 
@@ -32,7 +47,7 @@
 
         var preferredStyle = null;
         if (hasStorage) {
-            preferredStyle = localStorage.getItem('preferredStyle');
+            preferredStyle = localStorage.getItem(preferredStyleVar);
             if (preferredStyle !== null) {
                 changeStyleTo(preferredStyle);
             }
@@ -58,7 +73,7 @@
                 {% for style in styles %}
                     <option
                       value="{{style.name}}"
-                      {% if style.name == 'default' %}
+                      {% if style.name == defaultStyle %}
                           selected="selected"
                       {% endif %}
                     >{{style.name}}</option>
