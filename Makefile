@@ -8,7 +8,7 @@ export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 minimal: $(VENV) assets settings.py
 
 $(VENV): setup.py cli/setup.py requirements.txt requirements-dev.txt
-	vendor/venv-update venv= -p python3 venv install= -r requirements.txt -r requirements-dev.txt
+	vendor/venv-update venv= -p python3 venv install= -r requirements.txt -r requirements-dev.txt -e cli
 
 fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/sassc fluffy/static/scss/app.scss $@
@@ -81,10 +81,5 @@ release: $(VENV) assets
 	cd cli && debuild -us -uc -b
 
 .PHONY: upgrade-requirements
-upgrade-requirements:
-	# TODO: use upgrade-requirements instead
-	$(eval TMP := $(shell mktemp -d))
-	python ./vendor/venv-update venv= $(TMP) -ppython3 install= .
-	. $(TMP)/bin/activate && \
-		pip freeze | sort | grep -vE '^(wheel|pip-faster|virtualenv|fluffy-server)==' > requirements.txt
-	rm -rf $(TMP)
+upgrade-requirements: venv
+	upgrade-requirements

@@ -4,6 +4,7 @@ from collections import namedtuple
 import pygments.lexers
 import pygments.styles.xcode
 from pygments.formatters import HtmlFormatter
+from pygments_ansi_color import ExtendedColorHtmlFormatterMixin
 from pyquery import PyQuery as pq
 
 from fluffy.component.styles import DEFAULT_STYLE
@@ -38,7 +39,11 @@ UI_LANGUAGES_MAP = {
 }
 
 
-_pygments_formatter = HtmlFormatter(
+class FluffyFormatter(ExtendedColorHtmlFormatterMixin, HtmlFormatter):
+    pass
+
+
+_pygments_formatter = FluffyFormatter(
     noclasses=False,
     linespans='line',
     style=DEFAULT_STYLE,

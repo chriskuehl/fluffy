@@ -1,6 +1,7 @@
 import operator
 
 import pygments.styles
+from csscompressor import compress
 from pygments.formatters import HtmlFormatter
 from pygments_ansi_color import color_tokens
 
@@ -71,7 +72,7 @@ def _make_style(
 ):
     base_style = pygments.styles.get_style_by_name(base)
     new_styles = dict(base_style.styles)
-    new_styles.update(color_tokens(fg_colors, bg_colors))
+    new_styles.update(color_tokens(fg_colors, bg_colors, enable_256color=True))
     return type(
         'Fluffy' + base_style.__name__,
         (base_style,),
@@ -151,8 +152,8 @@ def main():
     for styles in STYLES_BY_CATEGORY.values():
         for style in styles:
             prefix = '.highlight-{}'.format(style.name)
-            print(HtmlFormatter(style=style).get_style_defs(prefix + ' .highlight'))
-            print(
+            css = HtmlFormatter(style=style).get_style_defs(prefix + ' .highlight')
+            css += (
                 '{prefix} .line-numbers {{'
                 '  background-color: {style.line_numbers_bg_color};'
                 '  border-color: {style.border_color};'
@@ -188,8 +189,9 @@ def main():
                 '{prefix} .text .highlight > pre > span.diff-remove.selected {{'
                 '  background-color: {style.diff_remove_selected_line_bg_color};'
                 '}}'
-                ''.format(prefix=prefix, style=style),
+                ''.format(prefix=prefix, style=style)
             )
+            print(compress(css))
 
 
 if __name__ == '__main__':

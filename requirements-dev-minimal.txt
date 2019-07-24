@@ -1,0 +1,13 @@
+coverage
+coverage-enable-subprocess
+coveralls
+ephemeral-port-reserve
+gunicorn
+libsass
+mock
+pgctl
+pre-commit>=1.0
+pytest
+requests
+requirements-tools
+twine
