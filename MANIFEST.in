@@ -1,2 +1,3 @@
+include requirements-minimal.txt
 recursive-include fluffy/static *
 recursive-include fluffy/templates *
