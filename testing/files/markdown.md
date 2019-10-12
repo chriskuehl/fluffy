@@ -164,6 +164,22 @@ Instead of overwriting an entire config file just to change one value, try to
 3. Better monitoring of puppet runs (e.g. to see when a server has not updated
    recently, which is a common problem on desktops)
 
+## Some tables!
+
+table one:
+
+| Command | Description |
+| --- | --- |
+| `git status` | List all *new or modified* files |
+| `git diff` | Show file differences that **haven't been** staged |
+
+table 2:
+
+| Left-aligned | Center-aligned | Right-aligned |
+| :---         |     :---:      |          ---: |
+| git status   | git status     | git status    |
+| git diff     | git diff       | git diff      |
+
 [puppet]: https://en.wikipedia.org/wiki/Puppet_(software)
 [ocf]: https://www.ocf.berkeley.edu/
 [debian]: https://www.debian.org/

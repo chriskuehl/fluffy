@@ -87,4 +87,14 @@ $source-code-font: 'Source Code Pro', monospace;
             padding-left: 5px;
         }
     }
+
+    td, th {
+        border: solid 1px #ddd;
+        padding: 8px;
+    }
+
+    th {
+        font-weight: bold;
+        background-color: #f1f1f1;
+    }
 }
