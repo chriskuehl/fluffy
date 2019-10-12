@@ -71,13 +71,17 @@ def upload():
                     except UnicodeDecodeError:
                         pass
                     else:
-                        pb = ctx.enter_context(HtmlToStore.from_html(render_template(
-                            'paste.html',
-                            text=text,
-                            highlighter=get_highlighter(text, None, uf.human_name),
-                            raw_url=app.config['FILE_URL'].format(name=uf.name),
-                            styles=STYLES_BY_CATEGORY,
-                        )))
+                        pb = ctx.enter_context(
+                            HtmlToStore.from_html(
+                                render_template(
+                                    'paste.html',
+                                    text=text,
+                                    highlighter=get_highlighter(text, None, uf.human_name),
+                                    raw_url=app.config['FILE_URL'].format(name=uf.name),
+                                    styles=STYLES_BY_CATEGORY,
+                                ),
+                            ),
+                        )
                         objects.append(pb)
 
                 uploaded_files.append((uf, pb))
@@ -99,10 +103,12 @@ def upload():
                 }), 403
 
         details_obj = ctx.enter_context(
-            HtmlToStore.from_html(render_template(
-                'details.html',
-                uploads=uploaded_files,
-            )),
+            HtmlToStore.from_html(
+                render_template(
+                    'details.html',
+                    uploads=uploaded_files,
+                ),
+            ),
         )
         objects.append(details_obj)
 
@@ -151,21 +157,29 @@ def paste():
         if lang != 'rendered-markdown':
             highlighter = get_highlighter(text, lang, None)
             lang_title = highlighter.name
-            paste_obj = ctx.enter_context(HtmlToStore.from_html(render_template(
-                'paste.html',
-                text=text,
-                highlighter=highlighter,
-                raw_url=app.config['FILE_URL'].format(name=uf.name),
-                styles=STYLES_BY_CATEGORY,
-            )))
+            paste_obj = ctx.enter_context(
+                HtmlToStore.from_html(
+                    render_template(
+                        'paste.html',
+                        text=text,
+                        highlighter=highlighter,
+                        raw_url=app.config['FILE_URL'].format(name=uf.name),
+                        styles=STYLES_BY_CATEGORY,
+                    ),
+                ),
+            )
             objects.append(paste_obj)
         else:
             lang_title = 'Rendered Markdown'
-            paste_obj = ctx.enter_context(HtmlToStore.from_html(render_template(
-                'markdown.html',
-                text=text,
-                raw_url=app.config['FILE_URL'].format(name=uf.name),
-            )))
+            paste_obj = ctx.enter_context(
+                HtmlToStore.from_html(
+                    render_template(
+                        'markdown.html',
+                        text=text,
+                        raw_url=app.config['FILE_URL'].format(name=uf.name),
+                    ),
+                ),
+            )
             objects.append(paste_obj)
 
         # Metadata JSON object
@@ -185,10 +199,12 @@ def paste():
                 'raw_text': transformed_text,
             },
         }
-        metadata_obj = ctx.enter_context(UploadedFile.from_text(
-            json.dumps(metadata, indent=4, sort_keys=True),
-            human_name='metadata.json',
-        ))
+        metadata_obj = ctx.enter_context(
+            UploadedFile.from_text(
+                json.dumps(metadata, indent=4, sort_keys=True),
+                human_name='metadata.json',
+            ),
+        )
         objects.append(metadata_obj)
 
         upload_objects(objects, metadata_url=metadata_obj.url)
