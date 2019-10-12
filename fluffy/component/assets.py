@@ -62,15 +62,17 @@ def upload_assets():
             asset_path = asset_hash_path[:-5]
 
             if os.path.isfile(asset_path):
-                commands.append('aws s3 cp {} s3://{}/{}'.format(
-                    asset_path,
-                    app.config['STORAGE_BACKEND']['asset_bucket'],
-                    app.config['STORAGE_BACKEND']['asset_s3path'].format(
-                        name=name_for_asset(
-                            os.path.relpath(asset_path, str(STATIC_ROOT)),
+                commands.append(
+                    'aws s3 cp {} s3://{}/{}'.format(
+                        asset_path,
+                        app.config['STORAGE_BACKEND']['asset_bucket'],
+                        app.config['STORAGE_BACKEND']['asset_s3path'].format(
+                            name=name_for_asset(
+                                os.path.relpath(asset_path, str(STATIC_ROOT)),
+                            ),
                         ),
                     ),
-                ))
+                )
 
     print('=' * 50)
     print('\n'.join(commands))
