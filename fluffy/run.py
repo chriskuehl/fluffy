@@ -11,57 +11,56 @@ import fluffy.component.markdown  # noreorder # noqa
 import fluffy.views  # noreorder # noqa
 
 
-TESTING_DIR = Path(__file__).parent.parent / 'testing'
+TESTING_DIR = Path(__file__).parent.parent / "testing"
 
 
 def debug():  # pragma: no cover
-
-    @app.route('/test/paste')
+    @app.route("/test/paste")
     def view_paste():
         return render_template(
-            'paste.html',
-            text=(TESTING_DIR / 'files' / 'code.py').open().read(),
-            highlighter=get_highlighter('', 'python', None),
-            edit_url='#edit',
-            raw_url='#raw',
+            "paste.html",
+            text=(TESTING_DIR / "files" / "code.py").open().read(),
+            highlighter=get_highlighter("", "python", None),
+            edit_url="#edit",
+            raw_url="#raw",
             styles=STYLES_BY_CATEGORY,
         )
 
-    @app.route('/test/diff')
+    @app.route("/test/diff")
     def view_diff():
-        text = (TESTING_DIR / 'files' / 'python.diff').open().read()
+        text = (TESTING_DIR / "files" / "python.diff").open().read()
         return render_template(
-            'paste.html',
+            "paste.html",
             text=text,
             highlighter=get_highlighter(text, None, None),
-            edit_url='#edit',
-            raw_url='#raw',
+            edit_url="#edit",
+            raw_url="#raw",
             styles=STYLES_BY_CATEGORY,
         )
 
-    @app.route('/test/ansi-color')
+    @app.route("/test/ansi-color")
     def view_ansi_color():
-        text = (TESTING_DIR / 'files' / 'ansi-color').open().read()
+        text = (TESTING_DIR / "files" / "ansi-color").open().read()
         return render_template(
-            'paste.html',
+            "paste.html",
             text=text,
             highlighter=get_highlighter(text, None, None),
-            edit_url='#edit',
-            raw_url='#raw',
+            edit_url="#edit",
+            raw_url="#raw",
             styles=STYLES_BY_CATEGORY,
         )
 
-    @app.route('/test/markdown')
+    @app.route("/test/markdown")
     def view_markdown():
         return render_template(
-            'markdown.html',
-            text=(TESTING_DIR / 'files' / 'markdown.md').open().read(),
-            edit_url='#edit',
-            raw_url='#raw',
+            "markdown.html",
+            text=(TESTING_DIR / "files" / "markdown.md").open().read(),
+            edit_url="#edit",
+            raw_url="#raw",
         )
 
     app.run(debug=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(debug())

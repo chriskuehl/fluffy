@@ -13,20 +13,21 @@ from fluffy.utils import gen_unique_id
 from fluffy.utils import ONE_MB
 
 
-MIME_WHITELIST = frozenset([
-    'application/pdf',
-    'application/x-ruby',
-    'audio/',
-    'image/',
-    'text/plain',
-    'text/x-python',
-    'text/x-sh',
-    'video/',
-])
+MIME_WHITELIST = frozenset(
+    [
+        "application/pdf",
+        "application/x-ruby",
+        "audio/",
+        "image/",
+        "text/plain",
+        "text/x-python",
+        "text/x-sh",
+        "video/",
+    ]
+)
 
 
 class ObjectToStore:
-
     @property
     def open_file(self):
         raise NotImplementedError()
@@ -41,18 +42,9 @@ class ObjectToStore:
 
 
 class UploadedFile(
-    namedtuple(
-        'UploadedFile',
-        (
-            'human_name',
-            'num_bytes',
-            'open_file',
-            'unique_id',
-        ),
-    ),
+    namedtuple("UploadedFile", ("human_name", "num_bytes", "open_file", "unique_id")),
     ObjectToStore,
 ):
-
     @classmethod
     @contextmanager
     def from_http_file(cls, f):
@@ -62,7 +54,7 @@ class UploadedFile(
             # even send it).
             f.save(tf)
             num_bytes = f.tell()
-            if num_bytes > app.config['MAX_UPLOAD_SIZE']:
+            if num_bytes > app.config["MAX_UPLOAD_SIZE"]:
                 raise FileTooLargeError()
             tf.seek(0)
 
@@ -76,13 +68,13 @@ class UploadedFile(
     @classmethod
     @contextmanager
     def from_text(cls, text):
-        with io.BytesIO(text.encode('utf8')) as open_file:
+        with io.BytesIO(text.encode("utf8")) as open_file:
             num_bytes = len(text)
-            if num_bytes > app.config['MAX_UPLOAD_SIZE']:
+            if num_bytes > app.config["MAX_UPLOAD_SIZE"]:
                 raise FileTooLargeError()
 
             yield cls(
-                human_name='plaintext.txt',
+                human_name="plaintext.txt",
                 num_bytes=num_bytes,
                 open_file=open_file,
                 unique_id=gen_unique_id(),
@@ -92,7 +84,7 @@ class UploadedFile(
     def name(self):
         """File name that will be stored."""
         if self.extension:
-            return '{self.unique_id}.{self.extension}'.format(self=self)
+            return "{self.unique_id}.{self.extension}".format(self=self)
         else:
             return self.unique_id
 
@@ -100,7 +92,7 @@ class UploadedFile(
     def extension(self):
         """Return file extension, or empty string."""
         _, ext = os.path.splitext(self.human_name)
-        if ext.startswith('.'):
+        if ext.startswith("."):
             ext = ext[1:]
         return ext
 
@@ -119,49 +111,33 @@ class UploadedFile(
     @cached_property
     def mimetype(self):
         mime, _ = mimetypes.guess_type(self.name)
-        if (
-                mime and
-                any(mime.startswith(check) for check in MIME_WHITELIST)
-        ):
+        if mime and any(mime.startswith(check) for check in MIME_WHITELIST):
             return mime
         else:
             if self.probably_binary:
-                return 'application/octet-stream'
+                return "application/octet-stream"
             else:
-                return 'text/plain'
+                return "text/plain"
 
     @cached_property
     def download_url(self):
-        return app.config['FILE_URL'].format(name=self.name)
+        return app.config["FILE_URL"].format(name=self.name)
 
 
-class HtmlToStore(
-    namedtuple(
-        'HtmlToStore',
-        (
-            'name',
-            'open_file',
-        ),
-    ),
-    ObjectToStore,
-):
-
+class HtmlToStore(namedtuple("HtmlToStore", ("name", "open_file")), ObjectToStore):
     @classmethod
     @contextmanager
     def from_html(cls, html):
-        with io.BytesIO(html.encode('utf8')) as open_file:
-            yield cls(
-                name=gen_unique_id() + '.html',
-                open_file=open_file,
-            )
+        with io.BytesIO(html.encode("utf8")) as open_file:
+            yield cls(name=gen_unique_id() + ".html", open_file=open_file)
 
     @property
     def mimetype(self):
-        return 'text/html'
+        return "text/html"
 
     @cached_property
     def url(self):
-        return app.config['HTML_URL'].format(name=self.name)
+        return app.config["HTML_URL"].format(name=self.name)
 
 
 class FileTooLargeError(Exception):

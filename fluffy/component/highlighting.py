@@ -13,29 +13,29 @@ from fluffy.component.styles import DEFAULT_STYLE
 # We purposefully don't list all possible languages, and instead just the ones
 # we think people are most likely to use.
 UI_LANGUAGES_MAP = {
-    'bash': 'Bash / Shell',
-    'c': 'C',
-    'c++': 'C++',
-    'cheetah': 'Cheetah',
-    'diff': 'Diff',
-    'groovy': 'Groovy',
-    'haskell': 'Haskell',
-    'html': 'HTML',
-    'java': 'Java',
-    'javascript': 'JavaScript',
-    'json': 'JSON',
-    'kotlin': 'Kotlin',
-    'lua': 'Lua',
-    'makefile': 'Makefile',
-    'objective-c': 'Objective-C',
-    'php': 'PHP',
-    'python3': 'Python',
-    'ruby': 'Ruby',
-    'rust': 'Rust',
-    'scala': 'Scala',
-    'sql': 'SQL',
-    'swift': 'Swift',
-    'yaml': 'YAML',
+    "bash": "Bash / Shell",
+    "c": "C",
+    "c++": "C++",
+    "cheetah": "Cheetah",
+    "diff": "Diff",
+    "groovy": "Groovy",
+    "haskell": "Haskell",
+    "html": "HTML",
+    "java": "Java",
+    "javascript": "JavaScript",
+    "json": "JSON",
+    "kotlin": "Kotlin",
+    "lua": "Lua",
+    "makefile": "Makefile",
+    "objective-c": "Objective-C",
+    "php": "PHP",
+    "python3": "Python",
+    "ruby": "Ruby",
+    "rust": "Rust",
+    "scala": "Scala",
+    "sql": "SQL",
+    "swift": "Swift",
+    "yaml": "YAML",
 }
 
 
@@ -44,58 +44,55 @@ class FluffyFormatter(ExtendedColorHtmlFormatterMixin, HtmlFormatter):
 
 
 _pygments_formatter = FluffyFormatter(
-    noclasses=False,
-    linespans='line',
-    style=DEFAULT_STYLE,
+    noclasses=False, linespans="line", style=DEFAULT_STYLE
 )
 
 
-class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
-
+class PygmentsHighlighter(namedtuple("PygmentsHighlighter", ("lexer",))):
     @property
     def name(self):
         return self.lexer.name
 
     @property
     def is_terminal_output(self):
-        return 'ansi-color' in self.lexer.aliases
+        return "ansi-color" in self.lexer.aliases
 
     def highlight(self, text):
         text = _highlight(text, self.lexer)
         return text
 
 
-class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
+class DiffHighlighter(namedtuple("DiffHighlighter", ("lexer",))):
 
     is_terminal_output = False
 
     @property
     def name(self):
-        return 'Diff ({})'.format(self.lexer.name)
+        return "Diff ({})".format(self.lexer.name)
 
     def highlight(self, text):
         html = pq(_highlight(text, self.lexer))
-        lines = html('pre > span')
+        lines = html("pre > span")
 
         # there's an empty span at the start...
-        assert 'id' not in lines[0].attrib
+        assert "id" not in lines[0].attrib
         pq(lines[0]).remove()
         lines.pop(0)
 
         for line in lines:
             line = pq(line)
-            assert line.attr('id').startswith('line-')
+            assert line.attr("id").startswith("line-")
 
             el = pq(line)
 
             # .text() doesn't include whitespace before it, but .html() does
             h = el.html()
-            text = h[:len(h) - len(h.lstrip())] + el.text()
+            text = h[: len(h) - len(h.lstrip())] + el.text()
 
-            if text.startswith('+'):
-                line.addClass('diff-add')
-            elif text.startswith('-'):
-                line.addClass('diff-remove')
+            if text.startswith("+"):
+                line.addClass("diff-add")
+            elif text.startswith("-"):
+                line.addClass("diff-remove")
 
         return html.outerHtml()
 
@@ -103,12 +100,12 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
 def looks_like_diff(text):
     """Return whether the text looks like a diff."""
     # TODO: improve this
-    return bool(re.search(r'^diff --git ', text, re.MULTILINE))
+    return bool(re.search(r"^diff --git ", text, re.MULTILINE))
 
 
 def looks_like_ansi_color(text):
     """Return whether the text looks like it has ANSI color codes."""
-    return '\x1b[' in text
+    return "\x1b[" in text
 
 
 def strip_diff_things(text):
@@ -119,64 +116,66 @@ def strip_diff_things(text):
     Really, we want it to highlight it like it's Python, and then we'll apply
     the diff formatting on top.
     """
-    s = ''
+    s = ""
 
     for line in text.splitlines():
-        if line.startswith((
-            'diff --git',
-            '--- ',
-            '+++ ',
-            'index ',
-            '@@ ',
-            'Author:',
-            'AuthorDate:',
-            'Commit:',
-            'CommitDate:',
-            'commit ',
-        )):
+        if line.startswith(
+            (
+                "diff --git",
+                "--- ",
+                "+++ ",
+                "index ",
+                "@@ ",
+                "Author:",
+                "AuthorDate:",
+                "Commit:",
+                "CommitDate:",
+                "commit ",
+            )
+        ):
             continue
 
-        if line.startswith(('+', '-')):
+        if line.startswith(("+", "-")):
             line = line[1:]
 
-        s += line + '\n'
+        s += line + "\n"
 
     return s
 
 
 def get_highlighter(text, language, filename):
-    if language in {None, 'autodetect'} and looks_like_ansi_color(text):
-        language = 'ansi-color'
+    if language in {None, "autodetect"} and looks_like_ansi_color(text):
+        language = "ansi-color"
 
     lexer = guess_lexer(text, language, filename)
 
-    diff_requested = (language or '').startswith('diff-')
+    diff_requested = (language or "").startswith("diff-")
 
     if (
-            diff_requested or
-            lexer is None or
-            language is None or
-            lexer.name.lower() != language.lower() or
-            lexer.name.lower() == 'diff'
+        diff_requested
+        or lexer is None
+        or language is None
+        or lexer.name.lower() != language.lower()
+        or lexer.name.lower() == "diff"
     ):
         if diff_requested:
-            _, requested_diff_language = language.split('-', 1)
+            _, requested_diff_language = language.split("-", 1)
         else:
             requested_diff_language = None
 
         # If it wasn't a perfect match, then we had to guess a language.
         # Pygments diff highlighting isn't too great, so we try to handle that
         # ourselves a bit.
-        if diff_requested or lexer.name.lower() == 'diff' or looks_like_diff(text):
+        if diff_requested or lexer.name.lower() == "diff" or looks_like_diff(text):
             return DiffHighlighter(
-                guess_lexer(strip_diff_things(text), requested_diff_language, filename),
+                guess_lexer(strip_diff_things(text), requested_diff_language, filename)
             )
 
     return PygmentsHighlighter(lexer)
 
 
 def guess_lexer(text, language, filename, opts=None):
-    lexer_opts = {'stripnl': False}
+    lexer_opts = {"stripnl": False}
     if opts:
         lexer_opts = dict(lexer_opts, **opts)
 
@@ -189,7 +188,9 @@ def guess_lexer(text, language, filename, opts=None):
     # If that didn't work, if given a file name, try finding a lexer using that.
     if filename is not None:
         try:
-            return pygments.lexers.guess_lexer_for_filename(filename, text, **lexer_opts)
+            return pygments.lexers.guess_lexer_for_filename(
+                filename, text, **lexer_opts
+            )
         except pygments.util.ClassNotFound:
             pass
 
@@ -206,12 +207,8 @@ def guess_lexer(text, language, filename, opts=None):
         pass
 
     # Default to Python, it highlights most things reasonably.
-    return pygments.lexers.get_lexer_by_name('python', **lexer_opts)
+    return pygments.lexers.get_lexer_by_name("python", **lexer_opts)
 
 
 def _highlight(text, lexer):
-    return pygments.highlight(
-        text,
-        lexer,
-        _pygments_formatter,
-    )
+    return pygments.highlight(text, lexer, _pygments_formatter)

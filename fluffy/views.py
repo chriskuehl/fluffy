@@ -22,19 +22,16 @@ from fluffy.utils import ICON_EXTENSIONS
 from fluffy.utils import ONE_MB
 
 
-@app.route('/', methods={'GET', 'POST'})
+@app.route("/", methods={"GET", "POST"})
 def home():
-    text = request.form.get('text', '') or request.args.get('text', '')
+    text = request.form.get("text", "") or request.args.get("text", "")
     return render_template(
-        'home.html',
-        languages=sorted(
-            UI_LANGUAGES_MAP.items(),
-            key=lambda key_val: key_val[1],
-        ),
+        "home.html",
+        languages=sorted(UI_LANGUAGES_MAP.items(), key=lambda key_val: key_val[1]),
         text=text,
-        extra_html_classes='start-on-paste' if (text or 'text' in request.args) else '',
+        extra_html_classes="start-on-paste" if (text or "text" in request.args) else "",
         icon_extensions=ICON_EXTENSIONS,
-        max_upload_size=app.config['MAX_UPLOAD_SIZE'],
+        max_upload_size=app.config["MAX_UPLOAD_SIZE"],
     )
 
 
@@ -48,7 +45,7 @@ def upload_objects(objects, metadata_url=None):
             get_backend().store_object(obj, links, metadata_url)
 
 
-@app.route('/upload', methods={'POST'})
+@app.route("/upload", methods={"POST"})
 def upload():
     """Process an upload and return JSON status."""
     uploaded_files = []
@@ -56,7 +53,7 @@ def upload():
     with contextlib.ExitStack() as ctx:
         objects = []
 
-        for f in request.files.getlist('file'):
+        for f in request.files.getlist("file"):
             try:
                 uf = ctx.enter_context(UploadedFile.from_http_file(f))
                 objects.append(uf)
@@ -67,76 +64,89 @@ def upload():
                     # We can't know for sure it's utf8, so this might fail.
                     # If so, we just won't make a pastebin for this file.
                     try:
-                        text = uf.full_content.decode('utf8')
+                        text = uf.full_content.decode("utf8")
                     except UnicodeDecodeError:
                         pass
                     else:
                         pb = ctx.enter_context(
                             HtmlToStore.from_html(
                                 render_template(
-                                    'paste.html',
+                                    "paste.html",
                                     text=text,
-                                    highlighter=get_highlighter(text, None, uf.human_name),
-                                    raw_url=app.config['FILE_URL'].format(name=uf.name),
+                                    highlighter=get_highlighter(
+                                        text, None, uf.human_name
+                                    ),
+                                    raw_url=app.config["FILE_URL"].format(name=uf.name),
                                     styles=STYLES_BY_CATEGORY,
-                                ),
-                            ),
+                                )
+                            )
                         )
                         objects.append(pb)
 
                 uploaded_files.append((uf, pb))
             except FileTooLargeError as ex:
                 num_bytes, = ex.args
-                return jsonify({
-                    'success': False,
-                    'error': '{} ({}) exceeded the maximum file size limit of {}'.format(
-                        f.filename,
-                        human_size(num_bytes),
-                        human_size(app.config['MAX_UPLOAD_SIZE']),
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "{} ({}) exceeded the maximum file size limit of {}".format(
+                                f.filename,
+                                human_size(num_bytes),
+                                human_size(app.config["MAX_UPLOAD_SIZE"]),
+                            ),
+                        }
                     ),
-                }), 413
+                    413,
+                )
             except ExtensionForbiddenError as ex:
                 extension, = ex.args
-                return jsonify({
-                    'success': False,
-                    'error': 'Sorry, files with the extension ".{}" are not allowed.'.format(extension),
-                }), 403
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": 'Sorry, files with the extension ".{}" are not allowed.'.format(
+                                extension
+                            ),
+                        }
+                    ),
+                    403,
+                )
 
         details_obj = ctx.enter_context(
             HtmlToStore.from_html(
-                render_template(
-                    'details.html',
-                    uploads=uploaded_files,
-                ),
-            ),
+                render_template("details.html", uploads=uploaded_files)
+            )
         )
         objects.append(details_obj)
 
         upload_objects(objects)
 
-    if 'json' in request.args:
-        return jsonify({
-            'success': True,
-            'redirect': details_obj.url,
-            'uploaded_files': {
-                uf.human_name: {
-                    'raw': uf.url,
-                    'paste': pb.url if pb is not None else None,
-                }
-                for uf, pb in uploaded_files
-            },
-        })
+    if "json" in request.args:
+        return jsonify(
+            {
+                "success": True,
+                "redirect": details_obj.url,
+                "uploaded_files": {
+                    uf.human_name: {
+                        "raw": uf.url,
+                        "paste": pb.url if pb is not None else None,
+                    }
+                    for uf, pb in uploaded_files
+                },
+            }
+        )
     else:
         return redirect(details_obj.url)
 
 
-@app.route('/paste', methods={'POST'})
+@app.route("/paste", methods={"POST"})
 def paste():
     """Paste and redirect."""
-    text = request.form['text']
+    text = request.form["text"]
     # Browsers always send \r\n for the pasted text, which leads to bad
     # newlines when curling the raw text (#28).
-    transformed_text = text.replace('\r\n', '\n')
+    transformed_text = text.replace("\r\n", "\n")
 
     with contextlib.ExitStack() as ctx:
         objects = []
@@ -146,80 +156,79 @@ def paste():
             uf = ctx.enter_context(UploadedFile.from_text(transformed_text))
         except FileTooLargeError as ex:
             num_bytes, = ex.args
-            return 'Exceeded the max upload size of {} (tried to paste {})'.format(
-                human_size(app.config['MAX_UPLOAD_SIZE']),
-                human_size(num_bytes),
-            ), 413
+            return (
+                "Exceeded the max upload size of {} (tried to paste {})".format(
+                    human_size(app.config["MAX_UPLOAD_SIZE"]), human_size(num_bytes)
+                ),
+                413,
+            )
         objects.append(uf)
 
         # HTML view (Markdown or paste)
-        lang = request.form['language']
-        if lang != 'rendered-markdown':
+        lang = request.form["language"]
+        if lang != "rendered-markdown":
             highlighter = get_highlighter(text, lang, None)
             lang_title = highlighter.name
             paste_obj = ctx.enter_context(
                 HtmlToStore.from_html(
                     render_template(
-                        'paste.html',
+                        "paste.html",
                         text=text,
                         highlighter=highlighter,
-                        raw_url=app.config['FILE_URL'].format(name=uf.name),
+                        raw_url=app.config["FILE_URL"].format(name=uf.name),
                         styles=STYLES_BY_CATEGORY,
-                    ),
-                ),
+                    )
+                )
             )
             objects.append(paste_obj)
         else:
-            lang_title = 'Rendered Markdown'
+            lang_title = "Rendered Markdown"
             paste_obj = ctx.enter_context(
                 HtmlToStore.from_html(
                     render_template(
-                        'markdown.html',
+                        "markdown.html",
                         text=text,
-                        raw_url=app.config['FILE_URL'].format(name=uf.name),
-                    ),
-                ),
+                        raw_url=app.config["FILE_URL"].format(name=uf.name),
+                    )
+                )
             )
             objects.append(paste_obj)
 
         # Metadata JSON object
         metadata = {
-            'server_version': version,
-            'uploaded_files': {
-                'html': paste_obj.url,
-                'raw': uf.url,
-            },
-            'timestamp': time.time(),
-            'upload_type': 'paste',
-            'paste_details': {
-                'language': {
-                    'title': lang_title,
-                },
-                'num_lines': len(transformed_text.splitlines()),
-                'raw_text': transformed_text,
+            "server_version": version,
+            "uploaded_files": {"html": paste_obj.url, "raw": uf.url},
+            "timestamp": time.time(),
+            "upload_type": "paste",
+            "paste_details": {
+                "language": {"title": lang_title},
+                "num_lines": len(transformed_text.splitlines()),
+                "raw_text": transformed_text,
             },
         }
         metadata_obj = ctx.enter_context(
             UploadedFile.from_text(
                 json.dumps(metadata, indent=4, sort_keys=True),
-                human_name='metadata.json',
-            ),
+                human_name="metadata.json",
+            )
         )
         objects.append(metadata_obj)
 
         upload_objects(objects, metadata_url=metadata_obj.url)
 
-    if 'json' in request.args:
-        return jsonify({
-            'success': True,
-            'redirect': paste_obj.url,
-            'uploaded_files': {
-                'paste': {
-                    'raw': uf.url,
-                    'paste': paste_obj.url,
-                    'metadata': metadata_obj.url,
+    if "json" in request.args:
+        return jsonify(
+            {
+                "success": True,
+                "redirect": paste_obj.url,
+                "uploaded_files": {
+                    "paste": {
+                        "raw": uf.url,
+                        "paste": paste_obj.url,
+                        "metadata": metadata_obj.url,
+                    }
                 },
-            },
-        })
+            }
+        )
     else:
         return redirect(paste_obj.url)

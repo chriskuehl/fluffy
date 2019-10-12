@@ -12,34 +12,21 @@ repos:
     -   id: check-yaml
     -   id: debug-statements
     -   id: detect-private-key
-    -   id: double-quote-string-fixer
     -   id: end-of-file-fixer
     -   id: flake8
-        exclude: ^vendor/
     -   id: name-tests-test
     -   id: requirements-txt-fixer
     -   id: trailing-whitespace
--   repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v1.4.4
+-   repo: https://github.com/psf/black
+    rev: 19.3b0
     hooks:
-    -   id: autopep8
+    - id: black
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v1.7.0
     hooks:
     -   id: reorder-python-imports
--   repo: https://github.com/asottile/add-trailing-comma
-    rev: v1.4.1
-    hooks:
-    -   id: add-trailing-comma
-        args: [--py35-plus]
-        exclude: ^vendor/
 -   repo: https://github.com/asottile/pyupgrade
     rev: v1.24.1
     hooks:
     -   id: pyupgrade
         args: [--py3-plus]
-        exclude: ^vendor/
--   repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.1.7
-    hooks:
-    -   id: remove-tabs

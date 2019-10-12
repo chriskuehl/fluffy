@@ -10,7 +10,7 @@ from fluffy.component.highlighting import strip_diff_things
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
 
 
-EXAMPLE_DIFF = '''\
+EXAMPLE_DIFF = """\
 commit 5eb58ea2be01b451583429c4d8a931c0bcdbac8e
 Author:     Chris Kuehl <ckuehl@ocf.berkeley.edu>
 AuthorDate: Mon Jul 25 20:49:11 2016 -0400
@@ -36,10 +36,10 @@ index 217363a..409d912 100644
          except pygments.util.ClassNotFound:
 -            return pygments.lexers.get_lexer_by_name('python')
 +            return pygments.lexers.get_lexer_by_name('python', stripnl=False)
-'''
+"""
 
 
-EXAMPLE_C = '''\
+EXAMPLE_C = """\
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -52,52 +52,49 @@ int main(void) {
     /* exit 1 for success! */
     return 1;
 }
-'''
+"""
 
 
-@pytest.mark.parametrize('language', UI_LANGUAGES_MAP)
+@pytest.mark.parametrize("language", UI_LANGUAGES_MAP)
 def test_ui_language_exists(language):
     """Ensure a lexer exists for each language we advertise."""
-    assert pygments.lexers.get_lexer_by_name('python') is not None
+    assert pygments.lexers.get_lexer_by_name("python") is not None
 
 
 def test_guess_lexer_precedence():
     # Prefers exact lexer name match
-    assert guess_lexer(EXAMPLE_C, 'ruby', 'my-thing.css').name == 'Ruby'
+    assert guess_lexer(EXAMPLE_C, "ruby", "my-thing.css").name == "Ruby"
 
     # Otherwise uses filename detection
-    assert guess_lexer(EXAMPLE_C, 'not-a-lexer', 'my-thing.css').name == 'CSS'
+    assert guess_lexer(EXAMPLE_C, "not-a-lexer", "my-thing.css").name == "CSS"
 
     # Finally uses text detection
-    assert guess_lexer(EXAMPLE_C, 'not-a-lexer', 'not-a-filename-that-matches').name == 'C'
+    assert (
+        guess_lexer(EXAMPLE_C, "not-a-lexer", "not-a-filename-that-matches").name == "C"
+    )
 
 
-@pytest.mark.parametrize('invalid_lang', ['herpderp', '', None, 'autodetect'])
+@pytest.mark.parametrize("invalid_lang", ["herpderp", "", None, "autodetect"])
 def test_guess_lexer_autodetects_with_invalid_lang(invalid_lang):
-    assert guess_lexer(EXAMPLE_C, invalid_lang, None).name == 'C'
+    assert guess_lexer(EXAMPLE_C, invalid_lang, None).name == "C"
 
 
 def test_guess_lexer_falls_back_to_python():
-    assert guess_lexer('what language even is this', None, None).name == 'Python'
+    assert guess_lexer("what language even is this", None, None).name == "Python"
 
 
 @pytest.mark.parametrize(
-    ('text', 'expected'), (
-        ('', False),
-        (
-            'some simple\n'
-            'text is here\n',
-            False,
-        ),
-        (EXAMPLE_DIFF, True),
-    ),
+    ("text", "expected"),
+    (("", False), ("some simple\n" "text is here\n", False), (EXAMPLE_DIFF, True)),
 )
 def test_looks_like_diff(text, expected):
     assert looks_like_diff(text) is expected
 
 
 def test_strip_diff_things():
-    assert strip_diff_things(EXAMPLE_DIFF) == '''\
+    assert (
+        strip_diff_things(EXAMPLE_DIFF)
+        == """\
 
     Don't strip newlines, add horizontal scrollbar when overflow
 
@@ -113,16 +110,18 @@ def test_strip_diff_things():
          except pygments.util.ClassNotFound:
             return pygments.lexers.get_lexer_by_name('python')
             return pygments.lexers.get_lexer_by_name('python', stripnl=False)
-'''
+"""
+    )
 
 
 @pytest.mark.parametrize(
-    ('text', 'language', 'filename', 'expected'), (
-        (EXAMPLE_C, 'c', None, pygments.lexers.get_lexer_by_name('c')),
-        (EXAMPLE_C, 'does not exist', None, pygments.lexers.get_lexer_by_name('c')),
-        (EXAMPLE_C, None, None, pygments.lexers.get_lexer_by_name('c')),
-        (EXAMPLE_DIFF, 'c', None, pygments.lexers.get_lexer_by_name('c')),
-        (EXAMPLE_C, None, 'my_file.rs', pygments.lexers.get_lexer_by_name('rust')),
+    ("text", "language", "filename", "expected"),
+    (
+        (EXAMPLE_C, "c", None, pygments.lexers.get_lexer_by_name("c")),
+        (EXAMPLE_C, "does not exist", None, pygments.lexers.get_lexer_by_name("c")),
+        (EXAMPLE_C, None, None, pygments.lexers.get_lexer_by_name("c")),
+        (EXAMPLE_DIFF, "c", None, pygments.lexers.get_lexer_by_name("c")),
+        (EXAMPLE_C, None, "my_file.rs", pygments.lexers.get_lexer_by_name("rust")),
     ),
 )
 def test_get_highlighter_pygments(text, language, filename, expected):
@@ -132,15 +131,19 @@ def test_get_highlighter_pygments(text, language, filename, expected):
 
 
 @pytest.mark.parametrize(
-    ('text', 'language', 'expected'), (
-        (EXAMPLE_DIFF, None, pygments.lexers.get_lexer_by_name('python')),
-        (EXAMPLE_DIFF, 'diff', pygments.lexers.get_lexer_by_name('python')),
-        (EXAMPLE_C, 'diff', pygments.lexers.get_lexer_by_name('c')),
-
+    ("text", "language", "expected"),
+    (
+        (EXAMPLE_DIFF, None, pygments.lexers.get_lexer_by_name("python")),
+        (EXAMPLE_DIFF, "diff", pygments.lexers.get_lexer_by_name("python")),
+        (EXAMPLE_C, "diff", pygments.lexers.get_lexer_by_name("c")),
         # requesting a diff language
-        (EXAMPLE_DIFF, 'diff-c', pygments.lexers.get_lexer_by_name('c')),
+        (EXAMPLE_DIFF, "diff-c", pygments.lexers.get_lexer_by_name("c")),
         # bogus language
-        (EXAMPLE_DIFF, 'diff-lolidonotexist', pygments.lexers.get_lexer_by_name('python')),
+        (
+            EXAMPLE_DIFF,
+            "diff-lolidonotexist",
+            pygments.lexers.get_lexer_by_name("python"),
+        ),
     ),
 )
 def test_get_highlighter_diff(text, language, expected):

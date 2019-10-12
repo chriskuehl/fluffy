@@ -18,17 +18,17 @@ class FileBackend:
     """Storage backend which stores files and info pages on the local disk."""
 
     def _store(self, path_key, obj):
-        path = app.config['STORAGE_BACKEND'][path_key].format(name=obj.name)
-        with open(path, 'wb') as f:
+        path = app.config["STORAGE_BACKEND"][path_key].format(name=obj.name)
+        with open(path, "wb") as f:
             shutil.copyfileobj(obj.open_file, f)
             obj.open_file.seek(0)
 
     # TODO: support links for file backend somehow?
     def store_object(self, obj, links, metadata_url):
-        self._store('object_path', obj)
+        self._store("object_path", obj)
 
     def store_html(self, obj, links, metadata_url):
-        self._store('html_path', obj)
+        self._store("html_path", obj)
 
 
 class S3Backend:
@@ -37,19 +37,19 @@ class S3Backend:
     def _store(self, obj, links, metadata_url):
         # We always use a new session in case the keys have been rotated on disk.
         session = boto3.session.Session()
-        s3 = session.resource('s3')
-        s3.Bucket(app.config['STORAGE_BACKEND']['bucket']).put_object(
-            Key=app.config['STORAGE_BACKEND']['s3path'].format(name=obj.name),
+        s3 = session.resource("s3")
+        s3.Bucket(app.config["STORAGE_BACKEND"]["bucket"]).put_object(
+            Key=app.config["STORAGE_BACKEND"]["s3path"].format(name=obj.name),
             Body=obj.open_file,
             ContentType=obj.mimetype,
             Metadata={
-                'fluffy-links': '; '.join(links),
-                'fluffy-metadata': metadata_url or '',
+                "fluffy-links": "; ".join(links),
+                "fluffy-metadata": metadata_url or "",
             },
             ContentDisposition=obj.content_disposition_header,
             # Allow the bucket owner to control the object, for cases where the
             # bucket is owned by a different account.
-            ACL='bucket-owner-full-control',
+            ACL="bucket-owner-full-control",
         )
         obj.open_file.seek(0)
 
@@ -61,7 +61,6 @@ class S3Backend:
 @functools.lru_cache()
 def get_backend():
     """Return current backend."""
-    return {
-        'file': FileBackend,
-        's3': S3Backend,
-    }[app.config['STORAGE_BACKEND']['name']]()
+    return {"file": FileBackend, "s3": S3Backend}[
+        app.config["STORAGE_BACKEND"]["name"]
+    ]()
