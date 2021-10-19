@@ -15,7 +15,7 @@ MarkupSafe==1.1.1
 mistune==0.8.4
 Pygments==2.3.1
 pygments-ansi-color==0.0.3
-pygments-style-solarized==0.1.1
+pygments-solarized-style==0.1
 pyquery==1.4.0
 python-dateutil==2.8.0
 s3transfer==0.2.1

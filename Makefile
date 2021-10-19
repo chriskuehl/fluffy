@@ -8,7 +8,9 @@ export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 minimal: $(VENV) assets settings.py
 
 $(VENV): setup.py cli/setup.py requirements.txt requirements-dev.txt
-	vendor/venv-update venv= -p python3 venv install= -r requirements.txt -r requirements-dev.txt -e cli -e .
+	rm -rf $@
+	virtualenv -ppython3 $@
+	$@/bin/pip install -r requirements.txt -r requirements-dev.txt -e cli -e .
 
 fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/sassc fluffy/static/scss/app.scss $@
