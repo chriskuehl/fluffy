@@ -33,7 +33,7 @@ pycparser==2.20
 pyparsing==2.4.7
 pytest==6.2.5
 PyYAML==6.0
-readme-renderer==24.0
+readme-renderer==30.0
 requests==2.26.0
 requests-toolbelt==0.9.1
 requirements-tools==2.0.0
