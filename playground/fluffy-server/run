@@ -1,2 +1,0 @@
-#!/bin/bash -eux
-FLUFFY_SETTINGS=../settings.py exec cd ../.. venv/bin/python -m fluffy.run 2>&1

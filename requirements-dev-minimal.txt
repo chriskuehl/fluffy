@@ -5,7 +5,6 @@ ephemeral-port-reserve
 gunicorn
 libsass
 mock
-pgctl
 pre-commit>=1.0
 pytest
 requests

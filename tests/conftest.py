@@ -48,7 +48,7 @@ def running_server():
     """A running fluffy server.
 
     Starts an app server on one port, and an http.server on another port to
-    serve the static files (much like pgctl does in dev).
+    serve the static files.
     """
     tempdir = tempfile.mkdtemp()
 
