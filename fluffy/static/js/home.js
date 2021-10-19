@@ -27,7 +27,7 @@ function transitionToText(callback) {
 
 
 function transitionToUpload(callback) {
-    container.animate({'width': '580px'}, TRANSITION_DURATION);
+    container.animate({'width': '680px'}, TRANSITION_DURATION);
     pb.slideUp(TRANSITION_DURATION);
     fh.slideDown(TRANSITION_DURATION, function() {
         transitioningModes = false;

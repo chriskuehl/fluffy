@@ -65,6 +65,26 @@
             </p>
             <input class="pasteButton" id="paste" type="submit" value="Paste" />
         </form>
+
+        <div class="recent-uploads">
+            <h3>your recent uploads</h3>
+            <div class="recent-uploads-grid">
+                {% for _ in range(3) %}
+                    <a href="#" class="recent-uploads-item">
+                        <img src="{{asset_url('img/mime/small/pdf.png')}}" alt="" />
+                        <div class="recent-uploads-text">
+                            <div class="nowrap"><strong>37 lines of Python reall ahlfd asdf asdf asdfa sdfads f</strong></div>
+                            <div class="nowrap">3 days ago</div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </a>
+                {% endfor %}
+                <a href="#" class="recent-uploads-more">
+                    More<br />
+                    &rarr;
+                </a>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
