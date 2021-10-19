@@ -34,7 +34,7 @@ This file can be placed at either /etc/fluffy.json or ~/.config/fluffy.json.
 
 def bold(text):
     if sys.stdout.isatty():
-        return '\033[1m{}\033[0m'.format(text)
+        return f'\033[1m{text}\033[0m'
     else:
         return text
 
@@ -47,14 +47,14 @@ def get_config():
                 j = json.load(f)
                 if not isinstance(j, dict):
                     raise ValueError(
-                        'Expected to parse dict, but the JSON was type "{}" instead.'.format(type(j)),
+                        f'Expected to parse dict, but the JSON was type "{type(j)}" instead.',
                     )
                 for key, value in j.items():
                     config[key] = value
         except FileNotFoundError:
             pass
         except Exception:
-            print(bold('Error parsing config file "{}". Is it valid JSON?'.format(path)))
+            print(bold(f'Error parsing config file "{path}". Is it valid JSON?'))
             raise
     return config
 
@@ -68,7 +68,7 @@ def upload(server, paths, auth, direct_link):
         auth=auth,
     )
     if req.status_code != 200:
-        print('Failed to upload (status code {}):'.format(req.status_code))
+        print(f'Failed to upload (status code {req.status_code}):')
         print(req.text)
         return 1
     else:
@@ -101,7 +101,7 @@ def paste(server, path, language, highlight_regex, auth, direct_link, tee):
         auth=auth,
     )
     if req.status_code != 200:
-        print('Failed to paste (status code {}):'.format(req.status_code))
+        print(f'Failed to paste (status code {req.status_code}):')
         print(req.text)
         return 1
     else:
@@ -154,7 +154,7 @@ def upload_main(argv=None):
         formatter_class=FluffyArgFormatter,
     )
     parser.add_argument('--server', default=config['server'], type=str, help='server to upload to')
-    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('--auth', dest='auth', action='store_true', help='use HTTP Basic auth')
     parser.add_argument('--no-auth', dest='auth', action='store_false', help='do not use HTTP Basic auth')
     parser.set_defaults(auth=config.get('auth', False))
@@ -168,7 +168,7 @@ def upload_main(argv=None):
     args = parser.parse_args(argv)
     auth = None
     if args.auth:
-        auth = args.username, getpass.getpass('Password for {}: '.format(args.username))
+        auth = args.username, getpass.getpass(f'Password for {args.username}: ')
     return upload(args.server, args.file, auth, args.direct_link)
 
 
@@ -179,7 +179,7 @@ def paste_main(argv=None):
         formatter_class=FluffyArgFormatter,
     )
     parser.add_argument('--server', default=config['server'], type=str, help='server to upload to')
-    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('-l', '--language', type=str, default='autodetect', help='language for syntax highlighting')
     parser.add_argument('-r', '--regex', type=re.compile, help='regex of lines to highlight')
     parser.add_argument('--auth', dest='auth', action='store_true', help='use HTTP Basic auth')
@@ -196,7 +196,7 @@ def paste_main(argv=None):
     args = parser.parse_args(argv)
     auth = None
     if args.auth:
-        auth = args.username, getpass.getpass('Password for {}: '.format(args.username))
+        auth = args.username, getpass.getpass(f'Password for {args.username}: ')
     return paste(args.server, args.file, args.language, args.regex, auth, args.direct_link, args.tee)
 
 

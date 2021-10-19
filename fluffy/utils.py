@@ -25,11 +25,11 @@ def pluralize(s, num):
 @app.template_filter()
 def human_size(size):
     if size >= ONE_GB:
-        return '{:.1f} GiB'.format(size / ONE_GB)
+        return f'{size / ONE_GB:.1f} GiB'
     elif size >= ONE_MB:
-        return '{:.1f} MiB'.format(size / ONE_MB)
+        return f'{size / ONE_MB:.1f} MiB'
     elif size >= ONE_KB:
-        return '{:.1f} KiB'.format(size / ONE_KB)
+        return f'{size / ONE_KB:.1f} KiB'
     else:
         return '{} {}'.format(size, pluralize('byte', size))
 

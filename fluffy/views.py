@@ -99,7 +99,7 @@ def upload():
                 extension, = ex.args
                 return jsonify({
                     'success': False,
-                    'error': 'Sorry, files with the extension ".{}" are not allowed.'.format(extension),
+                    'error': f'Sorry, files with the extension ".{extension}" are not allowed.',
                 }), 403
 
         details_obj = ctx.enter_context(

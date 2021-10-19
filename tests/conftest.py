@@ -19,13 +19,13 @@ TESTING_DIR = PROJECT_ROOT / 'testing'
 def _templated_config(tempdir, app_port, static_port):
     with (PROJECT_ROOT / 'settings' / 'test_files.py').open('r') as f:
         return f.read().format(
-            server_name='localhost:{}'.format(app_port),
+            server_name=f'localhost:{app_port}',
             object_path=os.path.join(tempdir, 'object', '{name}'),
             html_path=os.path.join(tempdir, 'html', '{name}'),
-            home_url='http://localhost:{}/'.format(app_port),
-            file_url='http://localhost:{}/object/{{name}}'.format(static_port),
-            html_url='http://localhost:{}/html/{{name}}'.format(static_port),
-            static_assets_url='http://localhost:{}/html/{{name}}'.format(static_port),
+            home_url=f'http://localhost:{app_port}/',
+            file_url=f'http://localhost:{static_port}/object/{{name}}',
+            html_url=f'http://localhost:{static_port}/html/{{name}}',
+            static_assets_url=f'http://localhost:{static_port}/html/{{name}}',
         )
 
 
@@ -40,7 +40,7 @@ def _wait_for_http(url):
                 break
         time.sleep(0.01)  # pragma: no cover
     else:  # pragma: no cover
-        raise RuntimeError('Timed out trying to access: {}'.format(url))
+        raise RuntimeError(f'Timed out trying to access: {url}')
 
 
 @pytest.yield_fixture(scope='session')
@@ -48,7 +48,7 @@ def running_server():
     """A running fluffy server.
 
     Starts an app server on one port, and an http.server on another port to
-    serve the static files (much like pgctl does in dev).
+    serve the static files.
     """
     tempdir = tempfile.mkdtemp()
 
@@ -67,7 +67,7 @@ def running_server():
         (
             sys.executable,
             '-m', 'gunicorn.app.wsgiapp',
-            '-b', '127.0.0.1:{}'.format(app_port),
+            '-b', f'127.0.0.1:{app_port}',
             'fluffy.run:app',
         ),
         env={
@@ -85,11 +85,11 @@ def running_server():
         cwd=tempdir,
     )
 
-    _wait_for_http('http://localhost:{}'.format(app_port))
-    _wait_for_http('http://localhost:{}'.format(static_port))
+    _wait_for_http(f'http://localhost:{app_port}')
+    _wait_for_http(f'http://localhost:{static_port}')
 
     yield {
-        'home': 'http://localhost:{}'.format(app_port),
+        'home': f'http://localhost:{app_port}',
     }
 
     time.sleep(1)

@@ -5,7 +5,7 @@ DOCKER_TAG := ckuehl/fluffy-server
 export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 
 .PHONY: minimal
-minimal: $(VENV) assets settings.py
+minimal: $(VENV) assets settings.py install-hooks
 
 $(VENV): setup.py cli/setup.py requirements.txt requirements-dev.txt
 	rm -rf $@
@@ -53,7 +53,13 @@ test: $(VENV)
 		$(BIN)/py.test -vv tests/
 	$(BIN)/coverage combine
 	$(BIN)/coverage report
+
+.PHONY: install-hooks
+install-hooks: $(VENV)
 	$(BIN)/pre-commit install -f --install-hooks
+
+.PHONY: pre-commit
+pre-commit: $(VENV)
 	$(BIN)/pre-commit run --all-files
 
 .PHONY: docker-image

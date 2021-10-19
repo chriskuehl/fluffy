@@ -68,7 +68,7 @@ def _make_style(
         diff_add_line_bg_color='#e2ffe2',
         diff_add_selected_line_bg_color='#e8ffbc',
         diff_remove_line_bg_color='#ffe5e5',
-        diff_remove_selected_line_bg_color='#ffdfbf'
+        diff_remove_selected_line_bg_color='#ffdfbf',
 ):
     base_style = pygments.styles.get_style_by_name(base)
     new_styles = dict(base_style.styles)
@@ -151,7 +151,7 @@ STYLES_BY_CATEGORY = {
 def main():
     for styles in STYLES_BY_CATEGORY.values():
         for style in styles:
-            prefix = '.highlight-{}'.format(style.name)
+            prefix = f'.highlight-{style.name}'
             css = HtmlFormatter(style=style).get_style_defs(prefix + ' .highlight')
             css += (
                 '{prefix} .line-numbers {{'

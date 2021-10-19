@@ -1,0 +1,20 @@
+name: CI
+on: push
+jobs:
+  build-and-test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          pip install virtualenv
+          make minimal
+      - name: Run tests
+        run: make test
+      - name: Report coverage to coveralls
+        run: venv/bin/coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

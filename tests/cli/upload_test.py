@@ -41,7 +41,7 @@ def test_single_file_upload_from_stdin(content, running_server):
 def test_multiple_file_upload(running_server, tmpdir):
     paths = []
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
-        path = tmpdir.join('ohai{}.bin'.format(i))
+        path = tmpdir.join(f'ohai{i}.bin')
         path.write(content, 'wb')
         paths.append(path.strpath)
 
@@ -53,7 +53,7 @@ def test_multiple_file_upload(running_server, tmpdir):
     assert req.status_code == 200
     urls = urls_from_details(req.text)
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
-        assert 'ohai{}.bin'.format(i) in req.text
+        assert f'ohai{i}.bin' in req.text
         assert_url_matches_content(urls[i], content)
 
 
@@ -61,7 +61,7 @@ def test_multiple_file_upload(running_server, tmpdir):
 def test_file_upload_with_direct_link(running_server, tmpdir):
     paths = []
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
-        path = tmpdir.join('ohai{}.bin'.format(i))
+        path = tmpdir.join(f'ohai{i}.bin')
         path.write(content, 'wb')
         paths.append(path.strpath)
 
