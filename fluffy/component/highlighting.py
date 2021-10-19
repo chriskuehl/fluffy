@@ -1,13 +1,15 @@
 import re
 from collections import namedtuple
 
-import pygments.lexers
+import pygments.lexers.teraterm
 import pygments.styles.xcode
 from pygments.formatters import HtmlFormatter
 from pygments_ansi_color import ExtendedColorHtmlFormatterMixin
 from pyquery import PyQuery as pq
 
 from fluffy.component.styles import DEFAULT_STYLE
+# Work around https://github.com/chriskuehl/fluffy/issues/88.
+pygments.lexers.teraterm.TeraTermLexer.analyse_text = lambda _: -100
 
 
 # We purposefully don't list all possible languages, and instead just the ones
