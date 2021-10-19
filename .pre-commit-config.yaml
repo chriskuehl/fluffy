@@ -1,7 +1,6 @@
-exclude: ^vendor/
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+    rev: v4.0.1
     hooks:
     -   id: check-added-large-files
     -   id: check-docstring-first
@@ -14,32 +13,28 @@ repos:
     -   id: detect-private-key
     -   id: double-quote-string-fixer
     -   id: end-of-file-fixer
-    -   id: flake8
-        exclude: ^vendor/
     -   id: name-tests-test
     -   id: requirements-txt-fixer
     -   id: trailing-whitespace
+-   repo: https://github.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+    -   id: flake8
 -   repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v1.4.4
+    rev: v1.5.7
     hooks:
     -   id: autopep8
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v1.7.0
+    rev: v2.6.0
     hooks:
     -   id: reorder-python-imports
 -   repo: https://github.com/asottile/add-trailing-comma
-    rev: v1.4.1
+    rev: v2.2.0
     hooks:
     -   id: add-trailing-comma
-        args: [--py35-plus]
-        exclude: ^vendor/
+        args: [--py36-plus]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v1.24.1
+    rev: v2.29.0
     hooks:
     -   id: pyupgrade
-        args: [--py3-plus]
-        exclude: ^vendor/
--   repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.1.7
-    hooks:
-    -   id: remove-tabs
+        args: [--py39-plus]
