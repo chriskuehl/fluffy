@@ -4,7 +4,6 @@ coveralls
 ephemeral-port-reserve
 gunicorn
 libsass
-mock
 pre-commit>=1.0
 pytest
 requests

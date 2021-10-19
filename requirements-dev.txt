@@ -22,7 +22,6 @@ iniconfig==1.1.1
 jeepney==0.7.1
 keyring==23.2.1
 libsass==0.21.0
-mock==4.0.3
 nodeenv==1.6.0
 packaging==21.0
 pkginfo==1.7.1
