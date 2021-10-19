@@ -1,6 +1,6 @@
 import io
+from unittest import mock
 
-import mock
 import pytest
 import requests
 from pyquery import PyQuery as pq
@@ -52,7 +52,7 @@ def test_single_file_upload_json(content, running_server):
 
 def test_multiple_files_upload(running_server):
     files = [
-        ('file', ('ohai{}.bin'.format(i), io.BytesIO(content), None, None))
+        ('file', (f'ohai{i}.bin', io.BytesIO(content), None, None))
         for i, content in enumerate(FILE_CONTENT_TESTCASES)
     ]
     req = requests.post(
@@ -62,13 +62,13 @@ def test_multiple_files_upload(running_server):
     assert req.status_code == 200
     urls = urls_from_details(req.text)
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
-        assert 'ohai{}.bin'.format(i) in req.text
+        assert f'ohai{i}.bin' in req.text
         assert_url_matches_content(urls[i], content)
 
 
 def test_multiple_files_upload_json(running_server):
     files = [
-        ('file', ('ohai{}.bin'.format(i), io.BytesIO(content), None, None))
+        ('file', (f'ohai{i}.bin', io.BytesIO(content), None, None))
         for i, content in enumerate(FILE_CONTENT_TESTCASES)
     ]
     req = requests.post(
@@ -80,7 +80,7 @@ def test_multiple_files_upload_json(running_server):
         'success': True,
         'redirect': mock.ANY,
         'uploaded_files': {
-            'ohai{}.bin'.format(i): {'paste': mock.ANY, 'raw': mock.ANY}
+            f'ohai{i}.bin': {'paste': mock.ANY, 'raw': mock.ANY}
             for i in range(len(FILE_CONTENT_TESTCASES))
         },
     }
@@ -90,7 +90,7 @@ def test_multiple_files_upload_json(running_server):
 
     urls = urls_from_details(req.text)
     for i, content in enumerate(FILE_CONTENT_TESTCASES):
-        assert 'ohai{}.bin'.format(i) in req.text
+        assert f'ohai{i}.bin' in req.text
         assert_url_matches_content(urls[i], content)
 
 

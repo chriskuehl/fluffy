@@ -71,7 +71,7 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
 
     @property
     def name(self):
-        return 'Diff ({})'.format(self.lexer.name)
+        return f'Diff ({self.lexer.name})'
 
     def highlight(self, text):
         html = pq(_highlight(text, self.lexer))
