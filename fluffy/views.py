@@ -120,6 +120,7 @@ def upload():
             'redirect': details_obj.url,
             'uploaded_files': {
                 uf.human_name: {
+                    'bytes': uf.num_bytes,
                     'raw': uf.url,
                     'paste': pb.url if pb is not None else None,
                 }

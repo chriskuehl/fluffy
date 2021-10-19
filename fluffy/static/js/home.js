@@ -43,7 +43,6 @@ $(document).ready(function() {
     pb = $('.pastebinForm');
     container = $('#container');
 
-
     $('.switch-modes a').click(function() {
         if (transitioningModes) {
             return;
@@ -232,6 +231,19 @@ function upload() {
             // TODO: improve error handling
             if (! data.success) {
                 return alert(data.error);
+            }
+
+            if (uploadHistory.enabled()) {
+                uploadHistory.addItemToHistory({
+                    url: data.redirect,
+                    time: new Date(),
+                    fileDetails: Object.entries(data.uploaded_files).map(([filename, metadata]) => ({
+                        filename,
+                        bytes: metadata.bytes,
+                        rawUrl: metadata.raw,
+                        pasteUrl: metadata.paste,
+                    })),
+                });
             }
 
             window.location.href = data.redirect;
