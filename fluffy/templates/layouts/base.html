@@ -10,6 +10,11 @@
         <link rel="stylesheet" href="{{asset_url('app.css')}}" />
         <link rel="icon" href="{{asset_url('img/favicon.ico')}}" />
 
+        {# This is fairly minimal inlined JS that the rest of the page might rely on early (before rendering has completed). #}
+        <script>
+            {{base_javascript|safe}}
+        </script>
+
         {% block extra_head %}{% endblock %}
     </head>
 

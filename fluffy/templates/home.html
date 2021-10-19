@@ -91,9 +91,6 @@
 {% endblock %}
 
 {% block inline_js %}
-    {# TODO: inline this somehow to avoid blocking rendering #}
-    <script src="{{asset_url('js/base.js')}}"></script>
-
     <script>
         // determine whether to use basic or advanced upload form
         if (typeof FileReader != "undefined" &&
