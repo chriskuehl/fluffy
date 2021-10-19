@@ -21,8 +21,16 @@ p.error {
     color: #B20000;
 }
 
+.clearfix {
+    clear: both;
+}
+
+.hidden {
+    display: none;
+}
+
 #container {
-    width: 580px;
+    width: 680px;
 
     margin: 100px auto;
     margin-bottom: 35px;

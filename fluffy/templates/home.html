@@ -65,6 +65,28 @@
             </p>
             <input class="pasteButton" id="paste" type="submit" value="Paste" />
         </form>
+
+        <div id="recent-uploads" class="hidden">
+            <h3>your recent uploads</h3>
+            <div id="recent-uploads-grid">
+                <template id="recent-uploads-item-tmpl">
+                    <a class="recent-uploads-item">
+                        <img class="recent-uploads-image" />
+                        <div class="recent-uploads-text">
+                            <div class="nowrap"><strong class="recent-uploads-text-title"></strong></div>
+                            <div class="nowrap recent-uploads-text-subtitle"></div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </a>
+                </template>
+                {# TODO(ckuehl|2021-10-19): implement this!
+                    <a href="#" class="recent-uploads-more">
+                        More<br />
+                        &rarr;
+                    </a>
+                #}
+            </div>
+        </div>
     </div>
 {% endblock %}
 
@@ -86,6 +108,67 @@
         };
 
         var maxUploadSize = {{max_upload_size | tojson | safe}};
+    </script>
+
+    <script>
+        (() => {
+            const template = document.getElementById('recent-uploads-item-tmpl').content.firstElementChild;
+            const grid = document.getElementById('recent-uploads-grid');
+
+            const addEntry = (url, image, title, subtitle) => {
+                const entry = template.cloneNode(true);
+                entry.setAttribute('href', url);
+                entry.querySelector('.recent-uploads-image').setAttribute('src', image);
+                entry.querySelector('.recent-uploads-text-title').innerText = title;
+                entry.querySelector('.recent-uploads-text-subtitle').innerText = subtitle;
+                grid.prepend(entry);
+            };
+
+            const titlesForEntry = (entry) => {
+                let title;
+
+                if (entry.pasteDetails) {
+                    title = 'TODO: implement this';
+                } else {
+                    const count = entry.fileDetails.length;
+                    title = `${count} file${count == 1 ? '' : 's'}`;
+                }
+
+                return {
+                    title,
+                    subtitle: getTimeAgo(entry.time),
+                }
+            };
+
+            const iconForEntry = (entry) => {
+                if (entry.pasteDetails) {
+                    return icons['txt'];
+                } else {
+                    // Use the icon from the largest file uploaded that has a known extension.
+                    const candidateIcons = entry.fileDetails
+                        .map(({ filename, bytes }) => [icons[filename.split('.').pop()], bytes])
+                        .filter(([filename, _]) => filename);
+                    if (candidateIcons.length == 0) {
+                        return icons['unknown'];
+                    } else {
+                        // Is there a graceful way to do max() with a key function in JS?
+                        const max = Math.max(...candidateIcons.map(([_, bytes]) => bytes));
+                        return candidateIcons.filter(([_, bytes]) => bytes == max)[0][0];
+                    }
+                }
+            };
+
+            if (uploadHistory.enabled()) {
+                const entries = uploadHistory.getHistory().slice(-3);
+                if (entries.length > 0) {
+                    entries.forEach(entry => {
+                        const { title, subtitle } = titlesForEntry(entry);
+                        addEntry(entry.url, iconForEntry(entry), title, subtitle);
+                    });
+                    document.getElementById('recent-uploads').classList.remove('hidden');
+                }
+            }
+        })();
     </script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>

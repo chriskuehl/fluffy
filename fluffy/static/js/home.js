@@ -27,7 +27,7 @@ function transitionToText(callback) {
 
 
 function transitionToUpload(callback) {
-    container.animate({'width': '580px'}, TRANSITION_DURATION);
+    container.animate({'width': '680px'}, TRANSITION_DURATION);
     pb.slideUp(TRANSITION_DURATION);
     fh.slideDown(TRANSITION_DURATION, function() {
         transitioningModes = false;
@@ -42,7 +42,6 @@ $(document).ready(function() {
     fh = $('#file-holder');
     pb = $('.pastebinForm');
     container = $('#container');
-
 
     $('.switch-modes a').click(function() {
         if (transitioningModes) {
@@ -232,6 +231,19 @@ function upload() {
             // TODO: improve error handling
             if (! data.success) {
                 return alert(data.error);
+            }
+
+            if (uploadHistory.enabled()) {
+                uploadHistory.addItemToHistory({
+                    url: data.redirect,
+                    time: new Date(),
+                    fileDetails: Object.entries(data.uploaded_files).map(([filename, metadata]) => ({
+                        filename,
+                        bytes: metadata.bytes,
+                        rawUrl: metadata.raw,
+                        pasteUrl: metadata.paste,
+                    })),
+                });
             }
 
             window.location.href = data.redirect;

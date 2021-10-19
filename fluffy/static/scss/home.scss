@@ -226,4 +226,71 @@
             cursor: pointer;
         }
     }
+
+    #recent-uploads {
+        padding: 15px;
+        background-color: #e0feff;
+        border-radius: 3px;
+        margin-top: 10px;
+
+        h3 {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        #recent-uploads-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr; // TODO for more button: 50px
+            column-gap: 10px;
+
+            a {
+                display: block;
+                background-color: #f8ffff;
+                border-radius: 5px;
+                padding: 10px;
+                color: black;
+                text-decoration: none;
+
+                &:hover {
+                    background-color: #fff7e6;
+                }
+
+                &.recent-uploads-item {
+                    overflow: hidden;
+
+                    img {
+                        float: left;
+                        margin-right: 5px;
+                    }
+
+                    .recent-uploads-text {
+                        font-size: 12px;
+                        color: #9f9f9f;
+                        line-height: 1.2em;
+
+                        strong {
+                            color: black;
+                        }
+
+                        .nowrap {
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+                    }
+                }
+
+                &.recent-uploads-more {
+                    text-align: center;
+                    font-size: 12px;
+                    display: flex;
+                    justify-content: center;
+                    align-content: center;
+                    flex-direction: column;
+                }
+            }
+        }
+    }
 }
