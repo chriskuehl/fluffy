@@ -5,7 +5,7 @@ flask
 identify
 mistune
 # Avoid Pygments 2.4 for now because it identifies everything as "TeraTermLexer".
-pygments<2.3.999
+pygments<2.7.5
 pygments-ansi-color>=0.0.3
 pygments-solarized-style
 pyquery

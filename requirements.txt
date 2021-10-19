@@ -12,7 +12,7 @@ jmespath==0.10.0
 lxml==4.6.3
 MarkupSafe==2.0.1
 mistune==0.8.4
-Pygments==2.3.1
+Pygments==2.7.4
 pygments-ansi-color==0.0.6
 pygments-solarized-style==0.1
 pyquery==1.4.3
