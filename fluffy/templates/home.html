@@ -117,8 +117,16 @@
                 if (entry.pasteDetails) {
                     title = 'TODO: implement this';
                 } else {
+                    const extensions = new Set(
+                        entry.fileDetails
+                            .map(f => f.filename.split('.').pop().toLowerCase())
+                            // Limit to extensions we know about to avoid things like "blah.x86_64"
+                            // being shown as "1 x86_64 file"
+                            .filter(extension => icons[extension] !== undefined)
+                    );
+                    const fileType = extensions.size === 1 ? ` ${extensions.values().next().value.toUpperCase()} ` : '';
                     const count = entry.fileDetails.length;
-                    title = `${count} file${count == 1 ? '' : 's'}`;
+                    title = `${count} ${fileType}file${count == 1 ? '' : 's'}`;
                 }
 
                 return {
