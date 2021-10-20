@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 
+import markupsafe
 from flask import Flask
 
 from fluffy import version
@@ -14,10 +15,26 @@ app.logger.addHandler(logging.StreamHandler(sys.stderr))
 app.logger.setLevel(logging.DEBUG)
 
 
-@functools.lru_cache
-def _base_javascript():
-    with open(os.path.join(os.path.dirname(__file__), 'static/js/base.js')) as f:
-        return f.read()
+def _cached_if_prod(fn):
+    cached_fn = functools.lru_cache(fn)
+
+    @functools.wraps(fn)
+    def wrapped(*args, **kwargs):
+        # Note that `app.debug` isn't correct at import time so this needs to
+        # be done at the actual call time.
+        if app.debug:
+            return fn(*args, **kwargs)
+        else:
+            return cached_fn(*args, **kwargs)
+
+    return wrapped
+
+
+@_cached_if_prod
+def _inline_js(path):
+    assert '..' not in path, path
+    with open(os.path.join(os.path.dirname(__file__), os.path.join('static/js', path))) as f:
+        return markupsafe.Markup(f'<script>\n{f.read()}\n</script>')
 
 
 @app.context_processor
@@ -32,5 +49,5 @@ def defaults():
         'home_url': app.config['HOME_URL'],
         'custom_footer_html': app.config.get('CUSTOM_FOOTER_HTML'),
         'num_lines': lambda text: len(text.splitlines()),
-        'base_javascript': _base_javascript(),
+        'inline_js': _inline_js,
     }
