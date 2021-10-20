@@ -219,6 +219,10 @@ def paste():
                     'raw': uf.url,
                     'paste': paste_obj.url,
                     'metadata': metadata_obj.url,
+                    'language': {
+                        'title': lang_title,
+                    },
+                    'num_lines': metadata['paste_details']['num_lines'],
                 },
             },
         })

@@ -224,6 +224,13 @@
             background: none;
             border: none;
             cursor: pointer;
+
+            &:disabled {
+                background-color: #ffd694 !important;
+                color: #676767;
+                transition: background-color 0.1s;
+                cursor: default;
+            }
         }
     }
 

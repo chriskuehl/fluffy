@@ -24,7 +24,8 @@ if (typeof FileReader != "undefined" &&
         let title;
 
         if (entry.pasteDetails) {
-            title = 'TODO: implement this';
+            const lines = entry.pasteDetails.num_lines;
+            title = `${lines} line${lines == 1 ? '' : 's'} of ${entry.pasteDetails.language_title}`;
         } else {
             const extensions = new Set(
                 entry.fileDetails
@@ -46,7 +47,7 @@ if (typeof FileReader != "undefined" &&
 
     const iconForEntry = (entry) => {
         if (entry.pasteDetails) {
-            return icons['txt'];
+            return icons['paste-generic'];
         } else {
             // Use the icon from the largest file uploaded that has a known extension.
             const candidateIcons = entry.fileDetails
