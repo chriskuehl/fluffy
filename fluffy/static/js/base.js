@@ -24,6 +24,8 @@ const hasLocalStorage = ((type) => {
     }
 })('localStorage');
 
+const s = (n => (n == 1 ? '' : 's'));
+
 // Adapted from https://gist.github.com/pomber/6195066a9258d1fb93bb59c206345b38
 const getTimeAgo = (date) => {
     const MINUTE = 60,
@@ -48,7 +50,7 @@ const getTimeAgo = (date) => {
         result = [Math.floor(secondsAgo / YEAR), 'year'];
     }
 
-    return `${result[0]} ${result[1]}${result[0] == 1 ? '' : 's'} ago`;
+    return `${result[0]} ${result[1]}${s(result[0])} ago`;
 };
 
 const uploadHistory = {

@@ -25,7 +25,7 @@ if (typeof FileReader != "undefined" &&
 
         if (entry.pasteDetails) {
             const lines = entry.pasteDetails.num_lines;
-            title = `${lines} line${lines == 1 ? '' : 's'} of ${entry.pasteDetails.language_title}`;
+            title = `${lines} line${s(lines)} of ${entry.pasteDetails.language_title}`;
         } else {
             const extensions = new Set(
                 entry.fileDetails
@@ -36,7 +36,7 @@ if (typeof FileReader != "undefined" &&
             );
             const fileType = extensions.size === 1 ? ` ${extensions.values().next().value.toUpperCase()} ` : '';
             const count = entry.fileDetails.length;
-            title = `${count} ${fileType}file${count == 1 ? '' : 's'}`;
+            title = `${count} ${fileType}file${s(count)}`;
         }
 
         return {

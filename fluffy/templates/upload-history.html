@@ -1,0 +1,58 @@
+{% set page_name = 'upload-history' %}
+
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+    <div class="content">
+        <h2>Upload History</h2>
+        <p id="no-upload-history" class="hidden">
+            You currently have no upload history.
+        </p>
+        <div id="history">
+            <template id="template-entry">
+                <div class="entry">
+                    <a class="fill"></a>
+                    <div class="grid">
+                        <div class="details">
+                            <p><strong class="title"></strong> <span class="time"></span></p>
+                            <ul class="file-list"></ul>
+                        </div>
+                        {# TODO: implement this
+                        <a class="remove" title="Remove from history">
+                            &times;
+                        </a>
+                        #}
+                    </div>
+                </div>
+            </template>
+            <template id="template-file-list-entry">
+                <li>
+                    <img width="32" height="32" class="icon" />
+                    <div class="name"></div>
+                    <div class="clearfix"></div>
+                </li>
+            </template>
+        </div>
+        <p>
+            Your upload history is stored locally, in your web browser. You can
+            disable it by disabling storage access to this site, or clear it by
+            clicking the button below. It will not delete any files.
+        </p>
+        <div class="center">
+            <span id="clear-history">
+                Clear History
+            </span>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block inline_js %}
+    <script>
+        const icons = {
+            {% for extension in icon_extensions %}
+                {{extension | tojson | safe}}: {{asset_url('img/mime/small/' + extension + '.png') | tojson | safe}},
+            {% endfor %}
+        };
+    </script>
+    {{inline_js('upload-history.js')}}
+{% endblock %}

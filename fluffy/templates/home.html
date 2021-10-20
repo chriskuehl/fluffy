@@ -58,7 +58,7 @@
             <div id="recent-uploads-grid">
                 <template id="recent-uploads-item-tmpl">
                     <a class="recent-uploads-item">
-                        <img class="recent-uploads-image" />
+                        <img width="32" height="32" class="recent-uploads-image" />
                         <div class="recent-uploads-text">
                             <div class="nowrap"><strong class="recent-uploads-text-title"></strong></div>
                             <div class="nowrap recent-uploads-text-subtitle"></div>
@@ -66,12 +66,10 @@
                         <div class="clearfix"></div>
                     </a>
                 </template>
-                {# TODO(ckuehl|2021-10-19): implement this!
-                    <a href="#" class="recent-uploads-more">
-                        More<br />
-                        &rarr;
-                    </a>
-                #}
+                <a href="/upload-history" class="recent-uploads-more">
+                    More<br />
+                    &rarr;
+                </a>
             </div>
         </div>
     </div>

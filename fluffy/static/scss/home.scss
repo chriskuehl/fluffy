@@ -99,11 +99,6 @@
         margin-bottom: 10px;
 
         background-color: #F3FFE2;
-
-        -webkit-transition: background-color 100ms linear;
-        -moz-transition: background-color 100ms linear;
-        -o-transition: background-color 100ms linear;
-        -ms-transition: background-color 100ms linear;
         transition: background-color 100ms linear;
     }
 
@@ -126,6 +121,8 @@
 
         text-align: center;
         color: white;
+
+        transition: background-color 0.1s;
     }
 
     #upload {
@@ -133,6 +130,10 @@
         margin-bottom: 15px;
 
         display: none;
+
+        &:hover {
+            background-color: #27acbb;
+        }
     }
 
     #statusText {
@@ -145,6 +146,10 @@
 
     #selectFile, .pasteButton {
         background-color: #EB7F00 !important;
+
+        &:hover {
+            background-color: #ff8e08 !important;
+        }
     }
 
     .hiddenFileInput {
@@ -249,7 +254,7 @@
 
         #recent-uploads-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr; // TODO for more button: 50px
+            grid-template-columns: 1fr 1fr 1fr 50px;
             column-gap: 10px;
 
             a {
@@ -296,6 +301,7 @@
                     justify-content: center;
                     align-content: center;
                     flex-direction: column;
+                    grid-column-start: 4;
                 }
             }
         }
