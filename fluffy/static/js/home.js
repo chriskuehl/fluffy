@@ -99,6 +99,56 @@ $(document).ready(function() {
             cancelUpload();
         }
     });
+
+    // pasting
+    pb.submit(function() {
+        // We keep the form around for compatibility with no-JS browsers, but
+        // normally we submit via AJAX requests instead so that we can use the
+        // JSON response to populate the upload history.
+        const button = $('#paste');
+        const originalText = button.attr('value');
+        button.attr('disabled', 'disabled');
+        button.attr('value', 'Pasting...');
+
+        $.ajax({
+            url: $(this).attr('action') + '?json',
+            type: 'POST',
+            data: $(this).serialize(),
+            success: (data) => {
+                if (!data.success) {
+                    // This can't actually happen at the moment, the backend never generates this response.
+                    alert('Error: pasting failed in an unexpected way, please try again.');
+                    return
+                }
+
+                if (uploadHistory.enabled()) {
+                    const paste = data.uploaded_files.paste;
+                    uploadHistory.addItemToHistory({
+                        url: data.redirect,
+                        time: new Date(),
+                        pasteDetails: {
+                            paste: paste.paste,
+                            raw: paste.raw,
+                            metadata: paste.metadata,
+                            language_title: paste.language.title,
+                            num_lines: paste.num_lines,
+                        },
+                    });
+                }
+
+                window.location.href = data.redirect;
+            },
+            error: (xhr, status) => {
+                // TODO: improve error handling
+                console.log("Unhandled failure: " + status + ", status=" + xhr.status + ", statusText=" + xhr.statusText);
+                alert("Sorry, an unexpected error occured.");
+
+                button.attr('value', originalText);
+                button.removeAttr('disabled');
+            },
+        });
+        return false;
+    });
 });
 
 

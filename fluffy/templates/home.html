@@ -5,12 +5,12 @@
     <div>
         <div class="fileUploadForm">
             <div id="file-holder">
-                <p class="switch-modes js-only"><a>paste source code instead</a></p>
+                <p class="switch-modes"><a>paste source code instead</a></p>
 
                 <ul id="files"></ul>
                 <a id="upload">Start Upload</a>
 
-                <div id="advancedUpload" class="js-only">
+                <div id="advancedUpload">
                     <p id="statusText"></p>
 
                     <div id="selectFiles">
@@ -20,7 +20,6 @@
                 </div>
                 <div id="basicUpload">
                     <p class="error" id="oldBrowserMessage">Your browser doesn't support dragging-and-dropping of files, so you're stuck with an icky file input. Bummer!</p>
-                    <noscript><p class="error">Your browser has JavaScript disabled, which means you don't get cool features like dragging-and-dropping or upload progress meters. Bummer!</p></noscript>
 
                     <form action="/upload" method="POST" enctype="multipart/form-data">
                         <p style="margin-bottom: 0px;">
@@ -33,20 +32,8 @@
             </div>
         </div>
 
-        <noscript>
-            <hr />
-            <style>
-                .pastebinForm {
-                    display: block !important;
-                }
-                .js-only {
-                    display: none !important;
-                }
-            </style>
-        </noscript>
-
         <form class="pastebinForm" method="POST" action="/paste">
-            <p class="switch-modes js-only"><a>upload files instead</a></p>
+            <p class="switch-modes"><a>upload files instead</a></p>
 
             <p>
                 <textarea id="text" name="text" placeholder="paste text here" required autofocus>{{text}}</textarea>
@@ -92,15 +79,6 @@
 
 {% block inline_js %}
     <script>
-        // determine whether to use basic or advanced upload form
-        if (typeof FileReader != "undefined" &&
-            "draggable" in document.createElement("span")) {
-            document.getElementById("basicUpload").style.display = "none";
-            document.getElementById("advancedUpload").style.display = "block";
-        } else {
-            document.getElementById("oldBrowserMessage").style.display = "block";
-        }
-
         var icons = {
             {% for extension in icon_extensions %}
                 {{extension | tojson | safe}}: {{asset_url('img/mime/small/' + extension + '.png') | tojson | safe}},
@@ -109,68 +87,7 @@
 
         var maxUploadSize = {{max_upload_size | tojson | safe}};
     </script>
-
-    <script>
-        (() => {
-            const template = document.getElementById('recent-uploads-item-tmpl').content.firstElementChild;
-            const grid = document.getElementById('recent-uploads-grid');
-
-            const addEntry = (url, image, title, subtitle) => {
-                const entry = template.cloneNode(true);
-                entry.setAttribute('href', url);
-                entry.querySelector('.recent-uploads-image').setAttribute('src', image);
-                entry.querySelector('.recent-uploads-text-title').innerText = title;
-                entry.querySelector('.recent-uploads-text-subtitle').innerText = subtitle;
-                grid.prepend(entry);
-            };
-
-            const titlesForEntry = (entry) => {
-                let title;
-
-                if (entry.pasteDetails) {
-                    title = 'TODO: implement this';
-                } else {
-                    const count = entry.fileDetails.length;
-                    title = `${count} file${count == 1 ? '' : 's'}`;
-                }
-
-                return {
-                    title,
-                    subtitle: getTimeAgo(entry.time),
-                }
-            };
-
-            const iconForEntry = (entry) => {
-                if (entry.pasteDetails) {
-                    return icons['txt'];
-                } else {
-                    // Use the icon from the largest file uploaded that has a known extension.
-                    const candidateIcons = entry.fileDetails
-                        .map(({ filename, bytes }) => [icons[filename.split('.').pop()], bytes])
-                        .filter(([filename, _]) => filename);
-                    if (candidateIcons.length == 0) {
-                        return icons['unknown'];
-                    } else {
-                        // Is there a graceful way to do max() with a key function in JS?
-                        const max = Math.max(...candidateIcons.map(([_, bytes]) => bytes));
-                        return candidateIcons.filter(([_, bytes]) => bytes == max)[0][0];
-                    }
-                }
-            };
-
-            if (uploadHistory.enabled()) {
-                const entries = uploadHistory.getHistory().slice(-3);
-                if (entries.length > 0) {
-                    entries.forEach(entry => {
-                        const { title, subtitle } = titlesForEntry(entry);
-                        addEntry(entry.url, iconForEntry(entry), title, subtitle);
-                    });
-                    document.getElementById('recent-uploads').classList.remove('hidden');
-                }
-            }
-        })();
-    </script>
-
+    {{inline_js('home-inline.js')}}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="{{asset_url('js/home.js')}}"></script>
 {% endblock %}

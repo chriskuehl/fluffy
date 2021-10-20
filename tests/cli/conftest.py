@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def cli_on_path():
     with mock.patch.dict(
             os.environ,
