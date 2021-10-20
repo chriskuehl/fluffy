@@ -7,6 +7,7 @@ $mobile-width: 767px;
 @import 'markdown';
 @import 'paste';
 @import 'text';
+@import 'upload-history';
 
 body {
     background-color: #005178;
@@ -19,6 +20,10 @@ p.error {
     text-align: center;
 
     color: #B20000;
+}
+
+.center {
+    text-align: center;
 }
 
 .clearfix {

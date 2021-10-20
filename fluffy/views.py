@@ -228,3 +228,11 @@ def paste():
         })
     else:
         return redirect(paste_obj.url)
+
+
+@app.route('/upload-history')
+def upload_history():
+    return render_template(
+        'upload-history.html',
+        icon_extensions=ICON_EXTENSIONS,
+    )

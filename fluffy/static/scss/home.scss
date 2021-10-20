@@ -99,11 +99,6 @@
         margin-bottom: 10px;
 
         background-color: #F3FFE2;
-
-        -webkit-transition: background-color 100ms linear;
-        -moz-transition: background-color 100ms linear;
-        -o-transition: background-color 100ms linear;
-        -ms-transition: background-color 100ms linear;
         transition: background-color 100ms linear;
     }
 
@@ -126,6 +121,12 @@
 
         text-align: center;
         color: white;
+
+        transition: background-color 0.1s;
+
+        &:hover {
+            background-color: #ff8e08 !important;
+        }
     }
 
     #upload {
@@ -249,7 +250,7 @@
 
         #recent-uploads-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr; // TODO for more button: 50px
+            grid-template-columns: 1fr 1fr 1fr 50px;
             column-gap: 10px;
 
             a {
