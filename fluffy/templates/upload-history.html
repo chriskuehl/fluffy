@@ -5,6 +5,9 @@
 {% block content %}
     <div class="content">
         <h2>Upload History</h2>
+        <p id="no-upload-history" class="hidden">
+            You currently have no upload history.
+        </p>
         <div id="history">
             <template id="template-entry">
                 <div class="entry">
@@ -36,7 +39,7 @@
             clicking the button below. It will not delete any files.
         </p>
         <div class="center">
-            <span class="clear-history">
+            <span id="clear-history">
                 Clear History
             </span>
         </div>

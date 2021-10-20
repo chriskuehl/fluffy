@@ -116,7 +116,13 @@
         }
     }
 
-    .clear-history {
+    #no-upload-history {
+        text-align: center;
+        font-size: 18px;
+        margin: 30px;
+    }
+
+    #clear-history {
         display: inline-block;
         color: white;
         cursor: pointer;

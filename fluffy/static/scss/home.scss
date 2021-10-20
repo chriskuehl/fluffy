@@ -123,10 +123,6 @@
         color: white;
 
         transition: background-color 0.1s;
-
-        &:hover {
-            background-color: #ff8e08 !important;
-        }
     }
 
     #upload {
@@ -134,6 +130,10 @@
         margin-bottom: 15px;
 
         display: none;
+
+        &:hover {
+            background-color: #27acbb;
+        }
     }
 
     #statusText {
@@ -146,6 +146,10 @@
 
     #selectFile, .pasteButton {
         background-color: #EB7F00 !important;
+
+        &:hover {
+            background-color: #ff8e08 !important;
+        }
     }
 
     .hiddenFileInput {
@@ -297,6 +301,7 @@
                     justify-content: center;
                     align-content: center;
                     flex-direction: column;
+                    grid-column-start: 4;
                 }
             }
         }
