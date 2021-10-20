@@ -43,7 +43,7 @@ def _wait_for_http(url):
         raise RuntimeError(f'Timed out trying to access: {url}')
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def running_server():
     """A running fluffy server.
 

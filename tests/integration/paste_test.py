@@ -29,7 +29,7 @@ def test_simple_paste_json(running_server):
         running_server['home'] + '/paste?json',
         data={
             'text': 'hello world',
-            'language': 'autodetect',
+            'language': 'python',
         },
     )
 
@@ -43,6 +43,10 @@ def test_simple_paste_json(running_server):
                 'raw': mock.ANY,
                 'paste': mock.ANY,
                 'metadata': mock.ANY,
+                'num_lines': 1,
+                'language': {
+                    'title': 'Python',
+                },
             },
         },
     }
