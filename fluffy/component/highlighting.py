@@ -186,7 +186,7 @@ GUESSLANG_LANGUAGE_MAP = {
 }
 
 
-@functools.lru_cache
+@functools.lru_cache()
 def _guesslang_guesser():
     try:
         # This is expensive (even just the import) so we do it at runtime
