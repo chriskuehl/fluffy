@@ -16,7 +16,7 @@ app.logger.setLevel(logging.DEBUG)
 
 
 def _cached_if_prod(fn):
-    cached_fn = functools.lru_cache(fn)
+    cached_fn = functools.lru_cache()(fn)
 
     @functools.wraps(fn)
     def wrapped(*args, **kwargs):
