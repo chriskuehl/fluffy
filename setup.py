@@ -25,4 +25,9 @@ setup(
             'fluffy-upload-assets = fluffy.component.assets:upload_assets',
         ],
     },
+    extras_require={
+        # guesslang provides greatly improved language autodetection, but pulls
+        # in tensorflow which is a huge dependency.
+        'guesslang': ['guesslang'],
+    },
 )

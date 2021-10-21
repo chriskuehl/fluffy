@@ -2,6 +2,7 @@ boto3
 cached_property
 csscompressor
 flask
+guesslang
 identify
 mistune
 pygments

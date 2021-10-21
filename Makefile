@@ -10,7 +10,7 @@ minimal: $(VENV) assets settings.py install-hooks
 $(VENV): setup.py cli/setup.py requirements.txt requirements-dev.txt
 	rm -rf $@
 	virtualenv -ppython3 $@
-	$@/bin/pip install -r requirements.txt -r requirements-dev.txt -e cli -e .
+	$@/bin/pip install -r requirements.txt -r requirements-dev.txt -e cli -e .[guesslang]
 
 fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/pysassc fluffy/static/scss/app.scss $@
