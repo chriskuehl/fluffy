@@ -58,7 +58,7 @@ class S3Backend:
     store_html = _store
 
 
-@functools.lru_cache
+@functools.lru_cache()
 def get_backend():
     """Return current backend."""
     return {
