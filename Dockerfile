@@ -20,8 +20,7 @@ COPY . /opt/fluffy
 RUN install --owner=nobody -d /srv/fluffy
 USER nobody
 RUN virtualenv -ppython3 /srv/fluffy/venv \
-    && /srv/fluffy/venv/bin/pip install /opt/fluffy \
-    && /srv/fluffy/venv/bin/pip install gunicorn==19.6
+    && /srv/fluffy/venv/bin/pip install -r /opt/fluffy/requirements.txt /opt/fluffy gunicorn==19.6
 
 EXPOSE 8000
 ENV FLUFFY_SETTINGS /opt/fluffy/settings/prod_s3.py
