@@ -76,7 +76,11 @@ class UploadedFile(
 
     def __new__(cls, *args, **kwargs):
         uf = super().__new__(cls, *args, **kwargs)
-        if uf.extension in app.config.get('EXTENSION_BLACKLIST', ()):
+        if uf.extension.lower() in {
+            extension.lower()
+            for extension in
+            app.config.get('EXTENSION_BLACKLIST', ())
+        }:
             raise ExtensionForbiddenError(uf.extension)
         else:
             return uf
