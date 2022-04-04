@@ -30,4 +30,23 @@ MAX_UPLOAD_SIZE = 20 * 1048576
 MAX_CONTENT_LENGTH = MAX_UPLOAD_SIZE * 10
 
 # file extensions to forbid for uploads
-EXTENSION_BLACKLIST = frozenset(('exe',))
+EXTENSION_BLACKLIST = frozenset((
+    '7z',
+    'cab',
+    'dll',
+    'doc',
+    'docx',
+    'exe',
+    'gz',
+    'hta',
+    'jar',
+    'lha',
+    'lzh',
+    'msi',
+    'pif',
+    'rar',
+    'scr',
+    'xz',
+    'z',
+    'zip',
+))
