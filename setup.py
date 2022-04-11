@@ -16,7 +16,9 @@ setup(
     packages=find_packages(exclude=('test*', 'playground')),
     include_package_data=True,
     install_requires=minimal_reqs,
+    license='Apache License 2.0',
     classifiers=(
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
