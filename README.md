@@ -107,7 +107,7 @@ fluffy is released under the MIT license; see LICENSE for full details.
 
 #### Running locally for development
 
-To run fluffy during development, run `make venv` and then `pgctl start`.
+To run fluffy during development, run `make dev`.
 You should now have fluffy running at `http://localhost:5000`.
 
 
