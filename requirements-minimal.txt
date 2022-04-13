@@ -2,7 +2,6 @@ boto3
 cached_property
 csscompressor
 flask
-guesslang
 identify
 # https://github.com/chriskuehl/fluffy/issues/126
 mistune<0.999
