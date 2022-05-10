@@ -5,6 +5,7 @@ ephemeral-port-reserve
 gunicorn
 libsass
 pre-commit>=1.0
+pysass
 pytest
 requests
 requirements-tools
