@@ -9,7 +9,7 @@ from flask import redirect
 from flask import render_template
 from flask import request
 
-from fluffy import version
+from fluffy import version as FLUFFY_VERSION
 from fluffy.app import app
 from fluffy.component.backends import get_backend
 from fluffy.component.highlighting import get_highlighter
@@ -42,9 +42,8 @@ def home():
 
 def upload_objects(
     objects: typing.Sequence[typing.Union[HtmlToStore, UploadedFile]],
-    metadata_url: typing.Optional[str] = None,
+    metadata_url: str,
 ) -> None:
-    # TODO: make metadata_url mandatory (need to support it for uploads too)
     links = sorted(obj.url for obj in objects)
 
     def _upload(obj: typing.Union[HtmlToStore, UploadedFile]):
@@ -124,12 +123,37 @@ def upload():
         )
         objects.append(details_obj)
 
-        upload_objects(objects)
+        metadata = {
+            'server_version': FLUFFY_VERSION,
+            'timestamp': time.time(),
+            'upload_type': 'file',
+            'uploaded_files': [
+                {
+                    'name': uf.human_name,
+                    'bytes': uf.num_bytes,
+                    'raw': uf.url,
+                    'paste': pb.url if pb is not None else None,
+                }
+                for uf, pb in uploaded_files
+            ],
+        }
+        metadata_obj = ctx.enter_context(
+            UploadedFile.from_text(
+                json.dumps(metadata, indent=4, sort_keys=True),
+                human_name='metadata.json',
+            ),
+        )
+        objects.append(metadata_obj)
+
+        upload_objects(objects, metadata_obj.url)
 
     if 'json' in request.args:
         return jsonify({
             'success': True,
             'redirect': details_obj.url,
+            'metadata': metadata_obj.url,
+            # TODO: This should really be a list since it's possible to have
+            # duplicate file name uploads.
             'uploaded_files': {
                 uf.human_name: {
                     'bytes': uf.num_bytes,
@@ -197,14 +221,14 @@ def paste():
 
         # Metadata JSON object
         metadata = {
-            'server_version': version,
-            'uploaded_files': {
-                'html': paste_obj.url,
-                'raw': uf.url,
-            },
+            'server_version': FLUFFY_VERSION,
             'timestamp': time.time(),
             'upload_type': 'paste',
             'paste_details': {
+                'urls': {
+                    'html': paste_obj.url,
+                    'raw': uf.url,
+                },
                 'language': {
                     'title': lang_title,
                 },
@@ -220,17 +244,17 @@ def paste():
         )
         objects.append(metadata_obj)
 
-        upload_objects(objects, metadata_url=metadata_obj.url)
+        upload_objects(objects, metadata_obj.url)
 
     if 'json' in request.args:
         return jsonify({
             'success': True,
             'redirect': paste_obj.url,
+            'metadata': metadata_obj.url,
             'uploaded_files': {
                 'paste': {
                     'raw': uf.url,
                     'paste': paste_obj.url,
-                    'metadata': metadata_obj.url,
                     'language': {
                         'title': lang_title,
                     },

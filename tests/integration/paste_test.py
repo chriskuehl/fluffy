@@ -38,11 +38,11 @@ def test_simple_paste_json(running_server):
     assert req.json() == {
         'success': True,
         'redirect': mock.ANY,
+        'metadata': mock.ANY,
         'uploaded_files': {
             'paste': {
                 'raw': mock.ANY,
                 'paste': mock.ANY,
-                'metadata': mock.ANY,
                 'num_lines': 1,
                 'language': {
                     'title': 'Python',
