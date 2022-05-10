@@ -160,6 +160,17 @@ class UploadedFile(
                 return 'text/plain'
 
     @cached_property
+    def is_image(self):
+        return self.mimetype in (
+            'image/gif',
+            'image/jpeg',
+            'image/png',
+            'image/svg+xml',
+            'image/tiff',
+            'image/webp',
+        )
+
+    @cached_property
     def content_disposition_header(self):
         if self.mimetype.startswith(INLINE_DISPLAY_MIME_WHITELIST) or not self.probably_binary:
             render_type = 'inline'
