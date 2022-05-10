@@ -1,6 +1,8 @@
+import concurrent.futures
 import contextlib
 import json
 import time
+import typing
 
 from flask import jsonify
 from flask import redirect
@@ -38,14 +40,24 @@ def home():
     )
 
 
-def upload_objects(objects, metadata_url=None):
+def upload_objects(
+    objects: typing.Sequence[typing.Union[HtmlToStore, UploadedFile]],
+    metadata_url: typing.Optional[str] = None,
+) -> None:
     # TODO: make metadata_url mandatory (need to support it for uploads too)
     links = sorted(obj.url for obj in objects)
-    for obj in objects:
+
+    def _upload(obj: typing.Union[HtmlToStore, UploadedFile]):
         if isinstance(obj, HtmlToStore):
             get_backend().store_html(obj, links, metadata_url)
         else:
             get_backend().store_object(obj, links, metadata_url)
+
+    with concurrent.futures.ThreadPoolExecutor() as ex:
+        for future in concurrent.futures.as_completed([
+            ex.submit(_upload, obj) for obj in objects
+        ]):
+            future.result()
 
 
 @app.route('/upload', methods={'POST'})
