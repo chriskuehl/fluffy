@@ -12,15 +12,23 @@
     $file-horizontal-edge-padding: 15px;
 
     .file {
-        min-width: 70%;
+        width: 100%;
         background-color: #F3FFE2;
         border-radius: 5px;
         position: relative;
 
+
+        &.image {
+            min-width: 70%;
+            width: auto;
+            .filename {
+                justify-content: center;
+            }
+        }
+
         .filename {
-            display: flex;
             align-items: center;
-            justify-content: center;
+            display: flex;
             padding: 10px $file-horizontal-edge-padding;
             font-size: 19px;
             overflow-x: hidden;

@@ -6,22 +6,17 @@
     <div id="files">
         {% for (file, pb) in uploads %}
             <div class="file-holder">
-                <div class="file">
-                    {% if file.is_image %}
-                        <div class="filename">
-                            <img src="{{asset_url('img/mime/small/' + (file.extension|icon_for_extension) + '.png')}}" />
-                            {{file.human_name}}
-                        </div>
+                <div class="file {% if file.is_image %}image{% endif %}">
+                    <div class="filename">
+                        <img src="{{asset_url('img/mime/small/' + (file.extension|icon_for_extension) + '.png')}}" />
+                        {{file.human_name}}
+                    </div>
 
+                    {% if file.is_image %}
                         <div class="image-holder">
                             <a href="{{file.url}}">
                                 <img src="{{file.url}}" />
                             </a>
-                        </div>
-                    {% else %}
-                        <div class="filename">
-                            <img src="{{asset_url('img/mime/large/' + (file.extension|icon_for_extension) + '.png')}}" />
-                            {{file.human_name}}
                         </div>
                     {% endif %}
 
