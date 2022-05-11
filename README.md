@@ -156,5 +156,4 @@ Primarily the reasons are:
 
 
 fluffy uses awesome icon sets developed by
-[FatCow](http://www.fatcow.com/free-icons) and
-[Everaldo Coelho](http://www.everaldo.com/).
+[FatCow](http://www.fatcow.com/free-icons).
