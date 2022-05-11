@@ -12,8 +12,8 @@ CUSTOM_FOOTER_HTML = None
 
 # URL patterns
 HOME_URL = 'http://localhost:5000/'
-FILE_URL = 'http://localhost:5001/object/{name}'
-HTML_URL = 'http://localhost:5001/html/{name}'
+FILE_URL = 'http://localhost:4999/object/{name}'
+HTML_URL = 'http://localhost:4999/html/{name}'
 
 STATIC_ASSETS_URL = 'http://localhost:5000/{name}'
 
