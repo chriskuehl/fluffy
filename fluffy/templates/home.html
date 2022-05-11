@@ -35,9 +35,10 @@
         <form class="pastebinForm" method="POST" action="/paste">
             <p class="switch-modes"><a>upload files instead</a></p>
 
-            <p>
-                <textarea id="text" name="text" placeholder="paste text here" required autofocus>{{text}}</textarea>
-            </p>
+            <div style="display:flex">
+                    <textarea id="text" name="text" placeholder="paste text here for document 1" required autofocus style="width:30%; flex:1; margin: 2px;">{{text}}</textarea>
+                    <textarea id="text" name="text2" placeholder="paste text here for document 2" required autofocus style="width:30%; flex:1; margin: 2px;">{{text2}}</textarea>
+            </div>
             <p>
                 <select name="language">
                     <option selected="selected" value="">Guess the language for me</option>
@@ -50,7 +51,7 @@
                     {% endfor %}
                 </select>
             </p>
-            <input class="pasteButton" id="paste" type="submit" value="Paste" />
+            <input class="pasteButton" id="paste" type="submit" value="Paste and compare" />
         </form>
 
         <div id="recent-uploads" class="hidden">

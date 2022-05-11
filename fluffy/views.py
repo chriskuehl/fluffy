@@ -135,6 +135,7 @@ def upload():
 def paste():
     """Paste and redirect."""
     text = request.form['text']
+    text2 = request.form['text2']
     # Browsers always send \r\n for the pasted text, which leads to bad
     # newlines when curling the raw text (#28).
     transformed_text = text.replace('\r\n', '\n')
@@ -157,13 +158,16 @@ def paste():
         lang = request.form['language']
         if lang != 'rendered-markdown':
             highlighter = get_highlighter(text, lang, None)
+            highlighter2 = get_highlighter(text2, lang, None)
             lang_title = highlighter.name
             paste_obj = ctx.enter_context(
                 HtmlToStore.from_html(
                     render_template(
                         'paste.html',
                         text=text,
+                        text2=text2,
                         highlighter=highlighter,
+                        highlighter2=highlighter2,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                         styles=STYLES_BY_CATEGORY,
                     ),
