@@ -8,33 +8,55 @@ what you do!
 """
 import functools
 import shutil
+import typing
 
 import boto3
 
 from fluffy.app import app
+from fluffy.models import HtmlToStore
+from fluffy.models import UploadedFile
 
 
 class FileBackend:
     """Storage backend which stores files and info pages on the local disk."""
 
-    def _store(self, path_key, obj):
+    def _store(
+        self,
+        path_key: str,
+        obj: typing.Union[HtmlToStore, UploadedFile],
+    ):
         path = app.config['STORAGE_BACKEND'][path_key].format(name=obj.name)
         with open(path, 'wb') as f:
             shutil.copyfileobj(obj.open_file, f)
             obj.open_file.seek(0)
 
     # TODO: support links for file backend somehow?
-    def store_object(self, obj, links, metadata_url):
+    def store_object(
+        self,
+        obj: UploadedFile,
+        links: typing.Sequence[str],
+        metadata_url: str,
+    ) -> None:
         self._store('object_path', obj)
 
-    def store_html(self, obj, links, metadata_url):
+    def store_html(
+        self,
+        obj: HtmlToStore,
+        links: typing.Sequence[str],
+        metadata_url: str,
+    ) -> None:
         self._store('html_path', obj)
 
 
 class S3Backend:
     """Storage backend which uploads to S3 using boto3."""
 
-    def _store(self, obj, links, metadata_url):
+    def _store(
+        self,
+        obj: typing.Union[HtmlToStore, UploadedFile],
+        links: typing.Sequence[str],
+        metadata_url: str,
+    ) -> None:
         # We always use a new session in case the keys have been rotated on disk.
         session = boto3.session.Session()
         s3 = session.resource('s3')
@@ -44,7 +66,7 @@ class S3Backend:
             ContentType=obj.mimetype,
             Metadata={
                 'fluffy-links': '; '.join(links),
-                'fluffy-metadata': metadata_url or '',
+                'fluffy-metadata': metadata_url,
             },
             ContentDisposition=obj.content_disposition_header,
             # Allow the bucket owner to control the object, for cases where the
