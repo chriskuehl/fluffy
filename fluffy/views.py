@@ -162,10 +162,10 @@ def paste():
         if request.form.get('format_text'):
             if iff_json_then_pretty_json(text):
                 text = iff_json_then_pretty_json(text)
-                request.form['language'] = 'json'
+                lang = 'json'
 
         # HTML view (Markdown or paste)
-        lang = request.form['language']
+        lang = lang or request.form['language']
         if lang != 'rendered-markdown':
             highlighter = get_highlighter(text, lang, None)
             lang_title = highlighter.name
