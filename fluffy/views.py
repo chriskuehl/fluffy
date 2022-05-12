@@ -10,6 +10,7 @@ from flask import request
 from fluffy import version
 from fluffy.app import app
 from fluffy.component.backends import get_backend
+from fluffy.component.highlighting import create_diff
 from fluffy.component.highlighting import get_highlighter
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
 from fluffy.component.styles import STYLES_BY_CATEGORY
@@ -157,15 +158,16 @@ def paste():
         # HTML view (Markdown or paste)
         lang = request.form['language']
         if lang != 'rendered-markdown':
-            highlighter = get_highlighter(text, lang, None)
-            highlighter2 = get_highlighter(text2, lang, None)
+            diff, diff2 = create_diff(text, text2)
+            highlighter = get_highlighter(diff, lang, None)
+            highlighter2 = get_highlighter(diff2, lang, None)
             lang_title = highlighter.name
             paste_obj = ctx.enter_context(
                 HtmlToStore.from_html(
                     render_template(
                         'paste.html',
-                        text=text,
-                        text2=text2,
+                        text=diff,
+                        text2=diff2,
                         highlighter=highlighter,
                         highlighter2=highlighter2,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),

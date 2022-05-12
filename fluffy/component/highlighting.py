@@ -1,3 +1,4 @@
+import difflib
 import functools
 import re
 from collections import namedtuple
@@ -176,6 +177,24 @@ def get_highlighter(text, language, filename):
             )
 
     return PygmentsHighlighter(lexer)
+
+
+def create_diff(text, text2):
+    """
+    The diff between two texts is calculated
+    """
+    delta = difflib.unified_diff(text.split('\n'), text2.split('\n'))
+    diff_lines = list(delta)
+    # if we find differences, we return them with the original code
+    # if not, we just return the original texts (otherwise we would get empty strings)
+    if diff_lines:
+        diff_lines = diff_lines[3:]
+        diff = '\n'.join((line if not line.startswith('+') else '') for line in diff_lines)
+        diff2 = '\n'.join((line if not line.startswith('-') else '') for line in diff_lines)
+        print(diff, diff2)
+        return diff, diff2
+    else:
+        return text, text2
 
 
 # All guesslang titles with available Pygments lexers match automatically
