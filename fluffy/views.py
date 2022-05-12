@@ -75,6 +75,7 @@ def upload():
                             HtmlToStore.from_html(
                                 render_template(
                                     'paste.html',
+                                    upload_timestamp=time.ctime(time.time()),
                                     text=text,
                                     highlighter=get_highlighter(text, None, uf.human_name),
                                     raw_url=app.config['FILE_URL'].format(name=uf.name),
@@ -162,6 +163,7 @@ def paste():
                 HtmlToStore.from_html(
                     render_template(
                         'paste.html',
+                        upload_timestamp=time.ctime(time.time()),
                         text=text,
                         highlighter=highlighter,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
@@ -176,6 +178,7 @@ def paste():
                 HtmlToStore.from_html(
                     render_template(
                         'markdown.html',
+                        upload_timestamp=time.ctime(time.time()),
                         text=text,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                     ),

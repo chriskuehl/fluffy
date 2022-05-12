@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block content %}
+    <div id="ts" style="color: #7EA9AD; font-size: 12px;">Uploaded at: {{upload_timestamp}}</div>
     <div id="highlightContainer" class="{% block highlight_class %}highlight-default{% endblock %}">
         {% block highlight_start %}{% endblock %}
         <div class="paste-toolbar">
