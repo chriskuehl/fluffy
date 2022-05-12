@@ -102,8 +102,11 @@ $(document).ready(function() {
     });
 
     var numbers = $('.highlight > pre > span');
-    numbers.each(function (index) {
-        $(this).attr("line-number", index);
+    numbers.each(function (i) {
+        var data = $("<td class='line-data'></td>").text($(this).text());
+        var line_num = $("<td class='line-number'></td>").text(i);
+        $(this).html("");
+        $(this).append(line_num, data);
     });
     var setState = -1;
     $(document).mouseup(function() {
