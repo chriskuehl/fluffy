@@ -11,6 +11,7 @@ from fluffy import version
 from fluffy.app import app
 from fluffy.component.backends import get_backend
 from fluffy.component.highlighting import get_highlighter
+from fluffy.component.highlighting import create_diff
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
 from fluffy.component.styles import STYLES_BY_CATEGORY
 from fluffy.models import ExtensionForbiddenError
@@ -151,21 +152,22 @@ def paste():
             return 'Exceeded the max upload size of {} (tried to paste {})'.format(
                 human_size(app.config['MAX_UPLOAD_SIZE']),
                 human_size(num_bytes),
-            ), 413
+            ),
         objects.append(uf)
 
         # HTML view (Markdown or paste)
         lang = request.form['language']
         if lang != 'rendered-markdown':
-            highlighter = get_highlighter(text, lang, None)
-            highlighter2 = get_highlighter(text2, lang, None)
+            diffs = create_diff(text, text2)
+            highlighter = get_highlighter(diffs[0], lang, None, True)
+            highlighter2 = get_highlighter(diffs[1], lang, None, True)
             lang_title = highlighter.name
             paste_obj = ctx.enter_context(
                 HtmlToStore.from_html(
                     render_template(
                         'paste.html',
-                        text=text,
-                        text2=text2,
+                        text=diffs[0],
+                        text2=diffs[1],
                         highlighter=highlighter,
                         highlighter2=highlighter2,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),

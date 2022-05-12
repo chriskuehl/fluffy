@@ -1,3 +1,4 @@
+import difflib
 import functools
 import re
 from collections import namedtuple
@@ -147,7 +148,7 @@ def strip_diff_things(text):
     return s
 
 
-def get_highlighter(text, language, filename):
+def get_highlighter(text, language, filename, diff):
     if language in {None, 'autodetect'} and looks_like_ansi_color(text):
         language = 'ansi-color'
 
@@ -178,13 +179,35 @@ def get_highlighter(text, language, filename):
     return PygmentsHighlighter(lexer)
 
 
+def create_diff(text, text2):
+    diffs = ["diff --git", "diff --git"]
+    delta = difflib.unified_diff(text.split('\n'), text2.split('\n'))
+    diffTogether = ''.join(delta).split('\n')[2:]
+
+    split_map = {"+": "-", "-": "+"}
+
+    for line in diffTogether:
+        if line.startswith('@'):
+            diffs[0] += line + '\n'
+            diffs[1] += line + '\n'
+        else:
+            first_sign = line[0]
+            line = line[1:]
+
+            line_diff = line.split(split_map[first_sign])
+            diffs[0] += first_sign + line_diff[0] + "\n"
+            diffs[1] += split_map[first_sign] + line_diff[1] + "\n"
+
+    print(diffs)
+    return diffs
+
+
 # All guesslang titles with available Pygments lexers match automatically
 # except for these exceptions.
 GUESSLANG_LANGUAGE_MAP = {
     'Batchfile': 'batch',
     'Visual Basic': 'vbscript',
 }
-
 
 @functools.lru_cache()
 def _guesslang_guesser():
