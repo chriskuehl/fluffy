@@ -91,6 +91,16 @@ function updateSelectedHash(selected) {
 }
 
 $(document).ready(function() {
+
+    $("#do_word_wrap").click(function () {
+        let text_to_wrap = $(".highlight").find('pre');
+        if (text_to_wrap.css('white-space')==="pre") {
+            text_to_wrap.css('white-space', 'normal');
+        } else {
+            text_to_wrap.css('white-space', '');
+        }
+    });
+
     var numbers = $('.line-numbers > a');
     var setState = -1;
     $(document).mouseup(function() {

@@ -1,6 +1,5 @@
 import contextlib
 import json
-import textwrap
 import time
 
 from flask import jsonify
@@ -153,10 +152,6 @@ def paste():
                 human_size(num_bytes),
             ), 413
         objects.append(uf)
-
-        if request.form.get('word_wrap'):
-            wrapper = textwrap.TextWrapper(width=50)
-            text = wrapper.fill(text=text)
 
         # HTML view (Markdown or paste)
         lang = request.form['language']
