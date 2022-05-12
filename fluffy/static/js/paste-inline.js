@@ -95,13 +95,16 @@ $(document).ready(function() {
     $("#do_word_wrap").click(function () {
         let text_to_wrap = $(".highlight").find('pre');
         if (text_to_wrap.css('white-space')==="pre") {
-            text_to_wrap.css('white-space', 'normal');
+            text_to_wrap.css('white-space', 'break-spaces');
         } else {
             text_to_wrap.css('white-space', '');
         }
     });
 
-    var numbers = $('.line-numbers > a');
+    var numbers = $('.highlight > pre > span');
+    numbers.each(function (index) {
+        $(this).attr("line-number", index);
+    });
     var setState = -1;
     $(document).mouseup(function() {
         setState = -1;
@@ -131,12 +134,13 @@ $(document).ready(function() {
         }
 
         var selected = selectedLines();
-        var line = parseInt(el.text());
+        var line = parseInt(el.get(0).id.replace("line-", ""));
         var idx = selected.indexOf(line);
 
         if (idx === -1 && setState === 1) {
             updateLineClasses(line, true);
             selected.push(line);
+            console.log("##"+ selected);
             updateSelectedHash(selected);
         } else if (idx !== -1 && setState === 0) {
             selected.splice(idx, 1);
@@ -148,7 +152,7 @@ $(document).ready(function() {
 
     numbers.on('mousedown', function(e) {
         var selected = selectedLines();
-        var line = parseInt($(this).text());
+        var line = parseInt(this.id.replace("line-", ""));
         setState = selected.indexOf(line) === -1 ? 1 : 0;
         return maybeChangeState($(this));
     });
