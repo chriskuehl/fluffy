@@ -159,8 +159,8 @@ def paste():
         lang = request.form['language']
         if lang != 'rendered-markdown':
             diffs = create_diff(text, text2)
-            highlighter = get_highlighter(diffs[0], lang, None, True)
-            highlighter2 = get_highlighter(diffs[1], lang, None, True)
+            highlighter = get_highlighter(diffs[0], lang, None)
+            highlighter2 = get_highlighter(diffs[1], lang, None)
             lang_title = highlighter.name
             paste_obj = ctx.enter_context(
                 HtmlToStore.from_html(

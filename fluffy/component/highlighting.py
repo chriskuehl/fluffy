@@ -148,7 +148,7 @@ def strip_diff_things(text):
     return s
 
 
-def get_highlighter(text, language, filename, diff):
+def get_highlighter(text, language, filename):
     if language in {None, 'autodetect'} and looks_like_ansi_color(text):
         language = 'ansi-color'
 
@@ -192,13 +192,18 @@ def create_diff(text, text2):
             diffs[1] += line + '\n'
         else:
             first_sign = line[0]
+
+            if first_sign not in split_map:
+                diffs[0] += line + '\n'
+                diffs[1] += line + '\n'
+                continue
+
             line = line[1:]
 
             line_diff = line.split(split_map[first_sign])
             diffs[0] += first_sign + line_diff[0] + "\n"
             diffs[1] += split_map[first_sign] + line_diff[1] + "\n"
 
-    print(diffs)
     return diffs
 
 
