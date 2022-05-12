@@ -19,6 +19,7 @@ from fluffy.models import HtmlToStore
 from fluffy.models import UploadedFile
 from fluffy.utils import human_size
 from fluffy.utils import ICON_EXTENSIONS
+from fluffy.utils import iff_json_then_pretty_json
 from fluffy.utils import ONE_MB
 
 
@@ -153,8 +154,12 @@ def paste():
             ), 413
         objects.append(uf)
 
+        if request.form.get('format_text'):
+            if iff_json_then_pretty_json(text):
+                text = iff_json_then_pretty_json(text)
+                lang = 'json'
         # HTML view (Markdown or paste)
-        lang = request.form['language']
+        lang = lang or request.form['language']
         if lang != 'rendered-markdown':
             highlighter = get_highlighter(text, lang, None)
             lang_title = highlighter.name
