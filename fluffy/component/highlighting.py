@@ -180,10 +180,19 @@ def get_highlighter(text, language, filename):
 
 
 def create_diff(text, text2):
+    """
+    The diff between two texts is calculated
+    """
+    # added diff --git at the beginning of the texts to be able to use DiffHighlighter (which adds the diff colours)
     diffs = ["diff --git", "diff --git"]
     delta = difflib.unified_diff(text.split('\n'), text2.split('\n'))
+    # just transforming the delta into a string and skipping the first two lines
     diffTogether = ''.join(delta).split('\n')[2:]
 
+    # because diffTogether has the diff calculation as a single string, we need to format this string back into
+    # two strings so that we can use DiffHighlighter for each text without changing anything else in the code.
+    # The use of this map is to make the formatting back into two strings easier. When one text needs to have its line
+    # removed, the other text needs to have the line added, and vice-versa.
     split_map = {"+": "-", "-": "+"}
 
     for line in diffTogether:
@@ -193,6 +202,7 @@ def create_diff(text, text2):
         else:
             first_sign = line[0]
 
+            # attempt to work with multiple lines without success
             if first_sign not in split_map:
                 diffs[0] += line + '\n'
                 diffs[1] += line + '\n'
