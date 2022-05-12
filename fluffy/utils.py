@@ -1,5 +1,7 @@
 import os
 import random
+from json import dumps
+from json import loads
 
 from fluffy.app import app
 
@@ -98,3 +100,14 @@ def trim_filename(name, length):
             return result
 
     return get_result()
+
+
+def iff_json_then_pretty_json(text):
+    try:
+        text_no_whitespace = text.strip()
+        if text_no_whitespace[0] in ['[', '{'] and text_no_whitespace[-1] in [']', '}']:
+            text = dumps(loads(text), separators=(',', ':'), indent=4)
+            return text
+    except ValueError:
+        pass
+    return None

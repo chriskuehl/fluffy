@@ -20,6 +20,7 @@ from fluffy.models import HtmlToStore
 from fluffy.models import UploadedFile
 from fluffy.utils import human_size
 from fluffy.utils import ICON_EXTENSIONS
+from fluffy.utils import iff_json_then_pretty_json
 from fluffy.utils import ONE_MB
 
 
@@ -157,6 +158,11 @@ def paste():
         if request.form.get('word_wrap'):
             wrapper = textwrap.TextWrapper(width=50)
             text = wrapper.fill(text=text)
+
+        if request.form.get('format_text'):
+            if iff_json_then_pretty_json(text):
+                text = iff_json_then_pretty_json(text)
+                request.form['language'] = 'json'
 
         # HTML view (Markdown or paste)
         lang = request.form['language']
