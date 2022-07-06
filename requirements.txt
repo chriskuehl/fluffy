@@ -26,7 +26,7 @@ Jinja2==3.1.1
 jmespath==1.0.0
 keras-nightly==2.5.0.dev2021032900
 Keras-Preprocessing==1.1.2
-lxml==4.8.0
+lxml==4.9.1
 Markdown==3.3.6
 MarkupSafe==2.1.1
 mistune==0.8.4
