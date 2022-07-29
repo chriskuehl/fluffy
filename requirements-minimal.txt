@@ -4,7 +4,7 @@ csscompressor
 flask
 identify
 # https://github.com/chriskuehl/fluffy/issues/126
-mistune<0.999
+mistune<2.1
 pygments
 pygments-ansi-color>=0.0.3
 pygments-solarized-style
