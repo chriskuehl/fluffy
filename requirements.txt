@@ -31,7 +31,7 @@ Markdown==3.3.6
 MarkupSafe==2.1.1
 mistune==0.8.4
 numpy==1.19.5
-oauthlib==3.2.0
+oauthlib==3.2.1
 opt-einsum==3.3.0
 protobuf==3.20.0
 pyasn1==0.4.8
