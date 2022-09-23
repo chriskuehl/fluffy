@@ -33,7 +33,7 @@ mistune==0.8.4
 numpy==1.19.5
 oauthlib==3.2.0
 opt-einsum==3.3.0
-protobuf==3.20.0
+protobuf==3.20.2
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 Pygments==2.11.2
