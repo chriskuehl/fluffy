@@ -135,33 +135,24 @@ def upload():
 @app.route('/paste', methods={'POST'})
 def paste():
     """Paste and redirect."""
-    text = request.form.get('text')
-    text2 = request.form.get('text2')
-    print('text')
-    print(text)
-    print('text2')
-    print(text2)
-    # Browsers always send \r\n for the pasted text, which leads to bad
-    # newlines when curling the raw text (#28).
-    transformed_text = text.replace('\r\n', '\n')
+    lang = request.form['language']
+    objects = []
 
     with contextlib.ExitStack() as ctx:
-        objects = []
-
-        # Raw text object
-        try:
-            uf = ctx.enter_context(UploadedFile.from_text(transformed_text))
-        except FileTooLargeError as ex:
-            num_bytes, = ex.args
-            return 'Exceeded the max upload size of {} (tried to paste {})'.format(
-                human_size(app.config['MAX_UPLOAD_SIZE']),
-                human_size(num_bytes),
-            ), 413
-        objects.append(uf)
-
-        # HTML view (Markdown or paste)
-        lang = request.form.get('language')
         if lang == 'diff-between-two-texts':
+            text = request.form['diff']
+            text2 = request.form['diff2']
+            # Browsers always send \r\n for the pasted text, which leads to bad
+            # newlines when curling the raw text (#28).
+            transformed_text = text.replace('\r\n', '\n')
+            transformed_text2 = text2.replace('\r\n', '\n')
+            transformed_texts = [transformed_text, transformed_text2]
+            transformed_texts_len = [len(transformed_text.splitlines()), len(transformed_text2.splitlines())]
+
+            for txt in transformed_texts:
+                uf = _get_raw_text_object(txt, ctx)
+                objects.append(uf)
+
             diff, diff2 = create_diff(text, text2)
             highlighter = get_highlighter(diff, lang, None)
             highlighter2 = get_highlighter(diff2, lang, None)
@@ -180,61 +171,105 @@ def paste():
                 ),
             )
             objects.append(paste_obj)
-        elif lang != 'rendered-markdown':
-            highlighter = get_highlighter(text, lang, None)
-            lang_title = highlighter.name
-            paste_obj = ctx.enter_context(
-                HtmlToStore.from_html(
-                    render_template(
-                        'paste.html',
-                        text=text,
-                        highlighter=highlighter,
-                        raw_url=app.config['FILE_URL'].format(name=uf.name),
-                        styles=STYLES_BY_CATEGORY,
-                    ),
-                ),
-            )
-            objects.append(paste_obj)
         else:
-            lang_title = 'Rendered Markdown'
-            paste_obj = ctx.enter_context(
-                HtmlToStore.from_html(
-                    render_template(
-                        'markdown.html',
-                        text=text,
-                        raw_url=app.config['FILE_URL'].format(name=uf.name),
-                    ),
-                ),
-            )
-            objects.append(paste_obj)
+            text = request.form['text']
+            # Browsers always send \r\n for the pasted text, which leads to bad
+            # newlines when curling the raw text (#28).
+            transformed_texts = text.replace('\r\n', '\n')
+            transformed_texts_len = len(transformed_texts.splitlines())
 
-        # Metadata JSON object
-        metadata = {
-            'server_version': version,
-            'uploaded_files': {
-                'html': paste_obj.url,
-                'raw': uf.url,
-            },
-            'timestamp': time.time(),
-            'upload_type': 'paste',
-            'paste_details': {
-                'language': {
-                    'title': lang_title,
-                },
-                'num_lines': len(transformed_text.splitlines()),
-                'raw_text': transformed_text,
-            },
-        }
-        metadata_obj = ctx.enter_context(
-            UploadedFile.from_text(
-                json.dumps(metadata, indent=4, sort_keys=True),
-                human_name='metadata.json',
-            ),
-        )
+            uf = _get_raw_text_object(text, ctx)
+            objects.append(uf)
+
+            # HTML view (Markdown or paste)
+            if lang != 'rendered-markdown':
+                highlighter = get_highlighter(text, lang, None)
+                lang_title = highlighter.name
+                paste_obj = ctx.enter_context(
+                    HtmlToStore.from_html(
+                        render_template(
+                            'paste.html',
+                            text=text,
+                            highlighter=highlighter,
+                            raw_url=app.config['FILE_URL'].format(name=uf.name),
+                            styles=STYLES_BY_CATEGORY,
+                        ),
+                    ),
+                )
+                objects.append(paste_obj)
+            else:
+                lang_title = 'Rendered Markdown'
+                paste_obj = ctx.enter_context(
+                    HtmlToStore.from_html(
+                        render_template(
+                            'markdown.html',
+                            text=text,
+                            raw_url=app.config['FILE_URL'].format(name=uf.name),
+                        ),
+                    ),
+                )
+                objects.append(paste_obj)
+
+        metadata = _get_metadata_json(paste_obj, uf, lang_title, transformed_texts_len, transformed_texts)
+        metadata_obj = _get_metadata_obj(metadata, ctx)
         objects.append(metadata_obj)
 
         upload_objects(objects, metadata_url=metadata_obj.url)
 
+        return _generate_output(paste_obj, uf, metadata_obj, lang_title, metadata)
+
+
+@app.route('/upload-history')
+def upload_history():
+    return render_template(
+        'upload-history.html',
+        icon_extensions=ICON_EXTENSIONS,
+    )
+
+
+def _get_raw_text_object(formatted_text, ctx):
+    try:
+        uf = ctx.enter_context(UploadedFile.from_text(formatted_text))
+    except FileTooLargeError as ex:
+        num_bytes, = ex.args
+        return 'Exceeded the max upload size of {} (tried to paste {})'.format(
+            human_size(app.config['MAX_UPLOAD_SIZE']),
+            human_size(num_bytes),
+        ), 413
+    return uf
+
+
+def _get_metadata_json(paste_obj, uf, lang_title, transformed_texts_len, transformed_texts):
+    metadata = {
+        'server_version': version,
+        'uploaded_files': {
+            'html': paste_obj.url,
+            'raw': uf.url,
+        },
+        'timestamp': time.time(),
+        'upload_type': 'paste',
+        'paste_details': {
+            'language': {
+                'title': lang_title,
+            },
+            'num_lines': transformed_texts_len,
+            'raw_text': transformed_texts,
+        },
+    }
+    return metadata
+
+
+def _get_metadata_obj(metadata, ctx):
+    metadata_obj = ctx.enter_context(
+        UploadedFile.from_text(
+            json.dumps(metadata, indent=4, sort_keys=True),
+            human_name='metadata.json',
+        ),
+    )
+    return metadata_obj
+
+
+def _generate_output(paste_obj, uf, metadata_obj, lang_title, metadata):
     if 'json' in request.args:
         return jsonify({
             'success': True,
@@ -253,11 +288,3 @@ def paste():
         })
     else:
         return redirect(paste_obj.url)
-
-
-@app.route('/upload-history')
-def upload_history():
-    return render_template(
-        'upload-history.html',
-        icon_extensions=ICON_EXTENSIONS,
-    )
