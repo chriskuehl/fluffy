@@ -100,6 +100,22 @@ $(document).ready(function() {
         }
     });
 
+    // show two text for diff_two
+    var langDropDown = $("#language");
+    langDropDown.change(function(e) {
+        var test = e.target.value;
+
+        // set display -> block instead of calling show() since otherwise
+        // jQuery will "restore" it to inline
+        if (test === "diff_two") {
+            $("#pastedTwoText").css("display", "block");
+            $("#pastedText").hide();
+        } else {
+            $("#pastedText").css("display", "block");
+            $("#pastedTwoText").hide();
+        }
+    });
+
     // pasting
     pb.submit(function() {
         // We keep the form around for compatibility with no-JS browsers, but
