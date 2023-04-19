@@ -2,8 +2,8 @@
 # storage backend (how are the files stored after being uploaded?)
 STORAGE_BACKEND = {
     'name': 'file',
-    'object_path': '/Users/MantasSkackauskas/Documents/fluffy/tmp/object/{name}',
-    'html_path': '/Users/MantasSkackauskas/Documents/fluffy/tmp/html/{name}',
+    'object_path': 'tmp/object/{name}',
+    'html_path': 'tmp/html/{name}',
 }
 
 # branding

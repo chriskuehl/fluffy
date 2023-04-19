@@ -183,38 +183,18 @@ def create_diff(text, text2):
     """
     The diff between two texts is calculated
     """
-    # added diff --git at the beginning of the texts to be able to use DiffHighlighter (which adds the diff colours)
-    diffs = ["diff --git", "diff --git"]
     delta = difflib.unified_diff(text.split('\n'), text2.split('\n'))
-    # just transforming the delta into a string and skipping the first two lines
-    diffTogether = ''.join(delta).split('\n')[2:]
-
-    # because diffTogether has the diff calculation as a single string, we need to format this string back into
-    # two strings so that we can use DiffHighlighter for each text without changing anything else in the code.
-    # The use of this map is to make the formatting back into two strings easier. When one text needs to have its line
-    # removed, the other text needs to have the line added, and vice-versa.
-    split_map = {"+": "-", "-": "+"}
-
-    for line in diffTogether:
-        if line.startswith('@'):
-            diffs[0] += line + '\n'
-            diffs[1] += line + '\n'
-        else:
-            first_sign = line[0]
-
-            # attempt to work with multiple lines without success
-            if first_sign not in split_map:
-                diffs[0] += line + '\n'
-                diffs[1] += line + '\n'
-                continue
-
-            line = line[1:]
-
-            line_diff = line.split(split_map[first_sign])
-            diffs[0] += first_sign + line_diff[0] + "\n"
-            diffs[1] += split_map[first_sign] + line_diff[1] + "\n"
-
-    return diffs
+    diff_lines = list(delta)
+    # if we find differences, we return them with the original code
+    # if not, we just return the original texts (otherwise we would get empty strings)
+    if diff_lines:
+        diff_lines = diff_lines[3:]
+        diff = '\n'.join((line if not line.startswith('+') else '') for line in diff_lines)
+        diff2 = '\n'.join((line if not line.startswith('-') else '') for line in diff_lines)
+        print(diff, diff2)
+        return diff, diff2
+    else:
+        return text, text2
 
 
 # All guesslang titles with available Pygments lexers match automatically
