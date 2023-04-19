@@ -12,7 +12,6 @@ from fluffy.app import app
 from fluffy.component.backends import get_backend
 from fluffy.component.highlighting import create_diff
 from fluffy.component.highlighting import get_highlighter
-from fluffy.component.highlighting import create_diff
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
 from fluffy.component.styles import STYLES_BY_CATEGORY
 from fluffy.models import ExtensionForbiddenError
@@ -136,8 +135,12 @@ def upload():
 @app.route('/paste', methods={'POST'})
 def paste():
     """Paste and redirect."""
-    text = request.form['text']
-    text2 = request.form['text2']
+    text = request.form.get('text')
+    text2 = request.form.get('text2')
+    print('text')
+    print(text)
+    print('text2')
+    print(text2)
     # Browsers always send \r\n for the pasted text, which leads to bad
     # newlines when curling the raw text (#28).
     transformed_text = text.replace('\r\n', '\n')
@@ -153,12 +156,12 @@ def paste():
             return 'Exceeded the max upload size of {} (tried to paste {})'.format(
                 human_size(app.config['MAX_UPLOAD_SIZE']),
                 human_size(num_bytes),
-            ),
+            ), 413
         objects.append(uf)
 
         # HTML view (Markdown or paste)
-        lang = request.form['language']
-        if lang != 'rendered-markdown':
+        lang = request.form.get('language')
+        if lang == 'diff-between-two-texts':
             diff, diff2 = create_diff(text, text2)
             highlighter = get_highlighter(diff, lang, None)
             highlighter2 = get_highlighter(diff2, lang, None)
@@ -171,6 +174,21 @@ def paste():
                         text2=diff2,
                         highlighter=highlighter,
                         highlighter2=highlighter2,
+                        raw_url=app.config['FILE_URL'].format(name=uf.name),
+                        styles=STYLES_BY_CATEGORY,
+                    ),
+                ),
+            )
+            objects.append(paste_obj)
+        elif lang != 'rendered-markdown':
+            highlighter = get_highlighter(text, lang, None)
+            lang_title = highlighter.name
+            paste_obj = ctx.enter_context(
+                HtmlToStore.from_html(
+                    render_template(
+                        'paste.html',
+                        text=text,
+                        highlighter=highlighter,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                         styles=STYLES_BY_CATEGORY,
                     ),

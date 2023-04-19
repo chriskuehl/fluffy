@@ -22,7 +22,6 @@ UI_LANGUAGES_MAP = {
     'c++': 'C++',
     'cheetah': 'Cheetah',
     'diff': 'Diff',
-    'diff_two': 'Diff between two texts',
     'groovy': 'Groovy',
     'haskell': 'Haskell',
     'html': 'HTML',
@@ -204,6 +203,7 @@ GUESSLANG_LANGUAGE_MAP = {
     'Batchfile': 'batch',
     'Visual Basic': 'vbscript',
 }
+
 
 @functools.lru_cache()
 def _guesslang_guesser():

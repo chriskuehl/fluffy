@@ -100,14 +100,14 @@ $(document).ready(function() {
         }
     });
 
-    // show two text for diff_two
+    // show two text for diff-between-two-texts
     var langDropDown = $("#language");
     langDropDown.change(function(e) {
         var test = e.target.value;
 
         // set display -> block instead of calling show() since otherwise
         // jQuery will "restore" it to inline
-        if (test === "diff_two") {
+        if (test === "diff-between-two-texts") {
             $("#pastedTwoText").css("display", "block");
             $("#pastedText").hide();
         } else {
