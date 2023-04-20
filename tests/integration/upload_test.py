@@ -36,6 +36,7 @@ def test_single_file_upload_json(content, running_server):
     assert req.json() == {
         'success': True,
         'redirect': mock.ANY,
+        'metadata': mock.ANY,
         'uploaded_files': {
             'ohai.bin': {
                 'bytes': len(content),
@@ -80,6 +81,7 @@ def test_multiple_files_upload_json(running_server):
     assert req.json() == {
         'success': True,
         'redirect': mock.ANY,
+        'metadata': mock.ANY,
         'uploaded_files': {
             f'ohai{i}.bin': {'bytes': len(content), 'paste': mock.ANY, 'raw': mock.ANY}
             for i, content in enumerate(FILE_CONTENT_TESTCASES)

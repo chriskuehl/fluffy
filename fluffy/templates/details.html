@@ -5,20 +5,34 @@
 {% block content %}
     <div id="files">
         {% for (file, pb) in uploads %}
-            <div class="file">
-                <div class="detailHolder">
-                    <div class="icon">
-                        <img src="{{asset_url('img/mime/large/' + (file.extension|icon_for_extension) + '.png')}}" />
+            <div class="file-holder">
+                <div class="file {% if file.is_image %}image{% endif %}">
+                    <div class="filename">
+                        <img src="{{asset_url('img/mime/small/' + (file.extension|icon_for_extension) + '.png')}}" />
+                        {{file.human_name}}
                     </div>
-                    <div class="details">
-                        <h2>{{file.human_name|trim_filename(16)}}</h2>
-                        <p>
+
+                    {% if file.is_image %}
+                        <div class="image-holder">
+                            <a href="{{file.url}}">
+                                <img src="{{file.url}}" />
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <div class="metadata-bar">
+                        <div class="filesize">
+                            {{file.num_bytes|human_size}}
+                        </div>
+
+                        <div class="buttons">
                             <a href="{{file.url}}" class="download">Direct Link</a>
                             {% if pb %}
                                 <a href="{{pb.url}}" class="view-paste">View Text</a>
                             {% endif %}
-                            &nbsp;&nbsp;  {{file.num_bytes|human_size}}
-                        </p>
+                        </div>
+
+                        <div class="clearfix"></div>
                     </div>
                 </div>
             </div>
