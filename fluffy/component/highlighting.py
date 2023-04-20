@@ -191,7 +191,6 @@ def create_diff(text, text2):
         diff_lines = diff_lines[3:]
         diff = '\n'.join((line if not line.startswith('+') else '') for line in diff_lines)
         diff2 = '\n'.join((line if not line.startswith('-') else '') for line in diff_lines)
-        print(diff, diff2)
         return diff, diff2
     else:
         return text, text2
