@@ -91,7 +91,23 @@ function updateSelectedHash(selected) {
 }
 
 $(document).ready(function() {
-    var numbers = $('.line-numbers > a');
+
+    $("#do_word_wrap").click(function () {
+        let text_to_wrap = $(".highlight").find('pre');
+        if (text_to_wrap.css('white-space')==="pre") {
+            text_to_wrap.css('white-space', 'break-spaces');
+        } else {
+            text_to_wrap.css('white-space', '');
+        }
+    });
+
+    var numbers = $('.highlight > pre > span');
+    numbers.each(function (i) {
+        var data = $("<td class='line-data'></td>").text($(this).text());
+        var line_num = $("<td class='line-number'></td>").text(i);
+        $(this).html("");
+        $(this).append(line_num, data);
+    });
     var setState = -1;
     $(document).mouseup(function() {
         setState = -1;
@@ -121,12 +137,13 @@ $(document).ready(function() {
         }
 
         var selected = selectedLines();
-        var line = parseInt(el.text());
+        var line = parseInt(el.get(0).id.replace("line-", ""));
         var idx = selected.indexOf(line);
 
         if (idx === -1 && setState === 1) {
             updateLineClasses(line, true);
             selected.push(line);
+            console.log("##"+ selected);
             updateSelectedHash(selected);
         } else if (idx !== -1 && setState === 0) {
             selected.splice(idx, 1);
@@ -138,7 +155,7 @@ $(document).ready(function() {
 
     numbers.on('mousedown', function(e) {
         var selected = selectedLines();
-        var line = parseInt($(this).text());
+        var line = parseInt(this.id.replace("line-", ""));
         setState = selected.indexOf(line) === -1 ? 1 : 0;
         return maybeChangeState($(this));
     });

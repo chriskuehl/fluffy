@@ -31,11 +31,11 @@
 {% endblock %}
 
 {% block text %}
-    <div class="line-numbers">
-        {% for i in range(1, num_lines(text) + 1) %}
-            <a id="LL{{i}}">{{i}}</a>
-        {% endfor %}
-    </div>
+{#    <div class="line-numbers">#}
+{#        {% for i in range(1, num_lines(text) + 1) %}#}
+{#            <a id="LL{{i}}">{{i}}</a>#}
+{#        {% endfor %}#}
+{#    </div>#}
     <div class="text" contenteditable="true" spellcheck="false">
         {{highlighter.highlight(text)|safe}}
     </div>

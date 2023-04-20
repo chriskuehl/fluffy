@@ -99,3 +99,7 @@ a.report {
 .footer a:hover {
     color: #89C2C7;
 }
+
+.page-paste #paste .text .highlight > pre > span::before {
+    content: attr(line-number);
+}
