@@ -26,7 +26,7 @@ class FileBackend:
         obj: typing.Union[HtmlToStore, UploadedFile],
     ):
         path = app.config['STORAGE_BACKEND'][path_key].format(name=obj.name)
-        with open(path, 'wb+') as f:
+        with open(path, 'wb') as f:
             shutil.copyfileobj(obj.open_file, f)
             obj.open_file.seek(0)
 
