@@ -215,6 +215,15 @@
             height: 600px;
         }
 
+        #pastedTwoText {
+            display: flex;
+            column-gap: 10px;
+
+            textarea {
+                flex: 1;
+            }
+        }
+
         select {
             box-sizing: border-box;
             padding: 3px;
