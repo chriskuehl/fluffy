@@ -33,7 +33,7 @@
 {% block text %}
     <div style="display:flex;">
         <div style="flex:1; width:30%;">
-            <div class="line-numbers" style=>
+            <div class="line-numbers">
                 {% for i in range(1, num_lines(text) + 1) %}
                     <a id="LL{{i}}">{{i}}</a>
                 {% endfor %}
