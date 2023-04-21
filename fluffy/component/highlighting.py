@@ -1,4 +1,3 @@
-import difflib
 import functools
 import re
 import typing
@@ -65,6 +64,9 @@ class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
     def is_terminal_output(self):
         return 'ansi-color' in self.lexer.aliases
 
+    def prepare_text(self, text: str) -> typing.List[str]:
+        return [text]
+
     def highlight(self, text):
         text = _highlight(text, self.lexer)
         return text
@@ -77,6 +79,24 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
     @property
     def name(self):
         return f'Diff ({self.lexer.name})'
+
+    def prepare_text(self, text: str) -> typing.List[str]:
+        """Transform the unified diff into a side-by-side diff."""
+        diff1 = []
+        diff2 = []
+        for line in text.splitlines():
+            if line in ('--- ', '+++ '):
+                pass
+            elif line.startswith('-'):
+                diff1.append(line)
+                diff2.append('')
+            elif line.startswith('+'):
+                diff1.append('')
+                diff2.append(line)
+            else:
+                diff1.append(line)
+                diff2.append(line)
+        return ['\n'.join(diff1), '\n'.join(diff2)]
 
     def highlight(self, text):
         html = pq(_highlight(text, self.lexer))
@@ -178,21 +198,6 @@ def get_highlighter(text, language, filename):
             )
 
     return PygmentsHighlighter(lexer)
-
-
-def create_diff(text: str, text2: str) -> typing.Tuple[str, str]:
-    """The diff between two texts is calculated."""
-    delta = difflib.unified_diff(text.split('\n'), text2.split('\n'))
-    diff_lines = list(delta)
-    # if we find differences, we return them with the original code
-    # if not, we just return the original texts (otherwise we would get empty strings)
-    if diff_lines:
-        diff_lines = diff_lines[3:]
-        diff = '\n'.join((line if not line.startswith('+') else '') for line in diff_lines)
-        diff2 = '\n'.join((line if not line.startswith('-') else '') for line in diff_lines)
-        return diff, diff2
-    else:
-        return text, text2
 
 
 # All guesslang titles with available Pygments lexers match automatically
