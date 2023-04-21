@@ -3,6 +3,7 @@ from pathlib import Path
 from flask import render_template
 
 from fluffy.app import app
+from fluffy.component.highlighting import create_diff
 from fluffy.component.highlighting import get_highlighter
 from fluffy.component.styles import STYLES_BY_CATEGORY
 from fluffy.models import HtmlToStore
@@ -45,6 +46,23 @@ def debug():  # pragma: no cover
             'paste.html',
             text=text,
             highlighter=get_highlighter(text, None, None),
+            edit_url='#edit',
+            raw_url='#raw',
+            styles=STYLES_BY_CATEGORY,
+        )
+
+    @app.route('/test/side-by-side-diff')
+    def view_side_by_side_diff():
+        diff, diff2 = create_diff(
+            (TESTING_DIR / 'files' / 'code.py').open().read(),
+            (TESTING_DIR / 'files' / 'code-v2.py').open().read(),
+        )
+        return render_template(
+            'paste.html',
+            text=diff,
+            text2=diff2,
+            highlighter=get_highlighter(diff, 'diff-python', None),
+            highlighter2=get_highlighter(diff2, 'diff-python', None),
             edit_url='#edit',
             raw_url='#raw',
             styles=STYLES_BY_CATEGORY,

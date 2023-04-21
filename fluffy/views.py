@@ -190,6 +190,9 @@ def paste():
                 objects.append(uf)
 
             diff, diff2 = create_diff(text, text2)
+            # TODO: should these be the same highlighter since these are (in
+            # theory) the same text?
+            # TODO: this needs to force diff
             highlighter = get_highlighter(diff, lang, None)
             highlighter2 = get_highlighter(diff2, lang, None)
             lang_title = highlighter.name
