@@ -38,5 +38,15 @@
         font-size: 14px;
         position: relative;
         background-color: white;
+        display: flex;
+
+        .text-container {
+            border-left: solid 1px #333;
+            flex: 1;
+        }
+
+        .text-container:first-child {
+           border-left: none;
+        }
     }
 }

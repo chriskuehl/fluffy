@@ -32,7 +32,7 @@ def debug():  # pragma: no cover
     def view_paste():
         return render_template(
             'paste.html',
-            text=(TESTING_DIR / 'files' / 'code.py').open().read(),
+            texts=[(TESTING_DIR / 'files' / 'code.py').open().read()],
             highlighter=get_highlighter('', 'python', None),
             edit_url='#edit',
             raw_url='#raw',
@@ -44,7 +44,7 @@ def debug():  # pragma: no cover
         text = (TESTING_DIR / 'files' / 'python.diff').open().read()
         return render_template(
             'paste.html',
-            text=text,
+            texts=[text],
             highlighter=get_highlighter(text, None, None),
             edit_url='#edit',
             raw_url='#raw',
@@ -59,10 +59,8 @@ def debug():  # pragma: no cover
         )
         return render_template(
             'paste.html',
-            text=diff,
-            text2=diff2,
+            texts=[diff, diff2],
             highlighter=get_highlighter(diff, 'diff-python', None),
-            highlighter2=get_highlighter(diff2, 'diff-python', None),
             edit_url='#edit',
             raw_url='#raw',
             styles=STYLES_BY_CATEGORY,
@@ -73,7 +71,7 @@ def debug():  # pragma: no cover
         text = (TESTING_DIR / 'files' / 'ansi-color').open().read()
         return render_template(
             'paste.html',
-            text=text,
+            texts=[text],
             highlighter=get_highlighter(text, None, None),
             edit_url='#edit',
             raw_url='#raw',

@@ -190,20 +190,17 @@ def paste():
                 objects.append(uf)
 
             diff, diff2 = create_diff(text, text2)
-            # TODO: should these be the same highlighter since these are (in
-            # theory) the same text?
-            # TODO: this needs to force diff
-            highlighter = get_highlighter(diff, lang, None)
-            highlighter2 = get_highlighter(diff2, lang, None)
+            highlighter = get_highlighter(diff + diff2, 'diff', None)
             lang_title = highlighter.name
             paste_obj = ctx.enter_context(
                 HtmlToStore.from_html(
                     render_template(
                         'paste.html',
-                        text=diff,
-                        text2=diff2,
+                        # TODO: maybe make the two diffed texts have the same
+                        # line count so their line numbers match up in the
+                        # rendered view.
+                        texts=[diff, diff2],
                         highlighter=highlighter,
-                        highlighter2=highlighter2,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                         styles=STYLES_BY_CATEGORY,
                     ),
@@ -228,7 +225,7 @@ def paste():
                     HtmlToStore.from_html(
                         render_template(
                             'paste.html',
-                            text=text,
+                            texts=[text],
                             highlighter=highlighter,
                             raw_url=app.config['FILE_URL'].format(name=uf.name),
                             styles=STYLES_BY_CATEGORY,

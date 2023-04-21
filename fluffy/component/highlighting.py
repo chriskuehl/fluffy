@@ -89,7 +89,7 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
 
         for line in lines:
             line = pq(line)
-            assert line.attr('id').startswith('line-')
+            assert line.attr('class').startswith('line-')
 
             el = pq(line)
 
@@ -271,8 +271,13 @@ def guess_lexer(text, language, filename, opts=None):
 
 
 def _highlight(text, lexer):
-    return pygments.highlight(
+    text = pygments.highlight(
         text,
         lexer,
         _pygments_formatter,
     )
+    # We may have multiple renders per page, but for some reason
+    # Pygments's HtmlFormatter only supports IDs and not classes for
+    # line numbers.
+    text = text.replace(' id="line-', ' class="line-')
+    return text

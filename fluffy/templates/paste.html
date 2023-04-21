@@ -20,7 +20,10 @@
 {% endblock %}
 
 {% block info %}
-    {{num_lines(text)}} {{'line'|pluralize(num_lines(text))}} of {{highlighter.name}}
+    {% if texts|length == 1 %}
+        {{num_lines(texts[0])}} {{'line'|pluralize(num_lines(texts[0]))}} of
+    {% endif %}
+    {{highlighter.name}}
 {% endblock %}
 
 {% block highlight_start %}
@@ -31,30 +34,18 @@
 {% endblock %}
 
 {% block text %}
-    <div style="display:flex;">
-        <div style="flex:1; width:30%;">
+    {% for text in texts %}
+        <div class="text-container">
             <div class="line-numbers">
                 {% for i in range(1, num_lines(text) + 1) %}
-                    <a id="LL{{i}}">{{i}}</a>
+                    <a class="LL{{i}}">{{i}}</a>
                 {% endfor %}
             </div>
             <div class="text" contenteditable="true" spellcheck="false">
                 {{highlighter.highlight(text)|safe}}
             </div>
         </div>
-        <div style="flex:1; width:30%;">
-            {% if text2 is defined and highlighter2 is defined %}
-                <div class="line-numbers">
-                    {% for i in range(1, num_lines(text2) + 1) %}
-                        <a id="LL{{i}}">{{i}}</a>
-                    {% endfor %}
-                </div>
-                <div class="text" contenteditable="true" spellcheck="false">
-                    {{highlighter2.highlight(text2)|safe}}
-                </div>
-            {% endif %}
-        </div>
-    </div>
+    {% endfor %}
 {% endblock %}
 
 {% block extra_toolbar %}
