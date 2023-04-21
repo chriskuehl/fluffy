@@ -1,6 +1,7 @@
 import difflib
 import functools
 import re
+import typing
 from collections import namedtuple
 
 import pygments.lexers.teraterm
