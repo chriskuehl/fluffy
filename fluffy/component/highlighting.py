@@ -180,10 +180,8 @@ def get_highlighter(text, language, filename):
     return PygmentsHighlighter(lexer)
 
 
-def create_diff(text, text2):
-    """
-    The diff between two texts is calculated
-    """
+def create_diff(text: str, text2: str) -> typing.Tuple[str, str]:
+    """The diff between two texts is calculated."""
     delta = difflib.unified_diff(text.split('\n'), text2.split('\n'))
     diff_lines = list(delta)
     # if we find differences, we return them with the original code
