@@ -83,12 +83,14 @@ def upload():
                     except UnicodeDecodeError:
                         pass
                     else:
+                        highlighter = get_highlighter(text, None, uf.human_name)
                         pb = ctx.enter_context(
                             HtmlToStore.from_html(
                                 render_template(
                                     'paste.html',
-                                    text=text,
-                                    highlighter=get_highlighter(text, None, uf.human_name),
+                                    texts=highlighter.prepare_text(text),
+                                    copy_and_edit_text=text,
+                                    highlighter=highlighter,
                                     raw_url=app.config['FILE_URL'].format(name=uf.name),
                                     styles=STYLES_BY_CATEGORY,
                                 ),
@@ -212,6 +214,7 @@ def paste():
                     render_template(
                         'paste.html',
                         texts=highlighter.prepare_text(transformed_text),
+                        copy_and_edit_text=transformed_text,
                         highlighter=highlighter,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                         styles=STYLES_BY_CATEGORY,
@@ -226,6 +229,7 @@ def paste():
                     render_template(
                         'markdown.html',
                         text=transformed_text,
+                        copy_and_edit_text=transformed_text,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                     ),
                 ),
