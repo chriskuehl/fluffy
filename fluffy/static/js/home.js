@@ -100,6 +100,18 @@ $(document).ready(function() {
         }
     });
 
+    // show two text boxes for diff-between-two-texts
+    $("#language").change(function(e) {
+        const selected_lang = e.target.value;
+        if (selected_lang === "diff-between-two-texts") {
+            $("#pastedTwoText").removeClass("hidden");
+            $("#pastedText").addClass("hidden");
+        } else {
+            $("#pastedText").removeClass("hidden");
+            $("#pastedTwoText").addClass("hidden");
+        }
+    });
+
     // pasting
     pb.submit(function() {
         // We keep the form around for compatibility with no-JS browsers, but

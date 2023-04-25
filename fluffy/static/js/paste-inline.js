@@ -101,7 +101,7 @@ $(document).ready(function() {
         /**
          * Add or remove "selected" classes from the line number and its line.
          */
-        var els = $('#LL' + num + ',#line-' + num);
+        var els = $('.LL' + num + ',.line-' + num);
         if (isSelected) {
             els.addClass('selected');
         } else {
@@ -174,7 +174,7 @@ $(document).ready(function() {
         updateLineClasses(line, true);
 
         if (!hasMovedDown) {
-            var e = $('#LL' + line);
+            var e = $('.LL' + line);
             hasMovedDown = true;
             if ($('body').scrollTop() == 0) {
                 // Chrome needs body, Firefox needs html :\

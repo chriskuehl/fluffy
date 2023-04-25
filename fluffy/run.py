@@ -29,10 +29,12 @@ def debug():  # pragma: no cover
 
     @app.route('/test/paste')
     def view_paste():
+        text = (TESTING_DIR / 'files' / 'code.py').open().read()
+        highlighter = get_highlighter('', 'python', None)
         return render_template(
             'paste.html',
-            text=(TESTING_DIR / 'files' / 'code.py').open().read(),
-            highlighter=get_highlighter('', 'python', None),
+            texts=highlighter.prepare_text(text),
+            highlighter=highlighter,
             edit_url='#edit',
             raw_url='#raw',
             styles=STYLES_BY_CATEGORY,
@@ -41,10 +43,11 @@ def debug():  # pragma: no cover
     @app.route('/test/diff')
     def view_diff():
         text = (TESTING_DIR / 'files' / 'python.diff').open().read()
+        highlighter = get_highlighter(text, None, None)
         return render_template(
             'paste.html',
-            text=text,
-            highlighter=get_highlighter(text, None, None),
+            texts=highlighter.prepare_text(text),
+            highlighter=highlighter,
             edit_url='#edit',
             raw_url='#raw',
             styles=STYLES_BY_CATEGORY,
@@ -53,10 +56,11 @@ def debug():  # pragma: no cover
     @app.route('/test/ansi-color')
     def view_ansi_color():
         text = (TESTING_DIR / 'files' / 'ansi-color').open().read()
+        highlighter = get_highlighter(text, None, None)
         return render_template(
             'paste.html',
-            text=text,
-            highlighter=get_highlighter(text, None, None),
+            texts=highlighter.prepare_text(text),
+            highlighter=highlighter,
             edit_url='#edit',
             raw_url='#raw',
             styles=STYLES_BY_CATEGORY,

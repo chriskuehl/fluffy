@@ -10,8 +10,10 @@
 {% endblock info %}
 
 {% block text %}
-    <div class="text">
-        {{text|markdown|safe}}
+    <div class="text-container">
+        <div class="text">
+            {{text|markdown|safe}}
+        </div>
     </div>
 {% endblock %}
 

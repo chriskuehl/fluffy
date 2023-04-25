@@ -38,5 +38,16 @@
         font-size: 14px;
         position: relative;
         background-color: white;
+        display: flex;
+
+        .text-container {
+            border-left: solid 1px #333;
+            flex: 1;
+            min-width: 0; /* https://css-tricks.com/flexbox-truncated-text/ */
+        }
+
+        .text-container:first-child {
+           border-left: none;
+        }
     }
 }

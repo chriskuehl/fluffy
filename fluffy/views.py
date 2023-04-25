@@ -1,5 +1,6 @@
 import concurrent.futures
 import contextlib
+import difflib
 import json
 import time
 import typing
@@ -82,12 +83,14 @@ def upload():
                     except UnicodeDecodeError:
                         pass
                     else:
+                        highlighter = get_highlighter(text, None, uf.human_name)
                         pb = ctx.enter_context(
                             HtmlToStore.from_html(
                                 render_template(
                                     'paste.html',
-                                    text=text,
-                                    highlighter=get_highlighter(text, None, uf.human_name),
+                                    texts=highlighter.prepare_text(text),
+                                    copy_and_edit_text=text,
+                                    highlighter=highlighter,
                                     raw_url=app.config['FILE_URL'].format(name=uf.name),
                                     styles=STYLES_BY_CATEGORY,
                                 ),
@@ -170,10 +173,22 @@ def upload():
 @app.route('/paste', methods={'POST'})
 def paste():
     """Paste and redirect."""
-    text = request.form['text']
+    lang = request.form['language']
+
     # Browsers always send \r\n for the pasted text, which leads to bad
     # newlines when curling the raw text (#28).
-    transformed_text = text.replace('\r\n', '\n')
+    transformed_text = request.form.get('text', '').replace('\r\n', '\n')
+    diff1 = request.form.get('diff1', '').replace('\r\n', '\n')
+    diff2 = request.form.get('diff2', '').replace('\r\n', '\n')
+
+    if lang == 'diff-between-two-texts':
+        transformed_text = '\n'.join(
+            # Lines may or may not end in newlines already (difflib inserts
+            # them on lines it adds, but not on input lines, and the last input
+            # line won't have a newline).
+            line.rstrip('\n') for line in difflib.unified_diff(diff1.splitlines(), diff2.splitlines())
+        )
+        lang = 'diff'
 
     with contextlib.ExitStack() as ctx:
         objects = []
@@ -192,13 +207,14 @@ def paste():
         # HTML view (Markdown or paste)
         lang = request.form['language']
         if lang != 'rendered-markdown':
-            highlighter = get_highlighter(text, lang, None)
+            highlighter = get_highlighter(transformed_text, lang, None)
             lang_title = highlighter.name
             paste_obj = ctx.enter_context(
                 HtmlToStore.from_html(
                     render_template(
                         'paste.html',
-                        text=text,
+                        texts=highlighter.prepare_text(transformed_text),
+                        copy_and_edit_text=transformed_text,
                         highlighter=highlighter,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                         styles=STYLES_BY_CATEGORY,
@@ -212,7 +228,8 @@ def paste():
                 HtmlToStore.from_html(
                     render_template(
                         'markdown.html',
-                        text=text,
+                        text=transformed_text,
+                        copy_and_edit_text=transformed_text,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                     ),
                 ),

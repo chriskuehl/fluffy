@@ -1,5 +1,6 @@
 import functools
 import re
+import typing
 from collections import namedtuple
 
 import pygments.lexers.teraterm
@@ -63,6 +64,9 @@ class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
     def is_terminal_output(self):
         return 'ansi-color' in self.lexer.aliases
 
+    def prepare_text(self, text: str) -> typing.List[str]:
+        return [text]
+
     def highlight(self, text):
         text = _highlight(text, self.lexer)
         return text
@@ -76,6 +80,24 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
     def name(self):
         return f'Diff ({self.lexer.name})'
 
+    def prepare_text(self, text: str) -> typing.List[str]:
+        """Transform the unified diff into a side-by-side diff."""
+        diff1 = []
+        diff2 = []
+        for line in text.splitlines():
+            if line in ('--- ', '+++ '):
+                pass
+            elif line.startswith('-'):
+                diff1.append(line)
+                diff2.append('')
+            elif line.startswith('+'):
+                diff1.append('')
+                diff2.append(line)
+            else:
+                diff1.append(line)
+                diff2.append(line)
+        return ['\n'.join(diff1), '\n'.join(diff2)]
+
     def highlight(self, text):
         html = pq(_highlight(text, self.lexer))
         lines = html('pre > span')
@@ -87,7 +109,7 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
 
         for line in lines:
             line = pq(line)
-            assert line.attr('id').startswith('line-')
+            assert line.attr('class').startswith('line-')
 
             el = pq(line)
 
@@ -254,8 +276,13 @@ def guess_lexer(text, language, filename, opts=None):
 
 
 def _highlight(text, lexer):
-    return pygments.highlight(
+    text = pygments.highlight(
         text,
         lexer,
         _pygments_formatter,
     )
+    # We may have multiple renders per page, but for some reason
+    # Pygments's HtmlFormatter only supports IDs and not classes for
+    # line numbers.
+    text = text.replace(' id="line-', ' class="line-')
+    return text
