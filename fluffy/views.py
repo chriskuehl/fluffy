@@ -177,7 +177,7 @@ def paste():
 
     # Browsers always send \r\n for the pasted text, which leads to bad
     # newlines when curling the raw text (#28).
-    transformed_text = request.form['text'].replace('\r\n', '\n')
+    transformed_text = request.form.get('text', '').replace('\r\n', '\n')
     diff1 = request.form.get('diff1', '').replace('\r\n', '\n')
     diff2 = request.form.get('diff2', '').replace('\r\n', '\n')
 
