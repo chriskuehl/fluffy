@@ -1,6 +1,5 @@
 coverage
 coverage-enable-subprocess
-coveralls
 ephemeral-port-reserve
 gunicorn
 libsass

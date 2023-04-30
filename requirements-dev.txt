@@ -5,7 +5,6 @@ cfgv==3.3.1
 commonmark==0.9.1
 coverage==6.3.2
 coverage-enable-subprocess==1.0
-coveralls==3.3.1
 cryptography==36.0.2
 distlib==0.3.4
 docopt==0.6.2
