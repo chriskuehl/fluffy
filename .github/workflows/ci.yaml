@@ -14,7 +14,3 @@ jobs:
           make minimal
       - name: Run tests
         run: make test
-      - name: Report coverage to coveralls
-        run: venv/bin/coveralls --service=github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
