@@ -84,18 +84,30 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
         """Transform the unified diff into a side-by-side diff."""
         diff1 = []
         diff2 = []
+
+        def _fill_empty_lines():
+            """Fill either side of the diff with empty lines so they have the same length."""
+            diff1.extend([''] * max(0, (len(diff2) - len(diff1))))
+            diff2.extend([''] * max(0, (len(diff1) - len(diff2))))
+
         for line in text.splitlines():
             if line in ('--- ', '+++ '):
                 pass
             elif line.startswith('-'):
                 diff1.append(line)
-                diff2.append('')
             elif line.startswith('+'):
-                diff1.append('')
                 diff2.append(line)
             else:
+                # Fill empty lines so that both sides are "caught up" after any
+                # additions/deletions and we can print the lines both sides
+                # contain side-by-side.
+                _fill_empty_lines()
+
                 diff1.append(line)
                 diff2.append(line)
+
+        _fill_empty_lines()
+        assert len(diff1) == len(diff2), (len(diff1), len(diff2))
         return ['\n'.join(diff1), '\n'.join(diff2)]
 
     def highlight(self, text):
