@@ -67,4 +67,25 @@
             }
         }
     }
+
+    &.diff-side-by-side {
+        #paste {
+            .text-container:nth-child(3) {
+                display: none;
+            }
+        }
+    }
+
+    &.diff-unified {
+        #paste {
+            .text-container:nth-child(1), .text-container:nth-child(2) {
+                display: none;
+            }
+
+            .text-container:nth-child(3) {
+                /* This is super janky... */
+                border-left: none;
+            }
+        }
+    }
 }

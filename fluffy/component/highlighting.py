@@ -56,6 +56,8 @@ _pygments_formatter = FluffyFormatter(
 
 class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
 
+    is_diff = False
+
     @property
     def name(self):
         return self.lexer.name
@@ -75,6 +77,7 @@ class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
 class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
 
     is_terminal_output = False
+    is_diff = True
 
     @property
     def name(self):
@@ -108,7 +111,7 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
 
         _fill_empty_lines()
         assert len(diff1) == len(diff2), (len(diff1), len(diff2))
-        return ['\n'.join(diff1), '\n'.join(diff2)]
+        return ['\n'.join(diff1), '\n'.join(diff2), text]
 
     def highlight(self, text):
         html = pq(_highlight(text, self.lexer))
