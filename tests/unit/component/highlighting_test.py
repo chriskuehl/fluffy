@@ -151,7 +151,7 @@ def test_get_highlighter_diff(text, language, expected):
 
 def test_diff_highlighter_prepare_text():
     highlighter = DiffHighlighter(pygments.lexers.get_lexer_by_name('text'))
-    text1, text2 = highlighter.prepare_text('''\
+    orig_text = '''\
  common line 1
 +added line 1
  common line 2
@@ -164,7 +164,9 @@ def test_diff_highlighter_prepare_text():
  common line 4
 +added line 4
 -deleted line 4
--deleted line 5''')
+-deleted line 5'''
+
+    text1, text2, text3 = highlighter.prepare_text(orig_text)
     assert text1 == '''\
  common line 1
 
@@ -187,3 +189,4 @@ def test_diff_highlighter_prepare_text():
  common line 4
 +added line 4
 '''
+    assert text3 == orig_text

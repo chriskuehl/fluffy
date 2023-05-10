@@ -21,15 +21,53 @@
 
         .button {
             float: right;
-            font-size: 14px;
-            background-color: #f3f3f3 !important;
             margin-left: 8px;
-            padding: 8px;
-            text-decoration: none;
-            color: #333;
 
             &:hover {
                 opacity: 0.8;
+            }
+        }
+
+        .button, .pill-buttons .option {
+            font-size: 14px;
+            background-color: #f3f3f3 !important;
+            text-decoration: none;
+            color: #333;
+            padding: 8px;
+        }
+
+        .pill-buttons {
+            display: flex;
+            padding-left: 12px;
+
+            .option {
+                padding: 8px 10px;
+                border-right: solid 1px #bbb;
+
+                &.selected {
+                    background-color: #b8b8b8 !important;
+                    color: white;
+                    text-shadow: 1px 1px #9d9d9db8;
+                }
+
+                &.not-selected {
+                    cursor: pointer;
+
+                    &:hover {
+                        opacity: 0.8;
+                    }
+                }
+
+                &:first-child {
+                    border-top-left-radius: 5px;
+                    border-bottom-left-radius: 5px;
+                }
+
+                &:last-child {
+                    border-top-right-radius: 5px;
+                    border-bottom-right-radius: 5px;
+                    border-right: none;
+                }
             }
         }
     }

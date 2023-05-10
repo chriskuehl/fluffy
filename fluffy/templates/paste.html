@@ -1,6 +1,10 @@
 {% set page_name = 'paste' %}
 {% extends 'layouts/text.html' %}
 
+{% if highlighter.is_diff %}
+    {% set extra_html_classes = "diff-side-by-side" %}
+{% endif %}
+
 {#
     Terminal output gets its own preferred theme setting, since many people
     seem to prefer a dark background for terminal output, but a light
@@ -69,6 +73,52 @@
             document.getElementById('style').value = preferredStyle;
         }
     </script>
+
+    {% if highlighter.is_diff %}
+        <div class="pill-buttons" id="diff-setting">
+            <div class="option selected" data-value="side-by-side">Side-by-Side</div>
+            <div class="option not-selected" data-value="unified">Unified</div>
+        </div>
+
+        {#
+            This is an inline script so that it can apply the right CSS before
+            rendering the diff and avoid flashing the wrong diff style on load.
+        #}
+        <script>
+            const PREFERRED_DIFF_SETTING = 'preferredDiffSetting';
+
+            const diffSetting = document.getElementById('diff-setting');
+            const updateDiffSetting = (setting) => {
+                localStorage.setItem(PREFERRED_DIFF_SETTING, setting);
+                for (const child of diffSetting.children) {
+                    if (child.getAttribute('data-value') === setting) {
+                        child.classList.add('selected');
+                        child.classList.remove('not-selected');
+                    } else {
+                        child.classList.remove('selected');
+                        child.classList.add('not-selected');
+                    }
+                }
+
+                const html = document.getElementsByTagName('html')[0];
+                if (setting === 'side-by-side') {
+                    html.classList.add('diff-side-by-side');
+                    html.classList.remove('diff-unified');
+                } else {
+                    html.classList.remove('diff-side-by-side');
+                    html.classList.add('diff-unified');
+                }
+            };
+
+            if (hasLocalStorage && localStorage.getItem(PREFERRED_DIFF_SETTING) !== null) {
+                updateDiffSetting(localStorage.getItem(PREFERRED_DIFF_SETTING));
+            }
+
+            for (const child of diffSetting.children) {
+                child.onclick = () => updateDiffSetting(child.getAttribute('data-value'))
+            }
+        </script>
+    {% endif %}
 {% endblock %}
 
 {% block inline_js %}
