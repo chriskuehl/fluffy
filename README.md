@@ -1,6 +1,6 @@
 ## fluffy: a file sharing web app that doesn't suck.
 
-| Overall build status | [![GitHub Actions CI](https://github.com/chriskuehl/fluffy/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/chriskuehl/fluffy/actions/workflows/ci.yaml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/chriskuehl/fluffy/master.svg)](https://results.pre-commit.ci/latest/github/chriskuehl/fluffy/master) |
+| Overall build status | [![GitHub Actions CI](https://github.com/chriskuehl/fluffy/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/chriskuehl/fluffy/actions/workflows/ci.yaml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/chriskuehl/fluffy/main.svg)](https://results.pre-commit.ci/latest/github/chriskuehl/fluffy/main) |
 | -------------------- | ----------------------------- |
 | `fluffy-server`      | [![PyPI version](https://badge.fury.io/py/fluffy-server.svg)](https://pypi.python.org/pypi/fluffy-server) |
 | `fluffy`             | [![PyPI version](https://badge.fury.io/py/fluffy.svg)](https://pypi.python.org/pypi/fluffy) |
