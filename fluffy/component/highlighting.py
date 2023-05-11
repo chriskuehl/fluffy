@@ -1,6 +1,5 @@
 import functools
 import re
-import typing
 from collections import namedtuple
 
 import pygments.lexers.teraterm
@@ -66,7 +65,7 @@ class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
     def is_terminal_output(self):
         return 'ansi-color' in self.lexer.aliases
 
-    def prepare_text(self, text: str) -> typing.List[str]:
+    def prepare_text(self, text: str) -> list[str]:
         return [text]
 
     def highlight(self, text):
@@ -83,7 +82,7 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
     def name(self):
         return f'Diff ({self.lexer.name})'
 
-    def prepare_text(self, text: str) -> typing.List[str]:
+    def prepare_text(self, text: str) -> list[str]:
         """Transform the unified diff into a side-by-side diff."""
         diff1 = []
         diff2 = []
@@ -223,7 +222,7 @@ GUESSLANG_LANGUAGE_MAP = {
 }
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def _guesslang_guesser():
     try:
         # This is expensive (even just the import) so we do it at runtime

@@ -23,7 +23,7 @@ class FileBackend:
     def _store(
         self,
         path_key: str,
-        obj: typing.Union[HtmlToStore, UploadedFile],
+        obj: HtmlToStore | UploadedFile,
     ):
         path = app.config['STORAGE_BACKEND'][path_key].format(name=obj.name)
         with open(path, 'wb') as f:
@@ -53,7 +53,7 @@ class S3Backend:
 
     def _store(
         self,
-        obj: typing.Union[HtmlToStore, UploadedFile],
+        obj: HtmlToStore | UploadedFile,
         links: typing.Sequence[str],
         metadata_url: str,
     ) -> None:
@@ -80,7 +80,7 @@ class S3Backend:
     store_html = _store
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_backend():
     """Return current backend."""
     return {

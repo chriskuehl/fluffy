@@ -42,12 +42,12 @@ def home():
 
 
 def upload_objects(
-    objects: typing.Sequence[typing.Union[HtmlToStore, UploadedFile]],
+    objects: typing.Sequence[HtmlToStore | UploadedFile],
     metadata_url: str,
 ) -> None:
     links = sorted(obj.url for obj in objects)
 
-    def _upload(obj: typing.Union[HtmlToStore, UploadedFile]):
+    def _upload(obj: HtmlToStore | UploadedFile):
         if isinstance(obj, HtmlToStore):
             get_backend().store_html(obj, links, metadata_url)
         else:
