@@ -30,5 +30,5 @@ CMD [ \
     "/srv/fluffy/venv/bin/gunicorn", \
         "-b", "0.0.0.0:8000", \
         "-w", "4", \
-        "fluffy.run_prod:app" \
+        "fluffy.run:app" \
 ]

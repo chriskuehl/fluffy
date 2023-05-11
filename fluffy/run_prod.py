@@ -2,8 +2,7 @@
 print('Importing app...')
 from fluffy.run import app  # noqa: E402 F401
 
-print('Initializing guesslang...')
-import fluffy.component.highlighting  # noqa: E402
-fluffy.component.highlighting._guesslang_guesser()
+# TODO: Consider removing this in a major version now that there is no warmup
+# needed again.
 
 print('Warmup complete')

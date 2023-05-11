@@ -1,4 +1,3 @@
-import functools
 import re
 from collections import namedtuple
 
@@ -214,46 +213,6 @@ def get_highlighter(text, language, filename):
     return PygmentsHighlighter(lexer)
 
 
-# All guesslang titles with available Pygments lexers match automatically
-# except for these exceptions.
-GUESSLANG_LANGUAGE_MAP = {
-    'Batchfile': 'batch',
-    'Visual Basic': 'vbscript',
-}
-
-
-@functools.lru_cache
-def _guesslang_guesser():
-    try:
-        # This is expensive (even just the import) so we do it at runtime
-        # rather than import time.
-        import guesslang
-        return guesslang.Guess()
-    except ImportError:
-        return None
-
-
-def _guesslang_guess_lexer(text, lexer_opts):
-    guess = _guesslang_guesser()
-    if guess is not None:
-        # guesslang by default ensures that "The predicted language probability
-        # must be higher than 2 standard deviations from the mean." to return a
-        # guess, but in my testing this is pretty generous and almost
-        # everything gets detected as _something_ (e.g. INI) which messes up
-        # the highlighting. Adding an arbitrary requirement seems to help.
-        probabilities = guess.probabilities(text)
-        lang_title, probability = probabilities[0]
-        print(f'Guessed {lang_title} @ {probability * 100:.2f}%')
-        if probability < 0.3:
-            return None
-        if lang_title is not None:
-            lang = GUESSLANG_LANGUAGE_MAP.get(lang_title, lang_title)
-            try:
-                return pygments.lexers.get_lexer_by_name(lang, **lexer_opts)
-            except pygments.util.ClassNotFound:
-                pass
-
-
 def guess_lexer(text, language, filename, opts=None):
     lexer_opts = {'stripnl': False}
     if opts:
@@ -274,8 +233,7 @@ def guess_lexer(text, language, filename, opts=None):
 
     # Finally, try to guess by looking at the file content.
     try:
-        # guesslang (if available) does better than pygments so we try it first.
-        lexer = _guesslang_guess_lexer(text, lexer_opts) or pygments.lexers.guess_lexer(text, **lexer_opts)
+        lexer = pygments.lexers.guess_lexer(text, **lexer_opts)
 
         # Newer versions of Pygments will virtually always fall back to
         # TextLexer due to its 0.01 priority (which is what it returns on
