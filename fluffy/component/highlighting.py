@@ -1,3 +1,5 @@
+import collections
+import dataclasses
 import re
 from collections import namedtuple
 
@@ -52,6 +54,12 @@ _pygments_formatter = FluffyFormatter(
 )
 
 
+@dataclasses.dataclass(frozen=True)
+class PasteText:
+    text: str
+    line_number_mapping: dict[int, int] | None = None
+
+
 class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
 
     is_diff = False
@@ -64,11 +72,11 @@ class PygmentsHighlighter(namedtuple('PygmentsHighlighter', ('lexer',))):
     def is_terminal_output(self):
         return 'ansi-color' in self.lexer.aliases
 
-    def prepare_text(self, text: str) -> list[str]:
-        return [text]
+    def prepare_text(self, text: str) -> list[PasteText]:
+        return [PasteText(text)]
 
-    def highlight(self, text):
-        text = _highlight(text, self.lexer)
+    def highlight(self, text, line_number_mapping: dict[int, int] | None = None):
+        text = _highlight(text, self.lexer, line_number_mapping)
         return text
 
 
@@ -81,20 +89,20 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
     def name(self):
         return f'Diff ({self.lexer.name})'
 
-    def prepare_text(self, text: str) -> list[str]:
+    def prepare_text(self, text: str) -> list[PasteText]:
         """Transform the unified diff into a side-by-side diff."""
         diff1 = []
         diff2 = []
+
+        line_number_mapping: dict[int, list[int]] = collections.defaultdict(list)
 
         def _fill_empty_lines():
             """Fill either side of the diff with empty lines so they have the same length."""
             diff1.extend([''] * max(0, (len(diff2) - len(diff1))))
             diff2.extend([''] * max(0, (len(diff1) - len(diff2))))
 
-        for line in text.splitlines():
-            if line in ('--- ', '+++ '):
-                pass
-            elif line.startswith('-'):
+        for i, line in enumerate(text.splitlines()):
+            if line.startswith('-'):
                 diff1.append(line)
             elif line.startswith('+'):
                 diff2.append(line)
@@ -107,12 +115,18 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
                 diff1.append(line)
                 diff2.append(line)
 
+            line_number_mapping[max(len(diff1), len(diff2))].append(i + 1)
+
         _fill_empty_lines()
         assert len(diff1) == len(diff2), (len(diff1), len(diff2))
-        return ['\n'.join(diff1), '\n'.join(diff2), text]
+        return [
+            PasteText('\n'.join(diff1), line_number_mapping),
+            PasteText('\n'.join(diff2), line_number_mapping),
+            PasteText(text),
+        ]
 
-    def highlight(self, text):
-        html = pq(_highlight(text, self.lexer))
+    def highlight(self, text, line_number_mapping: dict[int, int] | None = None):
+        html = pq(_highlight(text, self.lexer, line_number_mapping))
         lines = html('pre > span')
 
         # there's an empty span at the start...
@@ -247,14 +261,27 @@ def guess_lexer(text, language, filename, opts=None):
     return pygments.lexers.get_lexer_by_name('python', **lexer_opts)
 
 
-def _highlight(text, lexer):
+def _highlight(text, lexer, line_number_mapping: dict[int, int] | None):
     text = pygments.highlight(
         text,
         lexer,
         _pygments_formatter,
     )
-    # We may have multiple renders per page, but for some reason
-    # Pygments's HtmlFormatter only supports IDs and not classes for
-    # line numbers.
-    text = text.replace(' id="line-', ' class="line-')
+
+    def rewrite_line_id(match: re.Match[str]) -> str:
+        line = int(match.group(1))
+        if line_number_mapping is not None:
+            lines = line_number_mapping[line]
+        else:
+            lines = [line]
+
+        return 'class="{}"'.format(
+            ' '.join(
+                f'line-{line}' for line in lines
+            ),
+        )
+
+    # Transform line IDs to classes and (if necessary) map line numbers.
+    text = re.sub(r'id="line-(\d+)"', rewrite_line_id, text)
+
     return text

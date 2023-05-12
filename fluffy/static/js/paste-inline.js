@@ -51,8 +51,15 @@ function selectedLines() {
     return selected;
 }
 
-function updateSelectedHash(selected) {
+function updateSelectedHash(selected) {  // XXX: mutates selected!
     function rangeFromNumber(num) {
+        /*
+         * Convert a string "num" to an Array with start and end bound.
+         *
+         * e.g.
+         *   rangeFromNumber("42") => [42, 42]
+         *   rangeFromNumber("42-48") => [42, 48]
+         */
         var range = ('' + num).split('-').map(function(i) {
             return parseInt(i);
         });
@@ -90,6 +97,13 @@ function updateSelectedHash(selected) {
     }
 }
 
+const lineNumbersFromClassList = (classList) => (
+    [...classList]
+        .map(c => c.replace('LL', 'line-'))
+        .filter(c => c.startsWith('line-'))
+        .map(c => parseInt(c.substring(5)))
+);
+
 $(document).ready(function() {
     var numbers = $('.line-numbers > a');
     var setState = -1;
@@ -97,7 +111,7 @@ $(document).ready(function() {
         setState = -1;
     });
 
-    function updateLineClasses(num, isSelected) {
+    function updateLineClasses(allSelectedLines, num, isSelected) {
         /**
          * Add or remove "selected" classes from the line number and its line.
          */
@@ -105,7 +119,19 @@ $(document).ready(function() {
         if (isSelected) {
             els.addClass('selected');
         } else {
-            els.removeClass('selected');
+            // Removing is a bit more complicated because a given line element
+            // (either a line number element, or an actual line span in the
+            // rendered text) may represent multiple lines after mapping. We
+            // only want to remove the selected class if all lines for that
+            // element are no longer selected.
+            for (const el of els) {
+                const selectedLines = lineNumbersFromClassList(el.classList)
+                    .filter(line => allSelectedLines.includes(line));
+
+                if (selectedLines.length === 0) {
+                    el.classList.remove('selected');
+                }
+            }
         }
     }
 
@@ -120,26 +146,26 @@ $(document).ready(function() {
             return;
         }
 
-        var selected = selectedLines();
-        var line = parseInt(el.text());
-        var idx = selected.indexOf(line);
+        const selected = selectedLines();
+        const lines = lineNumbersFromClassList(el[0].classList);
 
-        if (idx === -1 && setState === 1) {
-            updateLineClasses(line, true);
-            selected.push(line);
-            updateSelectedHash(selected);
-        } else if (idx !== -1 && setState === 0) {
-            selected.splice(idx, 1);
-            updateLineClasses(line, false);
-            updateSelectedHash(selected);
+        for (const line of lines) {
+            const idx = selected.indexOf(line);
+            if (idx === -1 && setState === 1) {
+                selected.push(line);
+                updateSelectedHash([...selected]);
+                updateLineClasses(selected, line, true);
+            } else if (idx > -1 && setState === 0) {
+                selected.splice(idx, 1);
+                updateSelectedHash([...selected]);
+                updateLineClasses(selected, line, false);
+            }
         }
         return false;
     }
 
     numbers.on('mousedown', function(e) {
-        var selected = selectedLines();
-        var line = parseInt($(this).text());
-        setState = selected.indexOf(line) === -1 ? 1 : 0;
+        setState = e.target.classList.contains("selected") ? 0 : 1;
         return maybeChangeState($(this));
     });
     numbers.on('click', function() { return false; });
@@ -171,7 +197,7 @@ $(document).ready(function() {
     var hasMovedDown = false;
     for (var i = 0; i < selected.length; i++) {
         var line = selected[i];
-        updateLineClasses(line, true);
+        updateLineClasses(selected, line, true);
 
         if (!hasMovedDown) {
             var e = $('.LL' + line);
