@@ -51,9 +51,13 @@
 
         .text {
             padding: $paste-padding-top 0;
+            overflow-x: auto;
 
-            pre {
-                overflow-x: auto;
+            .highlight {
+                // Allow width to expand to match content so block element
+                // children (e.g. lines) extend the full width.
+                display: inline-block;
+                min-width: 100%;
             }
 
             .highlight > pre {
