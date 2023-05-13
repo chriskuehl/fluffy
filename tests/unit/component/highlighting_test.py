@@ -5,6 +5,7 @@ from fluffy.component.highlighting import DiffHighlighter
 from fluffy.component.highlighting import get_highlighter
 from fluffy.component.highlighting import guess_lexer
 from fluffy.component.highlighting import looks_like_diff
+from fluffy.component.highlighting import PasteText
 from fluffy.component.highlighting import PygmentsHighlighter
 from fluffy.component.highlighting import strip_diff_things
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
@@ -167,7 +168,8 @@ def test_diff_highlighter_prepare_text():
 -deleted line 5'''
 
     text1, text2, text3 = highlighter.prepare_text(orig_text)
-    assert text1 == '''\
+    assert text1 == PasteText(
+        '''\
  common line 1
 
  common line 2
@@ -177,8 +179,22 @@ def test_diff_highlighter_prepare_text():
 -deleted line 3
  common line 4
 -deleted line 4
--deleted line 5'''
-    assert text2 == '''\
+-deleted line 5''',
+        {
+            1: [1],
+            2: [2],
+            3: [3],
+            4: [4, 5],
+            5: [6],
+            6: [7],
+            7: [8, 9],
+            8: [10],
+            9: [11, 12],
+            10: [13],
+        },
+    )
+    assert text2 == PasteText(
+        '''\
  common line 1
 +added line 1
  common line 2
@@ -188,5 +204,18 @@ def test_diff_highlighter_prepare_text():
 +added line 3
  common line 4
 +added line 4
-'''
-    assert text3 == orig_text
+''',
+        {
+            1: [1],
+            2: [2],
+            3: [3],
+            4: [4, 5],
+            5: [6],
+            6: [7],
+            7: [8, 9],
+            8: [10],
+            9: [11, 12],
+            10: [13],
+        },
+    )
+    assert text3 == PasteText(orig_text)
