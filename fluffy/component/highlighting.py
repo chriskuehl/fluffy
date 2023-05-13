@@ -249,7 +249,16 @@ def guess_lexer(text, language, filename, opts=None):
 
 def _highlight(text, lexer):
     text = pygments.highlight(
-        text,
+        # Pygments works most consistently when the text is a series of lines
+        # ending with newlines. The rest of fluffy is not treating lines that
+        # way (instead, \n means start a new line which should actually be
+        # displayed) so we always append a newline here.
+        #
+        # This has no effect if the final line of the text has characters on
+        # it, but if the last line is empty (i.e. final character is already a
+        # newline in `text`), Pygments will chop off the last line unless we do
+        # this.
+        text + '\n' if len(text) > 0 else text,
         lexer,
         _pygments_formatter,
     )
