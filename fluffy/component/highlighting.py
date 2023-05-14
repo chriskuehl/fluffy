@@ -140,10 +140,11 @@ class DiffHighlighter(namedtuple('DiffHighlighter', ('lexer',))):
 
             el = pq(line)
 
-            # .text() doesn't include whitespace before it, but .html() does
-            h = el.html()
-            text = h[:len(h) - len(h.lstrip())] + el.text()
-
+            # This is not a perfect reconstruction of the text (e.g. doesn't
+            # handle HTML entities), but is enough to get the first character
+            # without running into
+            # https://github.com/chriskuehl/fluffy/issues/150
+            text = re.sub(r'<.*?>', '', el.html())
             if text.startswith('+'):
                 line.addClass('diff-add')
             elif text.startswith('-'):
