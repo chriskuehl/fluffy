@@ -1,7 +1,5 @@
 VENV := venv
 BIN := $(VENV)/bin
-DOCKER_TAG := ckuehl/fluffy-server
-
 export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 
 .PHONY: minimal
@@ -61,16 +59,6 @@ install-hooks: $(VENV)
 .PHONY: pre-commit
 pre-commit: $(VENV)
 	$(BIN)/pre-commit run --all-files
-
-.PHONY: docker-image
-docker-image: assets
-	docker build -t $(DOCKER_TAG) .
-	@echo 'Maybe you want to run:'
-	@echo -e '    \033[1mdocker push ckuehl/fluffy-server\033[0m'
-
-.PHONY: docker-run
-docker-run: docker-image
-	docker run -p 8000 $(DOCKER_TAG)
 
 .PHONY: clean
 clean:
