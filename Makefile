@@ -76,18 +76,6 @@ docker-run: docker-image
 clean:
 	rm -rf $(VENV)
 
-.PHONY: release
-release: $(VENV) assets
-	# server
-	$(BIN)/python setup.py sdist
-	$(BIN)/python setup.py bdist_wheel
-	$(BIN)/twine upload --skip-existing dist/*
-	# cli
-	cd cli && ../$(BIN)/python setup.py sdist
-	cd cli && ../$(BIN)/python setup.py bdist_wheel
-	cd cli && ../$(BIN)/twine upload --skip-existing dist/*
-	cd cli && debuild -us -uc -b
-
 .PHONY: upgrade-requirements
 upgrade-requirements: venv
 	upgrade-requirements

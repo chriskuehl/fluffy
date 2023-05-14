@@ -1,7 +1,8 @@
 ## Release process (server)
 
 1. Bump version in `fluffy/__init__.py`
-2. Run `make release`
+2. Commit, tag as "vX.Y.Z", and push to main.
+3. A GitHub Actions workflow will build and publish to PyPI.
 
 
 ## Release process (cli)

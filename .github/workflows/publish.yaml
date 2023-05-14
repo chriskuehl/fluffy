@@ -1,0 +1,23 @@
+name: Publish to PyPI
+on:
+  push:
+    tags:
+      - v*
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install virtualenv build
+      - name: Build assets
+        run: make assets
+      - name: Build artifacts
+        run: python -m build --sdist --wheel --outdir dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
