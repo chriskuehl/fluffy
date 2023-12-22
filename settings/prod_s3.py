@@ -32,6 +32,7 @@ MAX_CONTENT_LENGTH = MAX_UPLOAD_SIZE * 10
 # file extensions to forbid for uploads
 EXTENSION_BLACKLIST = frozenset((
     '7z',
+    'bz2',
     'cab',
     'dll',
     'doc',
