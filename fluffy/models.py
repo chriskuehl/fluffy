@@ -87,7 +87,7 @@ class UploadedFile(
 
     @classmethod
     @contextmanager
-    def from_http_file(cls, f):
+    def from_http_file(cls, f, unique_id: str | None = None):
         with tempfile.NamedTemporaryFile() as tf:
             # We don't know the file size until we start to save the file (the
             # client can lie about the uploaded size, and some browsers don't
@@ -102,12 +102,12 @@ class UploadedFile(
                 human_name=f.filename,
                 num_bytes=num_bytes,
                 open_file=tf,
-                unique_id=gen_unique_id(),
+                unique_id=unique_id or gen_unique_id(),
             )
 
     @classmethod
     @contextmanager
-    def from_text(cls, text, human_name='plaintext.txt'):
+    def from_text(cls, text, human_name='plaintext.txt', unique_id: str | None = None):
         with io.BytesIO(text.encode('utf8')) as open_file:
             num_bytes = len(text)
             if num_bytes > app.config['MAX_UPLOAD_SIZE']:
@@ -117,7 +117,7 @@ class UploadedFile(
                 human_name=human_name,
                 num_bytes=num_bytes,
                 open_file=open_file,
-                unique_id=gen_unique_id(),
+                unique_id=unique_id or gen_unique_id(),
             )
 
     @cached_property
@@ -191,8 +191,8 @@ class HtmlToStore(
     namedtuple(
         'HtmlToStore',
         (
-            'name',
             'open_file',
+            'unique_id',
         ),
     ),
     ObjectToStore,
@@ -200,11 +200,11 @@ class HtmlToStore(
 
     @classmethod
     @contextmanager
-    def from_html(cls, html):
+    def from_html(cls, html, unique_id: str | None = None):
         with io.BytesIO(html.encode('utf8')) as open_file:
             yield cls(
-                name=gen_unique_id() + '.html',
                 open_file=open_file,
+                unique_id=unique_id or gen_unique_id(),
             )
 
     @property
@@ -215,6 +215,10 @@ class HtmlToStore(
     def content_disposition_header(self):
         # inline => render as HTML as opposed to downloading the HTML
         return 'inline'
+
+    @cached_property
+    def name(self):
+        return f"{self.unique_id}.html"
 
     @cached_property
     def url(self):
