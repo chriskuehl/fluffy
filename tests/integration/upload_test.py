@@ -6,11 +6,11 @@ import requests
 from pyquery import PyQuery as pq
 
 from testing import assert_url_matches_content
-from testing import raw_text_url_from_paste_html
 from testing import BINARY_TESTCASES
 from testing import FILE_CONTENT_TESTCASES
 from testing import paste_urls_from_details
 from testing import PLAINTEXT_TESTCASES
+from testing import raw_text_url_from_paste_html
 from testing import urls_from_details
 
 
