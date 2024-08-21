@@ -91,3 +91,7 @@ def test_simple_paste_json(running_server):
             },
         },
     }
+
+    # The paste's HTML view and raw view should have the same URL minus the extension.
+    details = req.json()['uploaded_files']['paste']
+    assert details['raw'].rsplit('/', 1)[1] == details['paste'].replace('.html', '.txt').rsplit('/', 1)[1]

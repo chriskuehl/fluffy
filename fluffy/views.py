@@ -94,6 +94,7 @@ def upload():
                                     raw_url=app.config['FILE_URL'].format(name=uf.name),
                                     styles=STYLES_BY_CATEGORY,
                                 ),
+                                unique_id=uf.unique_id,
                             ),
                         )
                         objects.append(pb)
@@ -219,6 +220,7 @@ def paste():
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                         styles=STYLES_BY_CATEGORY,
                     ),
+                    unique_id=uf.unique_id,
                 ),
             )
             objects.append(paste_obj)
@@ -232,6 +234,7 @@ def paste():
                         copy_and_edit_text=transformed_text,
                         raw_url=app.config['FILE_URL'].format(name=uf.name),
                     ),
+                    unique_id=uf.unique_id,
                 ),
             )
             objects.append(paste_obj)
