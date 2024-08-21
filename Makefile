@@ -48,7 +48,7 @@ dev: $(VENV) fluffy/static/app.css
 test: $(VENV)
 	$(BIN)/coverage erase
 	COVERAGE_PROCESS_START=$(CURDIR)/.coveragerc \
-		$(BIN)/py.test -vv tests/
+		$(BIN)/py.test --tb=native -vv tests/
 	$(BIN)/coverage combine
 	$(BIN)/coverage report
 

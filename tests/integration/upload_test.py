@@ -6,6 +6,7 @@ import requests
 from pyquery import PyQuery as pq
 
 from testing import assert_url_matches_content
+from testing import raw_text_url_from_paste_html
 from testing import BINARY_TESTCASES
 from testing import FILE_CONTENT_TESTCASES
 from testing import paste_urls_from_details
@@ -111,6 +112,10 @@ def test_plaintext_files_are_also_pasted(content, running_server):
         pq(req.content.decode('utf8')).find('input[name=text]').attr('value') ==
         content
     )
+
+    # The paste's HTML view and raw view should have the same URL minus the extension.
+    raw_url = raw_text_url_from_paste_html(req.text)
+    assert raw_url.rsplit('/', 1)[1] == url.replace('.html', '.bin').rsplit('/', 1)[1]
 
 
 @pytest.mark.parametrize('content', BINARY_TESTCASES)
