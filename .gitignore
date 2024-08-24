@@ -10,8 +10,7 @@
 /.pytest_cache
 /.tox
 /build
-/cli/build
-/cli/dist
+/cli/cli
 /dist
 /fluffy/static/**/*.hash
 /fluffy/static/app.css
