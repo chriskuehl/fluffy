@@ -5,7 +5,7 @@ export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 .PHONY: minimal
 minimal: $(VENV) assets settings.py install-hooks
 
-cli/cli: cli/main.go cli/go.mod
+cli/cli: cli/main.go go.mod
 	cd cli && go build -o cli
 
 $(VENV): setup.py requirements.txt requirements-dev.txt cli/cli

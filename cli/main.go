@@ -412,19 +412,19 @@ func (v *regexpValue) Type() string {
 var regex = regexpValue{}
 
 // This will be set by the linker for release builds.
-var Version string
+var version string
 
 func init() {
 	buildInfo, ok := debug.ReadBuildInfo()
 	if !ok {
 		panic("could not read build info")
 	}
-	if Version == "" {
-		Version = buildInfo.Main.Version
+	if version == "" {
+		version = buildInfo.Main.Version
 	}
-	version := fmt.Sprintf("%s/%s", Version, buildInfo.GoVersion)
-	fpbCommand.Version = version
-	fputCommand.Version = version
+	versionString := fmt.Sprintf("%s/%s", version, buildInfo.GoVersion)
+	fpbCommand.Version = versionString
+	fputCommand.Version = versionString
 
 	settings, err := getSettings()
 	if err != nil {

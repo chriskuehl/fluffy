@@ -1,0 +1,30 @@
+version: 2
+snapshot:
+  name_template: '{{.Env.VERSION}}'
+builds:
+  - id: cli
+    main: ./cli
+    no_unique_dist_dir: true
+    binary: fput-{{.Os}}-{{.Arch}}
+archives:
+- format: binary
+nfpms:
+  - id: cli
+    package_name: fluffy
+    builds:
+      - cli
+    homepage: 'https://github.com/chriskuehl/fluffy'
+    maintainer: 'Chris Kuehl <ckuehl@ckuehl.me>'
+    description: 'command-line tools for uploading to fluffy servers'
+    license: Apache-2.0
+    formats:
+      - deb
+      - rpm
+      - archlinux
+    contents:
+      - src: /usr/bin/fput-{{.Os}}-{{.Arch}}
+        dst: /usr/bin/fpb
+        type: symlink
+      - src: /usr/bin/fput-{{.Os}}-{{.Arch}}
+        dst: /usr/bin/fput
+        type: symlink
