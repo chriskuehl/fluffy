@@ -51,6 +51,7 @@ dev: $(VENV) fluffy/static/app.css
 
 .PHONY: test
 test: $(VENV)
+	cd cli && go test -v ./...
 	$(BIN)/coverage erase
 	COVERAGE_PROCESS_START=$(CURDIR)/.coveragerc \
 		$(BIN)/py.test --tb=native -vv tests/
