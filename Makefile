@@ -5,10 +5,15 @@ export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 .PHONY: minimal
 minimal: $(VENV) assets settings.py install-hooks
 
-$(VENV): setup.py cli/setup.py requirements.txt requirements-dev.txt
+cli/cli: cli/main.go cli/go.mod
+	cd cli && go build -o cli
+
+$(VENV): setup.py requirements.txt requirements-dev.txt cli/cli
 	rm -rf $@
 	virtualenv -ppython3.11 $@
-	$@/bin/pip install -r requirements.txt -r requirements-dev.txt -e cli -e .
+	$@/bin/pip install -r requirements.txt -r requirements-dev.txt -e .
+	ln -fs ../../cli/cli $@/bin/fput
+	ln -fs ../../cli/cli $@/bin/fpb
 
 fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/pysassc fluffy/static/scss/app.scss $@
@@ -46,6 +51,7 @@ dev: $(VENV) fluffy/static/app.css
 
 .PHONY: test
 test: $(VENV)
+	cd cli && go test -v ./...
 	$(BIN)/coverage erase
 	COVERAGE_PROCESS_START=$(CURDIR)/.coveragerc \
 		$(BIN)/py.test --tb=native -vv tests/

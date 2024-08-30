@@ -55,7 +55,7 @@ def test_paste_with_direct_link(running_server, tmpdir):
 
 @pytest.mark.usefixtures('cli_on_path')
 def test_paste_with_tee(running_server, tmpdir):
-    input_text = b'hello\nworld!'
+    input_text = b'hello\nworld!\n'
     output = subprocess.check_output(
         ('fpb', '--server', running_server['home'], '--tee'),
         input=input_text,
