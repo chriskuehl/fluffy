@@ -4,9 +4,6 @@ on:
   push:
     tags:
       - cli/v*
-  release:
-    types:
-      - published
 
 permissions:
   contents: write
@@ -21,18 +18,12 @@ jobs:
         uses: actions/setup-go@v5
       - name: Set VERSION
         run: |
-          TAG="${{ github.event.inputs.version || github.ref_name }}"
-          # Get rid of the tag since the cli/ prefix confuses goreleaser.
-          git tag -d $TAG
           echo VERSION=${TAG#cli/v} >> $GITHUB_ENV
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: release --clean --snapshot --verbose
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+      - name: Build release artifacts
+        run: |
+          make release-cli
       - name: Upload assets
         uses: actions/upload-artifact@v4
         with:

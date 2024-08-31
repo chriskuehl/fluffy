@@ -8,6 +8,13 @@ minimal: $(VENV) assets settings.py install-hooks
 cli/cli: cli/main.go go.mod
 	cd cli && go build -o cli
 
+.PHONY: release-cli
+release-cli: export GORELEASER_CURRENT_TAG ?= 0.0.0
+release-cli: export VERSION ?= 0.0.0
+release-cli:
+	go run github.com/goreleaser/goreleaser/v2@latest release --clean --snapshot --verbose
+	rm -v dist/*.txt dist/*.yaml dist/*.json
+
 $(VENV): setup.py requirements.txt requirements-dev.txt cli/cli
 	rm -rf $@
 	virtualenv -ppython3.11 $@
