@@ -10,7 +10,6 @@
 /.pytest_cache
 /.tox
 /build
-/cli/cli
 /dist
 /fluffy/static/**/*.hash
 /fluffy/static/app.css
@@ -18,3 +17,5 @@
 /settings.py
 /tmp
 /venv
+/fpb
+/fput

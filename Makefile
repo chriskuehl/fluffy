@@ -3,10 +3,13 @@ BIN := $(VENV)/bin
 export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 
 .PHONY: minimal
-minimal: $(VENV) assets settings.py install-hooks
+minimal: $(VENV) fpb fput assets settings.py install-hooks
 
-cli/cli: cli/main.go go.mod
-	cd cli && go build -o cli
+fpb: cli/fpb/fpb.go cli/internal/cli/cli.go go.mod
+	go build ./cli/fpb
+
+fput: cli/fput/fput.go cli/internal/cli/cli.go go.mod
+	go build ./cli/fput
 
 .PHONY: release-cli
 release-cli: export GORELEASER_CURRENT_TAG ?= 0.0.0
@@ -15,12 +18,12 @@ release-cli:
 	go run github.com/goreleaser/goreleaser/v2@latest release --clean --snapshot --verbose
 	rm -v dist/*.txt dist/*.yaml dist/*.json
 
-$(VENV): setup.py requirements.txt requirements-dev.txt cli/cli
+$(VENV): setup.py requirements.txt requirements-dev.txt
 	rm -rf $@
 	virtualenv -ppython3.11 $@
 	$@/bin/pip install -r requirements.txt -r requirements-dev.txt -e .
-	ln -fs ../../cli/cli $@/bin/fput
-	ln -fs ../../cli/cli $@/bin/fpb
+	ln -fs ../../fput $@/bin/fput
+	ln -fs ../../fpb $@/bin/fpb
 
 fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/pysassc fluffy/static/scss/app.scss $@
