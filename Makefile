@@ -3,13 +3,24 @@ BIN := $(VENV)/bin
 export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 
 .PHONY: minimal
-minimal: $(VENV) fpb fput assets settings.py install-hooks
+minimal: $(VENV) bin/server bin/fpb bin/fput assets settings.py install-hooks
 
-fpb: cli/fpb/fpb.go cli/internal/cli/cli.go go.mod
-	go build ./cli/fpb
+.PHONY: fluffy-server
+bin/server:
+	go build -o $@ ./cmd/server
 
-fput: cli/fput/fput.go cli/internal/cli/cli.go go.mod
-	go build ./cli/fput
+.PHONY: dev
+dev:
+	go run ./cmd/server
+
+
+.PHONY: bin/fpb
+bin/fpb:
+	go build -o $@ ./cli/fpb
+
+.PHONY: bin/fput
+bin/fput:
+	go build -o $@ ./cli/fput
 
 .PHONY: release-cli
 release-cli: export GORELEASER_CURRENT_TAG ?= 0.0.0
@@ -22,8 +33,8 @@ $(VENV): setup.py requirements.txt requirements-dev.txt
 	rm -rf $@
 	virtualenv -ppython3.11 $@
 	$@/bin/pip install -r requirements.txt -r requirements-dev.txt -e .
-	ln -fs ../../fput $@/bin/fput
-	ln -fs ../../fpb $@/bin/fpb
+	ln -fs ../../bin/fput $@/bin/fput
+	ln -fs ../../bin/fpb $@/bin/fpb
 
 fluffy/static/app.css: $(VENV) $(wildcard fluffy/static/scss/*.scss)
 	$(BIN)/pysassc fluffy/static/scss/app.scss $@
@@ -55,13 +66,9 @@ watch-assets:
 			make assets; \
 	done
 
-.PHONY: dev
-dev: $(VENV) fluffy/static/app.css
-	$(BIN)/python -m fluffy.run
-
 .PHONY: test
 test: $(VENV)
-	cd cli && go test -v ./...
+	go test -v ./...
 	$(BIN)/coverage erase
 	COVERAGE_PROCESS_START=$(CURDIR)/.coveragerc \
 		$(BIN)/py.test --tb=native -vv tests/
