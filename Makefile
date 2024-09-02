@@ -1,9 +1,17 @@
 .PHONY: minimal
 minimal: bin/server bin/fpb bin/fput assets settings.py install-hooks
 
-.PHONY: fluffy-server
+.PHONY: bin/server
 bin/server:
 	go build -o $@ ./cmd/server
+
+.PHONY: bin/fpb
+bin/fpb:
+	go build -o $@ ./cmd/fpb
+
+.PHONY: bin/fput
+bin/fput:
+	go build -o $@ ./cmd/fput
 
 .PHONY: dev
 dev:
@@ -13,18 +21,17 @@ dev:
 delve:
 	dlv debug ./cmd/server -- --dev
 
-.PHONY: bin/fpb
-bin/fpb:
-	go build -o $@ ./cli/fpb
-
-.PHONY: bin/fput
-bin/fput:
-	go build -o $@ ./cli/fput
-
 .PHONY: release-cli
 release-cli: export GORELEASER_CURRENT_TAG ?= 0.0.0
 release-cli: export VERSION ?= 0.0.0
 release-cli:
+	go run github.com/goreleaser/goreleaser/v2@latest release --config .goreleaser-cli.yaml --clean --snapshot --verbose
+	rm -v dist/*.txt dist/*.yaml dist/*.json
+
+.PHONY: release-server
+release-server: export GORELEASER_CURRENT_TAG ?= 0.0.0
+release-server: export VERSION ?= 0.0.0
+release-server:
 	go run github.com/goreleaser/goreleaser/v2@latest release --clean --snapshot --verbose
 	rm -v dist/*.txt dist/*.yaml dist/*.json
 

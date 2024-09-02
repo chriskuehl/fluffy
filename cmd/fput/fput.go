@@ -13,7 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/chriskuehl/fluffy/cli/internal/cli"
+	"github.com/chriskuehl/fluffy/cmd/internal/cli"
 )
 
 // This will be set by the linker for release builds.
