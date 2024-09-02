@@ -63,6 +63,7 @@ func TestUploadHistory(t *testing.T) {
 	wantContent := []string{
 		`<html class="page-upload-history`,
 		`<h2>Upload History</h2>`,
+		`const icons = {"7z":"http://`,
 	}
 	for _, want := range wantContent {
 		if !strings.Contains(body, want) {

@@ -48,17 +48,23 @@ func pageTemplate(name string) *template.Template {
 	return template.Must(template.New("").ParseFS(templatesFS, "templates/include/*.html", "templates/"+name))
 }
 
-func handleIndex(config *Config, logger logging.Logger) (http.HandlerFunc, error) {
+func iconExtensions(config *Config) (template.JS, error) {
 	extensionToURL := make(map[string]string)
 	for _, ext := range mimeExtensions {
 		extensionToURL[ext] = config.AssetURL("img/mime/small/" + ext + ".png")
 	}
 	json, err := json.Marshal(extensionToURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal mime extensions to JSON: %w", err)
+		return "", fmt.Errorf("failed to marshal mime extensions to JSON: %w", err)
 	}
-	extensions := template.JS(json)
+	return template.JS(json), nil
+}
 
+func handleIndex(config *Config, logger logging.Logger) (http.HandlerFunc, error) {
+	extensions, err := iconExtensions(config)
+	if err != nil {
+		return nil, fmt.Errorf("iconExtensions: %w", err)
+	}
 	tmpl := pageTemplate("index.html")
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -96,16 +102,10 @@ func handleIndex(config *Config, logger logging.Logger) (http.HandlerFunc, error
 }
 
 func handleUploadHistory(config *Config, logger logging.Logger) (http.HandlerFunc, error) {
-	extensionToURL := make(map[string]string)
-	for _, ext := range mimeExtensions {
-		extensionToURL[ext] = config.AssetURL("img/mime/small/" + ext + ".png")
-	}
-	json, err := json.Marshal(extensionToURL)
+	extensions, err := iconExtensions(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal mime extensions to JSON: %w", err)
+		return nil, fmt.Errorf("iconExtensions: %w", err)
 	}
-	extensions := template.JS(json)
-
 	tmpl := pageTemplate("upload-history.html")
 
 	return func(w http.ResponseWriter, r *http.Request) {
