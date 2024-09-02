@@ -1,0 +1,91 @@
+.page-details {
+    .file-holder {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 15px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    $file-horizontal-edge-padding: 15px;
+
+    .file {
+        width: 100%;
+        background-color: #F3FFE2;
+        border-radius: 5px;
+        position: relative;
+
+
+        &.image {
+            min-width: 70%;
+            width: auto;
+            .filename {
+                justify-content: center;
+            }
+        }
+
+        .filename {
+            align-items: center;
+            display: flex;
+            padding: 10px $file-horizontal-edge-padding;
+            font-size: 19px;
+            overflow-x: hidden;
+            white-space: nowrap;
+
+            img {
+                vertical-align: middle;
+                margin-right: 5px;
+            }
+        }
+
+        .image-holder {
+            text-align: center;
+
+            img {
+                max-width: 100%;
+                // https://stackoverflow.com/a/51117224
+                background-position: 0px 0px, 10px 10px;
+                background-size: 20px 20px;
+                background-image: linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee 100%),linear-gradient(45deg, #eee 25%, white 25%, white 75%, #eee 75%, #eee 100%);
+            }
+        }
+
+        .metadata-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .buttons, .filesize {
+                padding: 10px $file-horizontal-edge-padding;
+            }
+
+            .buttons {
+                flex-grow: 1;
+                text-align: right;
+            }
+        }
+    }
+
+    .download, .view-paste {
+        display: inline-block;
+        cursor: pointer;
+
+        border-radius: 3px;
+        padding: 10px;
+
+        text-align: center;
+        color: white;
+
+        text-decoration: none;
+    }
+
+    .view-paste {
+        background-color: #1695A3;
+    }
+
+    .download {
+        background-color: #EB7F00;
+    }
+}

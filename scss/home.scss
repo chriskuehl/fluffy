@@ -1,0 +1,318 @@
+.page-home {
+    .switch-modes {
+        text-align: center;
+        margin-bottom: 15px;
+
+        a {
+            text-decoration: none;
+            cursor: pointer;
+            color: #EB7F00;
+        }
+    }
+
+    #file-holder {
+        position: relative;
+
+        padding: 15px;
+        background-color: #F3FFE2;
+        border-radius: 3px;
+    }
+
+    &.start-on-paste #file-holder {
+        display: none;
+    }
+
+    #oldBrowserMessage {
+        display: none;
+    }
+
+    #basicFormFile {
+        padding: 5px;
+        border: solid 1px #CCC;
+    }
+
+    #files li {
+        background-color: #FFE6B3;
+        margin-bottom: 10px;
+
+        position: relative;
+        height: 42px;
+    }
+
+    #files li .progress {
+        position: absolute;
+        top: 0px;
+        bottom: 0px;
+        left: 0px;
+
+        background-color: #FFD694;
+
+        width: 0%;
+
+        z-index: 1;
+    }
+
+    #files li img {
+        position: absolute;
+        left: 5px;
+        top: 5px;
+
+        z-index: 10;
+    }
+
+    #files li .title {
+        position: absolute;
+        left: 40px;
+        top: 14px;
+
+        z-index: 10;
+    }
+
+    #files li .remove {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        bottom: 8px;
+
+        z-index: 10;
+
+        display: block;
+        padding: 0px 10px;
+        padding-top: 5px;
+        cursor: pointer;
+
+        background-color: #FFD694;
+    }
+
+    #dropZone {
+        position: relative;
+
+        border: dashed 4px #EB7F00;
+        padding: 35px 20px;
+
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+
+        color: #EB7F00;
+
+        margin-bottom: 10px;
+
+        background-color: #F3FFE2;
+        transition: background-color 100ms linear;
+    }
+
+    #dropZone input {
+        position: absolute;
+        top: 0px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+
+        opacity: 0;
+    }
+
+    #upload, #selectFile, .pasteButton {
+        display: block;
+        cursor: pointer;
+
+        border-radius: 3px;
+        padding: 10px;
+
+        text-align: center;
+        color: white;
+
+        transition: background-color 0.1s;
+    }
+
+    #upload {
+        background-color: #1695A3;
+        margin-bottom: 15px;
+
+        display: none;
+
+        &:hover {
+            background-color: #27acbb;
+        }
+    }
+
+    #statusText {
+        text-align: center;
+        font-size: 12px;
+        line-height: 1.2em;
+        margin-bottom: 0px;
+        display: none;
+    }
+
+    #selectFile, .pasteButton {
+        background-color: #EB7F00 !important;
+
+        &:hover {
+            background-color: #ff8e08 !important;
+        }
+    }
+
+    .hiddenFileInput {
+        display: none;
+    }
+
+    #loading {
+        background-image: url("/static/img/loading-32.gif");
+        background-repeat: no-repeat;
+        background-position: 50% 50%;
+
+        position: absolute;
+
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        bottom: 0px;
+
+        display: none;
+    }
+
+    #loading p {
+        position: absolute;
+
+        top: 50%;
+        left: 0px;
+        right: 0px;
+        margin-top: 23px;
+
+        text-align: center;
+        font-size: 12px;
+    }
+
+
+    &.start-on-paste {
+        .pastebinForm {
+            display: block;
+        }
+
+         #container {
+            width: 960px;
+            @media screen and (max-width: $mobile-width) {
+                width: auto;
+            }
+        }
+    }
+
+    .pastebinForm {
+        display: none;
+        padding: 15px;
+        background-color: #F3FFE2;
+        border-radius: 3px;
+
+        textarea {
+            box-sizing: border-box;
+            border: solid 1px #efefef;
+
+            font-family: monospace;
+
+            padding: 5px;
+
+            width: 100%;
+            height: 600px;
+        }
+
+        #pastedTwoText {
+            display: flex;
+            column-gap: 10px;
+
+            textarea {
+                flex: 1;
+            }
+        }
+
+        select {
+            box-sizing: border-box;
+            padding: 3px;
+            width: 100%;
+        }
+
+        .pasteButton {
+            display: block;
+            width: 100%;
+            font-size: 100%;
+            font-family: "Open Sans", Helvetica, Arial, sans-serif;
+            background: none;
+            border: none;
+            cursor: pointer;
+
+            &:disabled {
+                background-color: #ffd694 !important;
+                color: #676767;
+                transition: background-color 0.1s;
+                cursor: default;
+            }
+        }
+    }
+
+    #recent-uploads {
+        padding: 15px;
+        background-color: #e0feff;
+        border-radius: 3px;
+        margin-top: 10px;
+
+        h3 {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        #recent-uploads-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 50px;
+            column-gap: 10px;
+
+            a {
+                display: block;
+                background-color: #f8ffff;
+                border-radius: 5px;
+                padding: 10px;
+                color: black;
+                text-decoration: none;
+
+                &:hover {
+                    background-color: #fff7e6;
+                }
+
+                &.recent-uploads-item {
+                    overflow: hidden;
+
+                    img {
+                        float: left;
+                        margin-right: 5px;
+                    }
+
+                    .recent-uploads-text {
+                        font-size: 12px;
+                        color: #9f9f9f;
+                        line-height: 1.2em;
+
+                        strong {
+                            color: black;
+                        }
+
+                        .nowrap {
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+                    }
+                }
+
+                &.recent-uploads-more {
+                    text-align: center;
+                    font-size: 12px;
+                    display: flex;
+                    justify-content: center;
+                    align-content: center;
+                    flex-direction: column;
+                    grid-column-start: 4;
+                }
+            }
+        }
+    }
+}

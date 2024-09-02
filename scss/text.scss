@@ -1,0 +1,91 @@
+.page-paste, .page-markdown {
+    .paste-toolbar {
+        background-color: #e0e0e0;
+        padding: 8px;
+        font-size: 14px;
+        color: #333;
+
+        .info {
+            float: left;
+            margin-top: 8px;
+            margin-left: 5px;
+        }
+
+        input[type=submit].button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: "Open Sans", Helvetica, Arial, sans-serif;
+            line-height: 14px;
+        }
+
+        .button {
+            float: right;
+            margin-left: 8px;
+
+            &:hover {
+                opacity: 0.8;
+            }
+        }
+
+        .button, .pill-buttons .option {
+            font-size: 14px;
+            background-color: #f3f3f3 !important;
+            text-decoration: none;
+            color: #333;
+            padding: 8px;
+        }
+
+        .pill-buttons {
+            display: flex;
+            padding-left: 12px;
+
+            .option {
+                padding: 8px 10px;
+                border-right: solid 1px #bbb;
+
+                &.selected {
+                    background-color: #b8b8b8 !important;
+                    color: white;
+                    text-shadow: 1px 1px #9d9d9db8;
+                }
+
+                &.not-selected {
+                    cursor: pointer;
+
+                    &:hover {
+                        opacity: 0.8;
+                    }
+                }
+
+                &:first-child {
+                    border-top-left-radius: 5px;
+                    border-bottom-left-radius: 5px;
+                }
+
+                &:last-child {
+                    border-top-right-radius: 5px;
+                    border-bottom-right-radius: 5px;
+                    border-right: none;
+                }
+            }
+        }
+    }
+
+    #paste {
+        font-size: 14px;
+        position: relative;
+        background-color: white;
+        display: flex;
+
+        .text-container {
+            border-left: solid 1px #333;
+            flex: 1;
+            min-width: 0; /* https://css-tricks.com/flexbox-truncated-text/ */
+        }
+
+        .text-container:first-child {
+           border-left: none;
+        }
+    }
+}

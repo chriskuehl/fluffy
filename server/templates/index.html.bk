@@ -96,6 +96,3 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="{{asset_url('js/home.js')}}"></script>
 {% endblock %}
-
-<!-- vim: ft=jinja
--->

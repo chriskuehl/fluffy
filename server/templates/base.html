@@ -1,0 +1,45 @@
+<!doctype html>
+<html class="{{.PageConfig.HTMLClasses}}">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <title>{{.Config.Branding}}</title>
+
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans:wght@400;700" />
+        <link rel="stylesheet" href="{{.Config.AssetURL "app.css"}}" />
+        <link rel="icon" href="{{.Config.AssetURL "img/favicon.ico"}}" />
+
+        {{/*
+        This is fairly minimal inlined JS that the rest of the page might rely on early (before rendering has completed).
+        */}}
+        {{.InlineJS "js/base.js"}}
+        {{template "extraHead" .}}
+    </head>
+
+    <body>
+        <div id="container">
+            <div id="content">
+                <h1 class="site-header"><a href="{{.Config.HomeURL}}">{{.Config.Branding}}</a></h1>
+                {{template "content" .}}
+            </div>
+        </div>
+
+        {{if .Config.CustomFooterHTML}}
+            <div class="footer custom-footer">
+                {{.Config.CustomFooterHTML}}
+            </div>
+        {{end}}
+
+        <p class="footer">
+            fluffy v{{.Config.Version}} is free and open-source software, available for you <a href="https://github.com/chriskuehl/fluffy">on GitHub</a>.<br />
+            Icons generously provided by <a href="http://www.fatcow.com/free-icons">FatCow</a>.<br />
+            <a class="report" href="mailto:{{.Config.AbuseContactEmail}}">Report Abuse</a>
+        </p>
+
+        {{template "inlineJS" .}}
+    </body>
+</html>
+
+<!-- vim: ft=jinja
+-->

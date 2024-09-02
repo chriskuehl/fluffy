@@ -17,6 +17,8 @@ import (
 	"github.com/chriskuehl/fluffy/server/logging"
 )
 
+var Version = "(dev)"
+
 type config struct {
 	*server.Config
 
@@ -25,13 +27,17 @@ type config struct {
 }
 
 func newConfigFromArgs(args []string) (*config, error) {
-	c := config{}
+	c := config{
+		Config: server.NewConfig(),
+	}
 	fs := flag.NewFlagSet("fluffy", flag.ExitOnError)
 	fs.StringVar(&c.host, "host", "localhost", "host to listen on")
 	fs.StringVar(&c.port, "port", "8080", "port to listen on")
+	fs.BoolVar(&c.DevMode, "dev", false, "enable dev mode")
 	if err := fs.Parse(args); err != nil {
 		return nil, err
 	}
+	c.Version = Version
 	return &c, nil
 }
 
@@ -46,12 +52,20 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 
 	logger := logging.NewSlogLogger(slog.New(slog.NewTextHandler(w, nil)))
 
+	handler, err := server.NewServer(logger, config.Config)
+	if err != nil {
+		return fmt.Errorf("creating server: %w", err)
+	}
+
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(config.host, config.port),
-		Handler: server.NewServer(logger, config.Config),
+		Handler: handler,
 	}
 	go func() {
 		logger.Info(ctx, "listening", "addr", httpServer.Addr)
+		if config.DevMode {
+			logger.Warn(ctx, "dev mode enabled! do not use in production!")
+		}
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "error listening and serving: %s\n", err)
 		}

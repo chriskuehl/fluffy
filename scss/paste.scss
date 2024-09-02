@@ -1,0 +1,95 @@
+.page-paste {
+    #style {
+        float: right;
+        height: 30px;
+        padding-left: 5px;
+        @media screen and (max-width: $mobile-width) {
+            display: none;
+        }
+    }
+    #container {
+        width: auto;
+
+        $margin: 100px;
+        margin-left: $margin;
+        margin-right: $margin;
+
+        @media screen and (max-width: $mobile-width) {
+            width: auto;
+            margin-left: 0;
+            margin-right: 0;
+            margin-top: 0;
+            padding-left: 0;
+            padding-right: 0;
+        }
+    }
+
+    #paste {
+        font-family: 'Source Code Pro', monospace;
+
+        $paste-padding-top: 2px;
+
+        .line-numbers {
+            padding: $paste-padding-top 0;
+            /* color comes from the pygments styles */
+            border-right-width: 1px;
+            border-right-style: solid;
+
+            float: left;
+            line-height: 1.25em;
+            text-align: right;
+
+
+            a {
+                cursor: pointer;
+                display: block;
+                text-decoration: none;
+                padding-left: 8px;
+                padding-right: 5px;
+            }
+        }
+
+        .text {
+            padding: $paste-padding-top 0;
+            overflow-x: auto;
+
+            .highlight {
+                // Allow width to expand to match content so block element
+                // children (e.g. lines) extend the full width.
+                display: inline-block;
+                min-width: 100%;
+            }
+
+            .highlight > pre {
+                line-height: 125%;
+
+                // These are line spans (sadly, no class is output by pygments)
+                & > span {
+                    padding-left: 5px;
+                    display: block;
+                }
+            }
+        }
+    }
+
+    &.diff-side-by-side {
+        #paste {
+            .text-container:nth-child(3) {
+                display: none;
+            }
+        }
+    }
+
+    &.diff-unified {
+        #paste {
+            .text-container:nth-child(1), .text-container:nth-child(2) {
+                display: none;
+            }
+
+            .text-container:nth-child(3) {
+                /* This is super janky... */
+                border-left: none;
+            }
+        }
+    }
+}

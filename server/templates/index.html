@@ -1,0 +1,99 @@
+{{define "extraHead"}}{{end}}
+
+{{define "content"}}
+    <div>
+        <div class="fileUploadForm">
+            <div id="file-holder">
+                <p class="switch-modes"><a>paste source code instead</a></p>
+
+                <ul id="files"></ul>
+                <a id="upload">Start Upload</a>
+
+                <div id="advancedUpload">
+                    <p id="statusText"></p>
+
+                    <div id="selectFiles">
+                        <div id="dropZone">drop files here</div>
+                        <a id="selectFile">Browse</a>
+                    </div>
+                </div>
+                <div id="basicUpload">
+                    <p class="error" id="oldBrowserMessage">Your browser doesn't support dragging-and-dropping of files, so you're stuck with an icky file input. Bummer!</p>
+
+                    <form action="/upload" method="POST" enctype="multipart/form-data">
+                        <p style="margin-bottom: 0px;">
+                            <label for="basicFormFile">File to Upload: </label><input id="basicFormFile" type="file" name="file" />
+                            <input type="submit" name="upload" value="Upload File" />
+                        </p>
+                    </form>
+                </div>
+                <div id="loading"><p></p></div>
+            </div>
+        </div>
+
+        <form class="pastebinForm" method="POST" action="/paste">
+            <p class="switch-modes"><a>upload files instead</a></p>
+
+            <p id="pastedText">
+                <textarea id="text" name="text" placeholder="paste text here" autofocus>TODO: text</textarea>
+            </p>
+
+            <div class="hidden" id="pastedTwoText">
+                <textarea name="diff1" placeholder="paste text here for document 1" autofocus></textarea>
+                <textarea name="diff2" placeholder="paste text here for document 2"></textarea>
+            </div>
+
+            <p>
+                <select name="language" id="language">
+                    <option selected="selected" value="">Guess the language for me</option>
+                    <option value="text">Plain text</option>
+                    <option value="rendered-markdown">Markdown (rendered)</option>
+                    <option value="diff-between-two-texts">Diff between two texts</option>
+                    <option disabled></option>
+
+                    {% for lang_key, text in languages %}
+                        <option value="{{lang_key}}">{{text}}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <input class="pasteButton" id="paste" type="submit" value="Paste" />
+        </form>
+
+        <div id="recent-uploads" class="hidden">
+            <h3>your recent uploads</h3>
+            <div id="recent-uploads-grid">
+                <template id="recent-uploads-item-tmpl">
+                    <a class="recent-uploads-item">
+                        <img width="32" height="32" class="recent-uploads-image" />
+                        <div class="recent-uploads-text">
+                            <div class="nowrap"><strong class="recent-uploads-text-title"></strong></div>
+                            <div class="nowrap recent-uploads-text-subtitle"></div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </a>
+                </template>
+                <a href="/upload-history" class="recent-uploads-more">
+                    More<br />
+                    &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "inlineJS"}}
+    <script nonce="{{.Nonce}}">
+        var icons = {
+            {% for extension in icon_extensions %}
+                {{extension | tojson | safe}}: {{asset_url('img/mime/small/' + extension + '.png') | tojson | safe}},
+            {% endfor %}
+        };
+
+        var maxUploadSize = {{max_upload_size | tojson | safe}};
+    </script>
+    {{.InlineJS "js/home-inline.js"}}
+    <script nonce="{{.Nonce}}" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script nonce="{{.Nonce}}" src="{{asset_url('js/home.js')}}"></script>
+{{end}}
+
+{{template "base.html" .RenderContext}}

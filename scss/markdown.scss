@@ -1,0 +1,104 @@
+$source-code-font: 'Source Code Pro', monospace;
+
+.page-markdown {
+    #container {
+        width: 960px;
+    }
+
+    .text {
+        background-color: white !important;
+        font-size: 15px;
+
+        padding: 24px;
+        line-height: 1.5em;
+        color: #111;
+
+        & > *:first-child {
+            margin-top: 0 !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: bold;
+            margin-top: 26px;
+        }
+
+        h1 { font-size: 28px; }
+        h1, h2 {
+            border-bottom: solid 1px #eee;
+            padding-bottom: 16px;
+            margin-bottom: 14px;
+        }
+        h2 { font-size: 24px; }
+        h3 { font-size: 18px; }
+        h4 { font-size: 16px; }
+        h5 { font-size: 14px; }
+        h6 { font-size: 14px; color: #777; }
+
+        blockquote {
+            color: #555;
+            padding: 0 15px;
+            border-left: solid 5px #ddd;
+        }
+
+        $source-code-bg-color: #f6f6f6;
+
+        pre {
+            font-family: $source-code-font;
+            overflow-x: auto;
+            background-color: $source-code-bg-color;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        code {
+            font-family: $source-code-font;
+            padding: 3px 6px;
+            font-size: 12px;
+            background-color: $source-code-bg-color;
+            border-radius: 2px;
+        }
+
+        a {
+            text-decoration: none;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    ul, ol {
+        padding-left: 35px;
+
+        li {
+            display: list-item;
+            margin: 5px 0;
+        }
+    }
+
+    ul {
+        list-style: disc;
+    }
+
+    ol {
+        list-style: decimal;
+
+        li {
+            padding-left: 5px;
+        }
+    }
+
+    td, th {
+        border: solid 1px #ddd;
+        padding: 8px;
+    }
+
+    th {
+        font-weight: bold;
+        background-color: #f1f1f1;
+    }
+
+    img {
+        max-width: 100%;
+    }
+}
