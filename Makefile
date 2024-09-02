@@ -9,6 +9,10 @@ bin/server:
 dev:
 	go run github.com/cespare/reflex@latest -v -s -r '^server/|^go\.mod$$' -- go run ./cmd/server --dev
 
+.PHONY: delve
+delve:
+	dlv debug ./cmd/server -- --dev
+
 .PHONY: bin/fpb
 bin/fpb:
 	go build -o $@ ./cli/fpb

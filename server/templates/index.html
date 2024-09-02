@@ -35,7 +35,7 @@
             <p class="switch-modes"><a>upload files instead</a></p>
 
             <p id="pastedText">
-                <textarea id="text" name="text" placeholder="paste text here" autofocus>TODO: text</textarea>
+            <textarea id="text" name="text" placeholder="paste text here" autofocus>{{.Text}}</textarea>
             </p>
 
             <div class="hidden" id="pastedTwoText">
@@ -51,9 +51,9 @@
                     <option value="diff-between-two-texts">Diff between two texts</option>
                     <option disabled></option>
 
-                    {% for lang_key, text in languages %}
-                        <option value="{{lang_key}}">{{text}}</option>
-                    {% endfor %}
+                    {{ range $key, $value := .UILanguagesMap }}
+                        <option value="{{ $key }}">{{ $value }}</option>
+                    {{ end }}
                 </select>
             </p>
             <input class="pasteButton" id="paste" type="submit" value="Paste" />
@@ -82,18 +82,14 @@
 {{end}}
 
 {{define "inlineJS"}}
-    <script nonce="{{.Nonce}}">
-        var icons = {
-            {% for extension in icon_extensions %}
-                {{extension | tojson | safe}}: {{asset_url('img/mime/small/' + extension + '.png') | tojson | safe}},
-            {% endfor %}
-        };
+    <script nonce="{{.Meta.Nonce}}">
+        var icons = {{.IconExtensions}};
 
-        var maxUploadSize = {{max_upload_size | tojson | safe}};
+        var maxUploadSize = {{.Meta.Config.MaxUploadBytes}};
     </script>
-    {{.InlineJS "js/home-inline.js"}}
-    <script nonce="{{.Nonce}}" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-    <script nonce="{{.Nonce}}" src="{{asset_url('js/home.js')}}"></script>
+    {{.Meta.InlineJS "js/home-inline.js"}}
+    <script nonce="{{.Meta.Nonce}}" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script nonce="{{.Meta.Nonce}}" src="{{.Meta.Config.AssetURL "js/home.js"}}"></script>
 {{end}}
 
-{{template "base.html" .RenderContext}}
+{{template "base.html" .}}

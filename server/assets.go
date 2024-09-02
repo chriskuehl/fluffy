@@ -11,6 +11,7 @@ import (
 	"io/fs"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/chriskuehl/fluffy/server/logging"
 )
@@ -18,6 +19,8 @@ import (
 //go:embed static/*
 var assetsFS embed.FS
 var assetHash = make(map[string]string)
+
+var mimeExtensions = []string{}
 
 func init() {
 	if err := fs.WalkDir(assetsFS, "static", func(path string, d fs.DirEntry, err error) error {
@@ -41,7 +44,20 @@ func init() {
 		panic("loading asset hashes: " + err.Error())
 	}
 
-	fmt.Printf("assetHash: %v\n", assetHash)
+	if err := fs.WalkDir(assetsFS, "static/img/mime/small", func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, ".png") {
+			return nil
+		}
+
+		name := filepath.Base(path)
+		mimeExtensions = append(mimeExtensions, name[:len(name)-len(".png")])
+		return nil
+	}); err != nil {
+		panic("loading mime extensions: " + err.Error())
+	}
 }
 
 func (c *Config) AssetObjectPath(path, hash string) string {
@@ -68,14 +84,14 @@ func (c *Config) AssetAsString(path string) string {
 	return string(data)
 }
 
-func (r renderContext) InlineJS(path string) template.HTML {
+func (m meta) InlineJS(path string) template.HTML {
 	var buf bytes.Buffer
 	data := struct {
-		RenderContext renderContext
-		Content       string
+		meta
+		Content template.JS
 	}{
-		RenderContext: r,
-		Content:       r.Config.AssetAsString(path),
+		meta:    m,
+		Content: template.JS(m.Config.AssetAsString(path)),
 	}
 	if err := templates.ExecuteTemplate(&buf, "inline-js.html", data); err != nil {
 		panic("executing template: " + err.Error())

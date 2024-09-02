@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -88,10 +89,15 @@ func addRoutes(
 	mux *http.ServeMux,
 	config *Config,
 	logger logging.Logger,
-) {
+) error {
 	mux.HandleFunc("GET /healthz", handleHealthz(logger))
-	mux.Handle("GET /{$}", handleIndex(config, logger))
+	if handler, err := handleIndex(config, logger); err != nil {
+		return fmt.Errorf("handleIndex: %w", err)
+	} else {
+		mux.Handle("GET /{$}", handler)
+	}
 	mux.Handle("GET /dev/static/", handleStatic(config, logger))
+	return nil
 }
 
 func NewServer(
@@ -102,7 +108,9 @@ func NewServer(
 		return nil, errors.New("invalid config: " + strings.Join(errs, ", "))
 	}
 	mux := http.NewServeMux()
-	addRoutes(mux, config, logger)
+	if err := addRoutes(mux, config, logger); err != nil {
+		return nil, fmt.Errorf("adding routes: %w", err)
+	}
 	var handler http.Handler = mux
 	handler = logging.NewMiddleware(logger, handler)
 	return handler, nil

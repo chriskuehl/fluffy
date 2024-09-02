@@ -16,5 +16,6 @@
 /fluffy/static/pygments.css
 /settings.py
 /server/static/app.css
+/server/static/app.css.map
 /tmp
 /venv

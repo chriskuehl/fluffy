@@ -5,10 +5,13 @@ import (
 	"crypto/rand"
 	"embed"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
 
+	"github.com/chriskuehl/fluffy/server/highlighting"
 	"github.com/chriskuehl/fluffy/server/logging"
 )
 
@@ -25,38 +28,56 @@ func (p pageConfig) HTMLClasses() string {
 	return "page-" + p.ID + " " + strings.Join(p.ExtraHTMLClasses, " ")
 }
 
-type renderContext struct {
+type meta struct {
 	Config     *Config
 	PageConfig pageConfig
-
-	Nonce string
+	Nonce      string
 }
 
-func NewRenderContext(config *Config, pc pageConfig) renderContext {
+func NewMeta(config *Config, pc pageConfig) meta {
 	nonce := make([]byte, 16)
 	if _, err := rand.Read(nonce); err != nil {
 		panic("failed to generate nonce: " + err.Error())
 	}
 
-	return renderContext{
+	return meta{
 		Config:     config,
 		PageConfig: pc,
-
-		Nonce: hex.EncodeToString(nonce),
+		Nonce:      hex.EncodeToString(nonce),
 	}
 }
 
-func handleIndex(config *Config, logger logging.Logger) http.HandlerFunc {
+func handleIndex(config *Config, logger logging.Logger) (http.HandlerFunc, error) {
+	extensionToURL := make(map[string]string)
+	for _, ext := range mimeExtensions {
+		extensionToURL[ext] = config.AssetURL("img/mime/small/" + ext + ".png")
+	}
+	json, err := json.Marshal(extensionToURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal mime extensions to JSON: %w", err)
+	}
+	extensions := template.JS(json)
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
+		extraHTMLClasses := []string{}
+		text, ok := r.URL.Query()["text"]
+		if ok {
+			extraHTMLClasses = append(extraHTMLClasses, "start-on-paste")
+		}
 
 		data := struct {
-			RenderContext renderContext
+			Meta           meta
+			UILanguagesMap map[string]string
+			IconExtensions template.JS
+			Text           string
 		}{
-			RenderContext: NewRenderContext(config, pageConfig{
+			Meta: NewMeta(config, pageConfig{
 				ID:               "index",
-				ExtraHTMLClasses: []string{"blah", "blarg"},
+				ExtraHTMLClasses: extraHTMLClasses,
 			}),
+			UILanguagesMap: highlighting.UILanguagesMap,
+			IconExtensions: extensions,
+			Text:           strings.Join(text, ""),
 		}
 		buf := bytes.Buffer{}
 		if err := templates.ExecuteTemplate(&buf, "index.html", data); err != nil {
@@ -64,8 +85,9 @@ func handleIndex(config *Config, logger logging.Logger) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		} else {
+			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
 			w.Write(buf.Bytes())
 		}
-	}
+	}, nil
 }
