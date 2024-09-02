@@ -2,29 +2,20 @@ package storage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/chriskuehl/fluffy/server/uploads"
 )
 
 type Object struct {
-	Key         string
+	Key         uploads.SanitizedKey
 	Links       []string
 	MetadataURL string
 	Reader      io.Reader
-}
-
-func (o Object) Validate() error {
-	if o.Key == "" {
-		return errors.New("key must not be empty")
-	}
-	if filepath.Clean(o.Key) != o.Key {
-		return errors.New("key contains invalid characters")
-	}
-	return nil
 }
 
 type Backend interface {
@@ -50,15 +41,12 @@ func absPath(path string) (string, error) {
 }
 
 func (b *FilesystemBackend) store(root string, obj Object) error {
-	if err := obj.Validate(); err != nil {
-		return fmt.Errorf("validating object: %w", err)
-	}
 	realRoot, err := absPath(root)
 	if err != nil {
 		return fmt.Errorf("getting real root: %w", err)
 	}
 
-	parentPath, err := absPath(filepath.Join(root, filepath.Dir(obj.Key)))
+	parentPath, err := absPath(filepath.Join(root, filepath.Dir(obj.Key.String())))
 	if err != nil {
 		return fmt.Errorf("getting parent path: %w", err)
 	}
@@ -67,7 +55,7 @@ func (b *FilesystemBackend) store(root string, obj Object) error {
 		return fmt.Errorf("parent path %q is outside of root %q", parentPath, realRoot)
 	}
 
-	path := filepath.Join(parentPath, filepath.Base(obj.Key))
+	path := filepath.Join(parentPath, filepath.Base(obj.Key.String()))
 	file, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("creating file: %w", err)

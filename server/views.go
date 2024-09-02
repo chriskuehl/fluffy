@@ -14,6 +14,7 @@ import (
 	"github.com/chriskuehl/fluffy/server/highlighting"
 	"github.com/chriskuehl/fluffy/server/logging"
 	"github.com/chriskuehl/fluffy/server/storage"
+	"github.com/chriskuehl/fluffy/server/uploads"
 )
 
 //go:embed templates/*
@@ -161,19 +162,19 @@ func handleUpload(config *Config, logger logging.Logger) http.HandlerFunc {
 			}
 			defer file.Close()
 
-			// TODO: check file extension
 			// TODO: check file size (keep in mind fileHeader.Size might be a lie?)
 			//    -- but maybe not? since Go buffers it first?
-			id, err := genUniqueObjectID()
+			key, err := uploads.SanitizeUploadName(fileHeader.Filename, config.ForbiddenFileExtensions)
 			if err != nil {
-				logger.Error(r.Context(), "generating unique object ID", "error", err)
+				// TODO: handle ErrForbiddenExtension and return useful error
+				logger.Error(r.Context(), "sanitizing upload name", "error", err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("Failed to generate unique object ID.\n"))
+				w.Write([]byte("Failed to sanitize upload name.\n"))
 				return
 			}
 
 			obj := storage.Object{
-				Key:    id + extractExtension(fileHeader.Filename),
+				Key:    *key,
 				Reader: file,
 			}
 			objs = append(objs, obj)

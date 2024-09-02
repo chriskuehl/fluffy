@@ -18,16 +18,16 @@ import (
 
 type Config struct {
 	// Site configuration.
-	StorageBackend           storage.Backend
-	Branding                 string
-	CustomFooterHTML         template.HTML
-	AbuseContactEmail        string
-	MaxUploadBytes           int64
-	MaxMultipartMemoryBytes  int64
-	HomeURL                  url.URL
-	ObjectURLPattern         url.URL
-	HTMLURLPattern           url.URL
-	DisallowedFileExtensions []string
+	StorageBackend          storage.Backend
+	Branding                string
+	CustomFooterHTML        template.HTML
+	AbuseContactEmail       string
+	MaxUploadBytes          int64
+	MaxMultipartMemoryBytes int64
+	HomeURL                 url.URL
+	ObjectURLPattern        url.URL
+	HTMLURLPattern          url.URL
+	ForbiddenFileExtensions map[string]struct{}
 
 	// Runtime options.
 	DevMode bool
@@ -57,9 +57,9 @@ func (c *Config) Validate() []string {
 	if !strings.Contains(c.HTMLURLPattern.Path, "%s") {
 		errs = append(errs, "HTMLURLPattern must contain a '%s' placeholder")
 	}
-	for _, ext := range c.DisallowedFileExtensions {
+	for ext := range c.ForbiddenFileExtensions {
 		if strings.HasPrefix(ext, ".") {
-			errs = append(errs, "DisallowedFileExtensions should not start with a dot: "+ext)
+			errs = append(errs, "ForbiddenFileExtensions should not start with a dot: "+ext)
 		}
 	}
 	if c.Version == "" {
