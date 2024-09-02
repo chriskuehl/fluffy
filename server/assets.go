@@ -66,14 +66,18 @@ func (c *Config) AssetObjectPath(path, hash string) string {
 
 func (c *Config) AssetURL(path string) string {
 	if c.DevMode {
-		return c.HomeURL + "/dev/static/" + path
+		url := c.HomeURL
+		url.Path = "/dev/static/" + path
+		return url.String()
 	}
 
 	hash, ok := assetHash[filepath.Join("static", path)]
 	if !ok {
 		panic("asset not found: " + path)
 	}
-	return fmt.Sprintf(c.ObjectURLPattern, c.AssetObjectPath(path, hash))
+	url := c.ObjectURLPattern
+	url.Path = fmt.Sprintf(url.Path, c.AssetObjectPath(path, hash))
+	return url.String()
 }
 
 func (c *Config) AssetAsString(path string) string {

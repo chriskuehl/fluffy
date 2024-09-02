@@ -21,7 +21,7 @@
                     <p class="error" id="oldBrowserMessage">Your browser doesn't support dragging-and-dropping of files, so you're stuck with an icky file input. Bummer!</p>
 
                     <form action="/upload" method="POST" enctype="multipart/form-data">
-                        <p style="margin-bottom: 0px;">
+                        <p id="basicForm">
                             <label for="basicFormFile">File to Upload: </label><input id="basicFormFile" type="file" name="file" />
                             <input type="submit" name="upload" value="Upload File" />
                         </p>
@@ -88,7 +88,7 @@
         var maxUploadSize = {{.Meta.Config.MaxUploadBytes}};
     </script>
     {{.Meta.InlineJS "js/home-inline.js"}}
-    <script nonce="{{.Meta.Nonce}}" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" crossorigin="anonymous"></script>
     <script nonce="{{.Meta.Nonce}}" src="{{.Meta.Config.AssetURL "js/home.js"}}"></script>
 {{end}}
 

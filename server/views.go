@@ -2,9 +2,8 @@ package server
 
 import (
 	"bytes"
-	"crypto/rand"
+	"context"
 	"embed"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -33,16 +32,15 @@ type meta struct {
 	Nonce      string
 }
 
-func NewMeta(config *Config, pc pageConfig) meta {
-	nonce := make([]byte, 16)
-	if _, err := rand.Read(nonce); err != nil {
-		panic("failed to generate nonce: " + err.Error())
+func NewMeta(ctx context.Context, config *Config, pc pageConfig) meta {
+	nonce, ok := ctx.Value(cspNonceKey{}).(string)
+	if !ok {
+		panic("no nonce in context")
 	}
-
 	return meta{
 		Config:     config,
 		PageConfig: pc,
-		Nonce:      hex.EncodeToString(nonce),
+		Nonce:      nonce,
 	}
 }
 
@@ -76,7 +74,7 @@ func handleIndex(config *Config, logger logging.Logger) (http.HandlerFunc, error
 			IconExtensions template.JS
 			Text           string
 		}{
-			Meta: NewMeta(config, pageConfig{
+			Meta: NewMeta(r.Context(), config, pageConfig{
 				ID:               "index",
 				ExtraHTMLClasses: extraHTMLClasses,
 			}),
@@ -115,7 +113,7 @@ func handleUploadHistory(config *Config, logger logging.Logger) (http.HandlerFun
 			Meta           meta
 			IconExtensions template.JS
 		}{
-			Meta: NewMeta(config, pageConfig{
+			Meta: NewMeta(r.Context(), config, pageConfig{
 				ID: "upload-history",
 			}),
 			IconExtensions: extensions,

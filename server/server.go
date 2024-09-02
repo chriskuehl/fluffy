@@ -1,10 +1,14 @@
 package server
 
 import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/chriskuehl/fluffy/server/logging"
@@ -16,9 +20,9 @@ type Config struct {
 	CustomFooterHTML         template.HTML
 	AbuseContactEmail        string
 	MaxUploadBytes           int64
-	HomeURL                  string
-	ObjectURLPattern         string
-	HTMLURLPattern           string
+	HomeURL                  url.URL
+	ObjectURLPattern         url.URL
+	HTMLURLPattern           url.URL
 	DisallowedFileExtensions []string
 
 	// Runtime options.
@@ -37,23 +41,14 @@ func (c *Config) Validate() []string {
 	if c.MaxUploadBytes <= 0 {
 		errs = append(errs, "MaxUploadBytes must be greater than 0")
 	}
-	if c.HomeURL == "" {
-		errs = append(errs, "HomeURL must not be empty")
-	}
-	if strings.HasSuffix(c.HomeURL, "/") {
+	if strings.HasSuffix(c.HomeURL.Path, "/") {
 		errs = append(errs, "HomeURL must not end with a slash")
 	}
-	if c.ObjectURLPattern == "" {
-		errs = append(errs, "ObjectURLPattern must not be empty")
+	if !strings.Contains(c.ObjectURLPattern.Path, "%s") {
+		errs = append(errs, "ObjectURLPattern must contain a '%s' placeholder")
 	}
-	if !strings.Contains(c.ObjectURLPattern, "%s") {
-		errs = append(errs, "ObjectURLPattern must contain a %s")
-	}
-	if c.HTMLURLPattern == "" {
-		errs = append(errs, "HTMLURLPattern must not be empty")
-	}
-	if !strings.Contains(c.HTMLURLPattern, "%s") {
-		errs = append(errs, "HTMLURLPattern must contain a %s")
+	if !strings.Contains(c.HTMLURLPattern.Path, "%s") {
+		errs = append(errs, "HTMLURLPattern must contain a '%s' placeholder")
 	}
 	for _, ext := range c.DisallowedFileExtensions {
 		if strings.HasPrefix(ext, ".") {
@@ -71,9 +66,9 @@ func NewConfig() *Config {
 		Branding:          "fluffy",
 		AbuseContactEmail: "abuse@example.com",
 		MaxUploadBytes:    1024 * 1024 * 10, // 10 MiB
-		HomeURL:           "http://localhost:8080",
-		ObjectURLPattern:  "http://localhost:8080/dev/object/%s",
-		HTMLURLPattern:    "http://localhost:8080/dev/html/%s",
+		HomeURL:           url.URL{Scheme: "http", Host: "localhost:8080"},
+		ObjectURLPattern:  url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/object/%s"},
+		HTMLURLPattern:    url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/html/%s"},
 	}
 }
 
@@ -83,6 +78,29 @@ func handleHealthz(logger logging.Logger) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok\n"))
 	}
+}
+
+type cspNonceKey struct{}
+
+func newCSPMiddleware(config *Config, next http.Handler) http.Handler {
+	objectURLBase := config.ObjectURLPattern
+	objectURLBase.Path = ""
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		nonceBytes := make([]byte, 16)
+		if _, err := rand.Read(nonceBytes); err != nil {
+			panic("failed to generate nonce: " + err.Error())
+		}
+		nonce := hex.EncodeToString(nonceBytes)
+		ctx = context.WithValue(ctx, cspNonceKey{}, nonce)
+		csp := fmt.Sprintf(
+			"default-src %s; script-src https://ajax.googleapis.com 'nonce-%s' %[1]s; style-src https://fonts.googleapis.com %[1]s; font-src https://fonts.gstatic.com %[1]s",
+			objectURLBase.String(),
+			nonce,
+		)
+		w.Header().Set("Content-Security-Policy", csp)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func addRoutes(
@@ -117,6 +135,7 @@ func NewServer(
 		return nil, fmt.Errorf("adding routes: %w", err)
 	}
 	var handler http.Handler = mux
+	handler = newCSPMiddleware(config, handler)
 	handler = logging.NewMiddleware(logger, handler)
 	return handler, nil
 }
