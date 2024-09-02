@@ -1,20 +1,11 @@
 name: CI
 on:
   push:
-    branches:
-      - main
   pull_request:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          pip install virtualenv
-          make minimal
       - name: Run tests
         run: make test

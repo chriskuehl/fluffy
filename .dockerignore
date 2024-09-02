@@ -1,8 +1,0 @@
-venv
-.git
-.tox
-*.swp
-playground
-*.pyc
-/testing
-/tests
