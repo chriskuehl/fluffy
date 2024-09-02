@@ -1,5 +1,5 @@
 .PHONY: minimal
-minimal: bin/server bin/fpb bin/fput assets settings.py install-hooks
+minimal: bin/server bin/fpb bin/fput assets
 
 .PHONY: bin/server
 bin/server:

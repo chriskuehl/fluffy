@@ -7,5 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Install sass
+        run: |
+          wget -O /tmp/sass.tar.gz https://github.com/sass/dart-sass/releases/download/1.77.8/dart-sass-1.77.8-linux-x64.tar.gz
+          cd /tmp
+          sha256sum -c <<< "b4a46d1b47fcfed0f38e02c3a5383d953dcc94e28fc67fdee517e5bde25eaf71 *sass.tar.gz"
+          tar -xvf /tmp/sass.tar.gz
+          echo /tmp/dart-sass >> $GITHUB_PATH
+      - name: Build
+        run: make minimal
       - name: Run tests
         run: make test
