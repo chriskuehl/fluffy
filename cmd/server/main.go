@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"time"
 
 	"github.com/chriskuehl/fluffy/server"
@@ -71,20 +70,13 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 		}
 	}()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		<-ctx.Done()
-		shutdownCtx := context.Background()
-		shutdownCtx, cancel := context.WithTimeout(shutdownCtx, 10*time.Second)
-		defer cancel()
-		if err := httpServer.Shutdown(shutdownCtx); err != nil {
-			fmt.Fprintf(os.Stderr, "error shutting down http server: %s\n", err)
-		}
-	}()
-	wg.Wait()
-
+	<-ctx.Done()
+	shutdownCtx := context.Background()
+	shutdownCtx, cancel = context.WithTimeout(shutdownCtx, 10*time.Second)
+	defer cancel()
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("shutting down: %w", err)
+	}
 	return nil
 }
 

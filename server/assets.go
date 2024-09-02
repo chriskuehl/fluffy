@@ -84,6 +84,8 @@ func (c *Config) AssetAsString(path string) string {
 	return string(data)
 }
 
+var inlineJSTemplate = pageTemplate("include/inline-js.html")
+
 func (m meta) InlineJS(path string) template.HTML {
 	var buf bytes.Buffer
 	data := struct {
@@ -93,7 +95,7 @@ func (m meta) InlineJS(path string) template.HTML {
 		meta:    m,
 		Content: template.JS(m.Config.AssetAsString(path)),
 	}
-	if err := templates.ExecuteTemplate(&buf, "inline-js.html", data); err != nil {
+	if err := inlineJSTemplate.ExecuteTemplate(&buf, "inline-js.html", data); err != nil {
 		panic("executing template: " + err.Error())
 	} else {
 		return template.HTML(buf.String())

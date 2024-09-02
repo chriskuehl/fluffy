@@ -96,6 +96,11 @@ func addRoutes(
 	} else {
 		mux.Handle("GET /{$}", handler)
 	}
+	if handler, err := handleUploadHistory(config, logger); err != nil {
+		return fmt.Errorf("handleUploadHistory: %w", err)
+	} else {
+		mux.Handle("GET /upload-history", handler)
+	}
 	mux.Handle("GET /dev/static/", handleStatic(config, logger))
 	return nil
 }
