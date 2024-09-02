@@ -32,6 +32,7 @@ func (r *requestInfo) newLogger(logger *slog.Logger) *slog.Logger {
 }
 
 func NewMiddleware(logger Logger, next http.Handler) http.Handler {
+	// TODO: request logging
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, requestInfoKey{}, &requestInfo{

@@ -9,9 +9,11 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/chriskuehl/fluffy/server/highlighting"
 	"github.com/chriskuehl/fluffy/server/logging"
+	"github.com/chriskuehl/fluffy/server/storage"
 )
 
 //go:embed templates/*
@@ -129,4 +131,86 @@ func handleUploadHistory(config *Config, logger logging.Logger) (http.HandlerFun
 			w.Write(buf.Bytes())
 		}
 	}, nil
+}
+
+func handleUpload(config *Config, logger logging.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseMultipartForm(config.MaxMultipartMemoryBytes)
+		if err != nil {
+			logger.Error(r.Context(), "parsing form", "error", err)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Failed to parse multipart form.\n"))
+			return
+		}
+
+		_, json := r.URL.Query()["json"]
+		if _, ok := r.MultipartForm.Value["json"]; ok {
+			json = true
+		}
+		fmt.Printf("json: %v\n", json)
+
+		objs := []storage.Object{}
+
+		for _, fileHeader := range r.MultipartForm.File["file"] {
+			file, err := fileHeader.Open()
+			if err != nil {
+				logger.Error(r.Context(), "opening file", "error", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("Failed to open file.\n"))
+				return
+			}
+			defer file.Close()
+
+			// TODO: check file extension
+			// TODO: check file size (keep in mind fileHeader.Size might be a lie?)
+			//    -- but maybe not? since Go buffers it first?
+			id, err := genUniqueObjectID()
+			if err != nil {
+				logger.Error(r.Context(), "generating unique object ID", "error", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("Failed to generate unique object ID.\n"))
+				return
+			}
+
+			obj := storage.Object{
+				Key:    id + extractExtension(fileHeader.Filename),
+				Reader: file,
+			}
+			objs = append(objs, obj)
+		}
+
+		results := make(chan error, len(objs))
+		var wg sync.WaitGroup
+		wg.Add(len(objs))
+		for _, obj := range objs {
+			go func() {
+				defer wg.Done()
+				if err := config.StorageBackend.StoreObject(r.Context(), obj); err != nil {
+					logger.Error(r.Context(), "storing object", "error", err)
+					results <- err
+				} else {
+					results <- nil
+				}
+			}()
+		}
+		wg.Wait()
+
+		hadError := false
+		for i := 0; i < len(objs); i++ {
+			if err := <-results; err != nil {
+				logger.Error(r.Context(), "storing object", "error", err)
+				hadError = true
+			}
+		}
+
+		if hadError {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Failed to store object.\n"))
+			return
+		}
+
+		logger.Info(r.Context(), "uploaded", "objects", len(objs))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Uploaded.\n"))
+	}
 }

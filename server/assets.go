@@ -106,7 +106,7 @@ func (m meta) InlineJS(path string) template.HTML {
 	}
 }
 
-func handleStatic(config *Config, logger logging.Logger) http.HandlerFunc {
+func handleDevStatic(config *Config, logger logging.Logger) http.HandlerFunc {
 	if !config.DevMode {
 		return func(w http.ResponseWriter, r *http.Request) {
 			logger.Warn(r.Context(), "assets cannot be served from the server in production")
@@ -117,7 +117,7 @@ func handleStatic(config *Config, logger logging.Logger) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		strippedReq := r.Clone(r.Context())
-		strippedReq.URL.Path = strippedReq.URL.Path[len("/dev"):]
+		strippedReq.URL.Path = strings.TrimPrefix(strippedReq.URL.Path, "/dev")
 		http.FileServer(http.FS(assetsFS)).ServeHTTP(w, strippedReq)
 	}
 }

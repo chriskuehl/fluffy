@@ -9,17 +9,21 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/chriskuehl/fluffy/server/logging"
+	"github.com/chriskuehl/fluffy/server/storage"
 )
 
 type Config struct {
 	// Site configuration.
+	StorageBackend           storage.Backend
 	Branding                 string
 	CustomFooterHTML         template.HTML
 	AbuseContactEmail        string
 	MaxUploadBytes           int64
+	MaxMultipartMemoryBytes  int64
 	HomeURL                  url.URL
 	ObjectURLPattern         url.URL
 	HTMLURLPattern           url.URL
@@ -40,6 +44,9 @@ func (c *Config) Validate() []string {
 	}
 	if c.MaxUploadBytes <= 0 {
 		errs = append(errs, "MaxUploadBytes must be greater than 0")
+	}
+	if c.MaxMultipartMemoryBytes <= 0 {
+		errs = append(errs, "MaxMultipartMemoryBytes must be greater than 0")
 	}
 	if strings.HasSuffix(c.HomeURL.Path, "/") {
 		errs = append(errs, "HomeURL must not end with a slash")
@@ -63,12 +70,17 @@ func (c *Config) Validate() []string {
 
 func NewConfig() *Config {
 	return &Config{
-		Branding:          "fluffy",
-		AbuseContactEmail: "abuse@example.com",
-		MaxUploadBytes:    1024 * 1024 * 10, // 10 MiB
-		HomeURL:           url.URL{Scheme: "http", Host: "localhost:8080"},
-		ObjectURLPattern:  url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/object/%s"},
-		HTMLURLPattern:    url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/html/%s"},
+		StorageBackend: &storage.FilesystemBackend{
+			ObjectRoot: filepath.Join("tmp", "object"),
+			HTMLRoot:   filepath.Join("tmp", "html"),
+		},
+		Branding:                "fluffy",
+		AbuseContactEmail:       "abuse@example.com",
+		MaxUploadBytes:          1024 * 1024 * 10, // 10 MiB
+		MaxMultipartMemoryBytes: 1024 * 1024 * 10, // 10 MiB
+		HomeURL:                 url.URL{Scheme: "http", Host: "localhost:8080"},
+		ObjectURLPattern:        url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/object/%s"},
+		HTMLURLPattern:          url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/html/%s"},
 	}
 }
 
@@ -119,7 +131,9 @@ func addRoutes(
 	} else {
 		mux.Handle("GET /upload-history", handler)
 	}
-	mux.Handle("GET /dev/static/", handleStatic(config, logger))
+	mux.Handle("POST /upload", handleUpload(config, logger))
+	mux.Handle("GET /dev/static/", handleDevStatic(config, logger))
+	mux.Handle("GET /dev/storage/{type}/", handleDevStorage(config, logger))
 	return nil
 }
 
