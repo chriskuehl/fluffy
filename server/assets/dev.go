@@ -8,8 +8,8 @@ import (
 	"github.com/chriskuehl/fluffy/server/logging"
 )
 
-func HandleDevStatic(config *config.Config, logger logging.Logger) http.HandlerFunc {
-	if !config.DevMode {
+func HandleDevStatic(conf *config.Config, logger logging.Logger) http.HandlerFunc {
+	if !conf.DevMode {
 		return func(w http.ResponseWriter, r *http.Request) {
 			logger.Warn(r.Context(), "assets cannot be served from the server in production")
 			w.WriteHeader(http.StatusNotFound)

@@ -93,13 +93,13 @@ func SanitizeUploadName(name string, forbiddenExtensions map[string]struct{}) (*
 func UploadObjects(
 	ctx context.Context,
 	logger logging.Logger,
-	config *config.Config,
+	conf *config.Config,
 	objs []storagedata.Object,
 ) []error {
 	results := make(chan error, len(objs))
 	for _, obj := range objs {
 		go func() {
-			err := config.StorageBackend.StoreObject(ctx, obj)
+			err := conf.StorageBackend.StoreObject(ctx, obj)
 			if err != nil {
 				logger.Error(ctx, "storing object", "obj", obj, "error", err)
 			} else {

@@ -34,10 +34,10 @@ func pageTemplate(name string) *template.Template {
 	return template.Must(template.New("").ParseFS(templatesFS, "templates/include/*.html", "templates/"+name))
 }
 
-func iconExtensions(config *config.Config) (template.JS, error) {
+func iconExtensions(conf *config.Config) (template.JS, error) {
 	extensionToURL := make(map[string]string)
 	for _, ext := range assets.MimeExtensions() {
-		url, err := assets.AssetURL(config, "img/mime/small/"+ext+".png")
+		url, err := assets.AssetURL(conf, "img/mime/small/"+ext+".png")
 		if err != nil {
 			return "", fmt.Errorf("failed to get asset URL for %q: %w", ext, err)
 		}
@@ -50,8 +50,8 @@ func iconExtensions(config *config.Config) (template.JS, error) {
 	return template.JS(json), nil
 }
 
-func handleIndex(config *config.Config, logger logging.Logger) (http.HandlerFunc, error) {
-	extensions, err := iconExtensions(config)
+func handleIndex(conf *config.Config, logger logging.Logger) (http.HandlerFunc, error) {
+	extensions, err := iconExtensions(conf)
 	if err != nil {
 		return nil, fmt.Errorf("iconExtensions: %w", err)
 	}
@@ -70,7 +70,7 @@ func handleIndex(config *config.Config, logger logging.Logger) (http.HandlerFunc
 			IconExtensions template.JS
 			Text           string
 		}{
-			Meta: NewMeta(r.Context(), config, pageConfig{
+			Meta: NewMeta(r.Context(), conf, pageConfig{
 				ID:               "index",
 				ExtraHTMLClasses: extraHTMLClasses,
 			}),
@@ -91,8 +91,8 @@ func handleIndex(config *config.Config, logger logging.Logger) (http.HandlerFunc
 	}, nil
 }
 
-func handleUploadHistory(config *config.Config, logger logging.Logger) (http.HandlerFunc, error) {
-	extensions, err := iconExtensions(config)
+func handleUploadHistory(conf *config.Config, logger logging.Logger) (http.HandlerFunc, error) {
+	extensions, err := iconExtensions(conf)
 	if err != nil {
 		return nil, fmt.Errorf("iconExtensions: %w", err)
 	}
@@ -103,7 +103,7 @@ func handleUploadHistory(config *config.Config, logger logging.Logger) (http.Han
 			Meta           meta
 			IconExtensions template.JS
 		}{
-			Meta: NewMeta(r.Context(), config, pageConfig{
+			Meta: NewMeta(r.Context(), conf, pageConfig{
 				ID: "upload-history",
 			}),
 			IconExtensions: extensions,
@@ -126,7 +126,7 @@ type UploadResponse struct {
 	Error   string `json:"error"`
 }
 
-func handleUpload(config *config.Config, logger logging.Logger) http.HandlerFunc {
+func handleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jsonError := func(statusCode int, msg string) {
 			w.WriteHeader(statusCode)
@@ -137,7 +137,7 @@ func handleUpload(config *config.Config, logger logging.Logger) http.HandlerFunc
 			})
 		}
 
-		err := r.ParseMultipartForm(config.MaxMultipartMemoryBytes)
+		err := r.ParseMultipartForm(conf.MaxMultipartMemoryBytes)
 		if err != nil {
 			logger.Error(r.Context(), "parsing multipart form", "error", err)
 			jsonError(http.StatusBadRequest, "Could not parse multipart form.")
@@ -166,7 +166,7 @@ func handleUpload(config *config.Config, logger logging.Logger) http.HandlerFunc
 
 			// TODO: check file size (keep in mind fileHeader.Size might be a lie?)
 			//    -- but maybe not? since Go buffers it first?
-			key, err := uploads.SanitizeUploadName(fileHeader.Filename, config.ForbiddenFileExtensions)
+			key, err := uploads.SanitizeUploadName(fileHeader.Filename, conf.ForbiddenFileExtensions)
 			if err != nil {
 				if errors.Is(err, uploads.ErrForbiddenExtension) {
 					logger.Info(r.Context(), "forbidden extension", "filename", fileHeader.Filename)
@@ -197,7 +197,7 @@ func handleUpload(config *config.Config, logger logging.Logger) http.HandlerFunc
 			return
 		}
 
-		errs := uploads.UploadObjects(r.Context(), logger, config, objs)
+		errs := uploads.UploadObjects(r.Context(), logger, conf, objs)
 
 		if len(errs) > 0 {
 			logger.Error(r.Context(), "uploading objects failed", "errors", errs)

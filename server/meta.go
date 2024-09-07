@@ -10,20 +10,20 @@ import (
 )
 
 type meta struct {
-	Config     *config.Config
-	PageConfig pageConfig
-	Nonce      string
+	Conf     *config.Config
+	PageConf pageConfig
+	Nonce    string
 }
 
-func NewMeta(ctx context.Context, config *config.Config, pc pageConfig) meta {
+func NewMeta(ctx context.Context, conf *config.Config, pc pageConfig) meta {
 	nonce, ok := ctx.Value(cspNonceKey{}).(string)
 	if !ok {
 		panic("no nonce in context")
 	}
 	return meta{
-		Config:     config,
-		PageConfig: pc,
-		Nonce:      nonce,
+		Conf:     conf,
+		PageConf: pc,
+		Nonce:    nonce,
 	}
 }
 
@@ -50,7 +50,7 @@ func (m meta) InlineJS(path string) template.HTML {
 }
 
 func (m meta) AssetURL(path string) string {
-	url, err := assets.AssetURL(m.Config, path)
+	url, err := assets.AssetURL(m.Conf, path)
 	if err != nil {
 		panic("loading asset: " + err.Error())
 	}

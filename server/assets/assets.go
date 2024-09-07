@@ -68,9 +68,9 @@ func assetObjectPath(path, hash string) string {
 //
 // In development mode, this will return a URL served by the fluffy server itself. In production,
 // this will return a URL to the object store.
-func AssetURL(c *config.Config, path string) (string, error) {
-	if c.DevMode {
-		url := c.HomeURL
+func AssetURL(conf *config.Config, path string) (string, error) {
+	if conf.DevMode {
+		url := conf.HomeURL
 		url.Path = "/dev/static/" + path
 		return url.String(), nil
 	}
@@ -79,8 +79,8 @@ func AssetURL(c *config.Config, path string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("asset not found: %s", path)
 	}
-	url := c.ObjectURLPattern
-	url.Path = fmt.Sprintf(url.Path, assetObjectPath(path, hash))
+	url := conf.ObjectURLPattern
+	url.Path = strings.Replace(url.Path, "{path}", assetObjectPath(path, hash), -1)
 	return url.String(), nil
 }
 

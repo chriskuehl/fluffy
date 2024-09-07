@@ -85,7 +85,7 @@
     <script nonce="{{.Meta.Nonce}}">
         var icons = {{.IconExtensions}};
 
-        var maxUploadSize = {{.Meta.Config.MaxUploadBytes}};
+        var maxUploadSize = {{.Meta.Conf.MaxUploadBytes}};
     </script>
     {{.Meta.InlineJS "js/home-inline.js"}}
     <script integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" crossorigin="anonymous"></script>

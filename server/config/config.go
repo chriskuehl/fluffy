@@ -35,35 +35,38 @@ type Config struct {
 	Version string
 }
 
-func (c *Config) Validate() []string {
+func (conf *Config) Validate() []string {
 	var errs []string
-	if c.Branding == "" {
+	if conf.Branding == "" {
 		errs = append(errs, "Branding must not be empty")
 	}
-	if c.AbuseContactEmail == "" {
+	if conf.AbuseContactEmail == "" {
 		errs = append(errs, "AbuseContactEmail must not be empty")
 	}
-	if c.MaxUploadBytes <= 0 {
+	if conf.MaxUploadBytes <= 0 {
 		errs = append(errs, "MaxUploadBytes must be greater than 0")
 	}
-	if c.MaxMultipartMemoryBytes <= 0 {
+	if conf.MaxMultipartMemoryBytes <= 0 {
 		errs = append(errs, "MaxMultipartMemoryBytes must be greater than 0")
 	}
-	if strings.HasSuffix(c.HomeURL.Path, "/") {
+	if strings.HasSuffix(conf.HomeURL.Path, "/") {
 		errs = append(errs, "HomeURL must not end with a slash")
 	}
-	if !strings.Contains(c.ObjectURLPattern.Path, "%s") {
-		errs = append(errs, "ObjectURLPattern must contain a '%s' placeholder")
+	if !strings.Contains(conf.ObjectURLPattern.Path, "{path}") {
+		errs = append(errs, "ObjectURLPattern must contain a '{path}' placeholder")
 	}
-	if !strings.Contains(c.HTMLURLPattern.Path, "%s") {
-		errs = append(errs, "HTMLURLPattern must contain a '%s' placeholder")
+	if !strings.Contains(conf.HTMLURLPattern.Path, "{path}") {
+		errs = append(errs, "HTMLURLPattern must contain a '{path}' placeholder")
 	}
-	for ext := range c.ForbiddenFileExtensions {
+	if conf.ForbiddenFileExtensions == nil {
+		errs = append(errs, "ForbiddenFileExtensions must not be nil")
+	}
+	for ext := range conf.ForbiddenFileExtensions {
 		if strings.HasPrefix(ext, ".") {
 			errs = append(errs, "ForbiddenFileExtensions should not start with a dot: "+ext)
 		}
 	}
-	if c.Version == "" {
+	if conf.Version == "" {
 		errs = append(errs, "Version must not be empty")
 	}
 	return errs

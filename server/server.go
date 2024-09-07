@@ -29,8 +29,9 @@ func NewConfig() *config.Config {
 		MaxUploadBytes:          1024 * 1024 * 10, // 10 MiB
 		MaxMultipartMemoryBytes: 1024 * 1024 * 10, // 10 MiB
 		HomeURL:                 url.URL{Scheme: "http", Host: "localhost:8080"},
-		ObjectURLPattern:        url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/object/%s"},
-		HTMLURLPattern:          url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/html/%s"},
+		ObjectURLPattern:        url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/object/{path}"},
+		HTMLURLPattern:          url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/html/{path}"},
+		ForbiddenFileExtensions: make(map[string]struct{}),
 		Host:                    "127.0.0.1",
 		Port:                    8080,
 	}
@@ -46,8 +47,8 @@ func handleHealthz(logger logging.Logger) http.HandlerFunc {
 
 type cspNonceKey struct{}
 
-func newCSPMiddleware(config *config.Config, next http.Handler) http.Handler {
-	objectURLBase := config.ObjectURLPattern
+func newCSPMiddleware(conf *config.Config, next http.Handler) http.Handler {
+	objectURLBase := conf.ObjectURLPattern
 	objectURLBase.Path = ""
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -69,39 +70,39 @@ func newCSPMiddleware(config *config.Config, next http.Handler) http.Handler {
 
 func addRoutes(
 	mux *http.ServeMux,
-	config *config.Config,
+	conf *config.Config,
 	logger logging.Logger,
 ) error {
 	mux.HandleFunc("GET /healthz", handleHealthz(logger))
-	if handler, err := handleIndex(config, logger); err != nil {
+	if handler, err := handleIndex(conf, logger); err != nil {
 		return fmt.Errorf("handleIndex: %w", err)
 	} else {
 		mux.Handle("GET /{$}", handler)
 	}
-	if handler, err := handleUploadHistory(config, logger); err != nil {
+	if handler, err := handleUploadHistory(conf, logger); err != nil {
 		return fmt.Errorf("handleUploadHistory: %w", err)
 	} else {
 		mux.Handle("GET /upload-history", handler)
 	}
-	mux.Handle("POST /upload", handleUpload(config, logger))
-	mux.Handle("GET /dev/static/", assets.HandleDevStatic(config, logger))
-	mux.Handle("GET /dev/storage/{type}/", storage.HandleDevStorage(config, logger))
+	mux.Handle("POST /upload", handleUpload(conf, logger))
+	mux.Handle("GET /dev/static/", assets.HandleDevStatic(conf, logger))
+	mux.Handle("GET /dev/storage/{type}/", storage.HandleDevStorage(conf, logger))
 	return nil
 }
 
 func NewServer(
 	logger logging.Logger,
-	config *config.Config,
+	conf *config.Config,
 ) (http.Handler, error) {
-	if errs := config.Validate(); len(errs) > 0 {
+	if errs := conf.Validate(); len(errs) > 0 {
 		return nil, errors.New("invalid config: " + strings.Join(errs, ", "))
 	}
 	mux := http.NewServeMux()
-	if err := addRoutes(mux, config, logger); err != nil {
+	if err := addRoutes(mux, conf, logger); err != nil {
 		return nil, fmt.Errorf("adding routes: %w", err)
 	}
 	var handler http.Handler = mux
-	handler = newCSPMiddleware(config, handler)
+	handler = newCSPMiddleware(conf, handler)
 	handler = logging.NewMiddleware(logger, handler)
 	handler = http.TimeoutHandler(handler, time.Second/2, "timeout")
 	return handler, nil

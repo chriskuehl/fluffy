@@ -1,10 +1,10 @@
 <!doctype html>
-<html class="{{.Meta.PageConfig.HTMLClasses}}">
+<html class="{{.Meta.PageConf.HTMLClasses}}">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <title>{{.Meta.Config.Branding}}</title>
+        <title>{{.Meta.Conf.Branding}}</title>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans:wght@400;700" />
         <link rel="stylesheet" href="{{.Meta.AssetURL "app.css"}}" />
@@ -20,21 +20,21 @@
     <body>
         <div id="container">
             <div id="content">
-                <h1 class="site-header"><a href="{{.Meta.Config.HomeURL}}">{{.Meta.Config.Branding}}</a></h1>
+                <h1 class="site-header"><a href="{{.Meta.Conf.HomeURL}}">{{.Meta.Conf.Branding}}</a></h1>
                 {{template "content" .}}
             </div>
         </div>
 
-        {{if .Meta.Config.CustomFooterHTML}}
+        {{if .Meta.Conf.CustomFooterHTML}}
             <div class="footer custom-footer">
-                {{.Meta.Config.CustomFooterHTML}}
+                {{.Meta.Conf.CustomFooterHTML}}
             </div>
         {{end}}
 
         <p class="footer">
-            fluffy v{{.Meta.Config.Version}} is free and open-source software, available for you <a href="https://github.com/chriskuehl/fluffy">on GitHub</a>.<br />
+            fluffy v{{.Meta.Conf.Version}} is free and open-source software, available for you <a href="https://github.com/chriskuehl/fluffy">on GitHub</a>.<br />
             Icons generously provided by <a href="http://www.fatcow.com/free-icons">FatCow</a>.<br />
-            <a class="report" href="mailto:{{.Meta.Config.AbuseContactEmail}}">Report Abuse</a>
+            <a class="report" href="mailto:{{.Meta.Conf.AbuseContactEmail}}">Report Abuse</a>
         </p>
 
         {{template "inlineJS" .}}
