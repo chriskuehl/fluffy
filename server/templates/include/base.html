@@ -7,8 +7,8 @@
         <title>{{.Meta.Config.Branding}}</title>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Slab:700|Open+Sans:wght@400;700" />
-        <link rel="stylesheet" href="{{.Meta.Config.AssetURL "app.css"}}" />
-        <link rel="icon" href="{{.Meta.Config.AssetURL "img/favicon.ico"}}" />
+        <link rel="stylesheet" href="{{.Meta.AssetURL "app.css"}}" />
+        <link rel="icon" href="{{.Meta.AssetURL "img/favicon.ico"}}" />
 
         {{/*
         This is fairly minimal inlined JS that the rest of the page might rely on early (before rendering has completed).

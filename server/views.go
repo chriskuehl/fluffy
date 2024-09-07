@@ -2,18 +2,19 @@ package server
 
 import (
 	"bytes"
-	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
-	"sync"
 
+	"github.com/chriskuehl/fluffy/server/assets"
+	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/highlighting"
 	"github.com/chriskuehl/fluffy/server/logging"
-	"github.com/chriskuehl/fluffy/server/storage"
+	"github.com/chriskuehl/fluffy/server/storage/storagedata"
 	"github.com/chriskuehl/fluffy/server/uploads"
 )
 
@@ -29,32 +30,18 @@ func (p pageConfig) HTMLClasses() string {
 	return "page-" + p.ID + " " + strings.Join(p.ExtraHTMLClasses, " ")
 }
 
-type meta struct {
-	Config     *Config
-	PageConfig pageConfig
-	Nonce      string
-}
-
-func NewMeta(ctx context.Context, config *Config, pc pageConfig) meta {
-	nonce, ok := ctx.Value(cspNonceKey{}).(string)
-	if !ok {
-		panic("no nonce in context")
-	}
-	return meta{
-		Config:     config,
-		PageConfig: pc,
-		Nonce:      nonce,
-	}
-}
-
 func pageTemplate(name string) *template.Template {
 	return template.Must(template.New("").ParseFS(templatesFS, "templates/include/*.html", "templates/"+name))
 }
 
-func iconExtensions(config *Config) (template.JS, error) {
+func iconExtensions(config *config.Config) (template.JS, error) {
 	extensionToURL := make(map[string]string)
-	for _, ext := range mimeExtensions {
-		extensionToURL[ext] = config.AssetURL("img/mime/small/" + ext + ".png")
+	for _, ext := range assets.MimeExtensions() {
+		url, err := assets.AssetURL(config, "img/mime/small/"+ext+".png")
+		if err != nil {
+			return "", fmt.Errorf("failed to get asset URL for %q: %w", ext, err)
+		}
+		extensionToURL[ext] = url
 	}
 	json, err := json.Marshal(extensionToURL)
 	if err != nil {
@@ -63,7 +50,7 @@ func iconExtensions(config *Config) (template.JS, error) {
 	return template.JS(json), nil
 }
 
-func handleIndex(config *Config, logger logging.Logger) (http.HandlerFunc, error) {
+func handleIndex(config *config.Config, logger logging.Logger) (http.HandlerFunc, error) {
 	extensions, err := iconExtensions(config)
 	if err != nil {
 		return nil, fmt.Errorf("iconExtensions: %w", err)
@@ -104,7 +91,7 @@ func handleIndex(config *Config, logger logging.Logger) (http.HandlerFunc, error
 	}, nil
 }
 
-func handleUploadHistory(config *Config, logger logging.Logger) (http.HandlerFunc, error) {
+func handleUploadHistory(config *config.Config, logger logging.Logger) (http.HandlerFunc, error) {
 	extensions, err := iconExtensions(config)
 	if err != nil {
 		return nil, fmt.Errorf("iconExtensions: %w", err)
@@ -134,13 +121,26 @@ func handleUploadHistory(config *Config, logger logging.Logger) (http.HandlerFun
 	}, nil
 }
 
-func handleUpload(config *Config, logger logging.Logger) http.HandlerFunc {
+type UploadResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
+
+func handleUpload(config *config.Config, logger logging.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		jsonError := func(statusCode int, msg string) {
+			w.WriteHeader(statusCode)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(UploadResponse{
+				Success: false,
+				Error:   msg,
+			})
+		}
+
 		err := r.ParseMultipartForm(config.MaxMultipartMemoryBytes)
 		if err != nil {
-			logger.Error(r.Context(), "parsing form", "error", err)
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Failed to parse multipart form.\n"))
+			logger.Error(r.Context(), "parsing multipart form", "error", err)
+			jsonError(http.StatusBadRequest, "Could not parse multipart form.")
 			return
 		}
 
@@ -150,14 +150,16 @@ func handleUpload(config *Config, logger logging.Logger) http.HandlerFunc {
 		}
 		fmt.Printf("json: %v\n", json)
 
-		objs := []storage.Object{}
+		objs := []storagedata.Object{}
+
+		fmt.Printf("files: %v\n", r.MultipartForm.File["file"])
 
 		for _, fileHeader := range r.MultipartForm.File["file"] {
+			fmt.Printf("file: %v\n", fileHeader.Filename)
 			file, err := fileHeader.Open()
 			if err != nil {
 				logger.Error(r.Context(), "opening file", "error", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("Failed to open file.\n"))
+				jsonError(http.StatusInternalServerError, "Could not open file.")
 				return
 			}
 			defer file.Close()
@@ -166,45 +168,39 @@ func handleUpload(config *Config, logger logging.Logger) http.HandlerFunc {
 			//    -- but maybe not? since Go buffers it first?
 			key, err := uploads.SanitizeUploadName(fileHeader.Filename, config.ForbiddenFileExtensions)
 			if err != nil {
-				// TODO: handle ErrForbiddenExtension and return useful error
+				if errors.Is(err, uploads.ErrForbiddenExtension) {
+					logger.Info(r.Context(), "forbidden extension", "filename", fileHeader.Filename)
+					jsonError(
+						http.StatusBadRequest,
+						fmt.Sprintf("Sorry, %q has a forbidden file extension.", fileHeader.Filename),
+					)
+					return
+				}
 				logger.Error(r.Context(), "sanitizing upload name", "error", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("Failed to sanitize upload name.\n"))
 				return
 			}
 
-			obj := storage.Object{
-				Key:    *key,
+			obj := storagedata.Object{
+				Key:    key.String(),
 				Reader: file,
 			}
 			objs = append(objs, obj)
 		}
 
-		results := make(chan error, len(objs))
-		var wg sync.WaitGroup
-		wg.Add(len(objs))
-		for _, obj := range objs {
-			go func() {
-				defer wg.Done()
-				if err := config.StorageBackend.StoreObject(r.Context(), obj); err != nil {
-					logger.Error(r.Context(), "storing object", "error", err)
-					results <- err
-				} else {
-					results <- nil
-				}
-			}()
-		}
-		wg.Wait()
+		fmt.Printf("objs: %v\n", objs)
 
-		hadError := false
-		for i := 0; i < len(objs); i++ {
-			if err := <-results; err != nil {
-				logger.Error(r.Context(), "storing object", "error", err)
-				hadError = true
-			}
+		if len(objs) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("No files uploaded.\n"))
+			return
 		}
 
-		if hadError {
+		errs := uploads.UploadObjects(r.Context(), logger, config, objs)
+
+		if len(errs) > 0 {
+			logger.Error(r.Context(), "uploading objects failed", "errors", errs)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Failed to store object.\n"))
 			return

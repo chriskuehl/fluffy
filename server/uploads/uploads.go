@@ -1,11 +1,16 @@
 package uploads
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"math/big"
 	"path/filepath"
 	"strings"
+
+	"github.com/chriskuehl/fluffy/server/config"
+	"github.com/chriskuehl/fluffy/server/logging"
+	"github.com/chriskuehl/fluffy/server/storage/storagedata"
 )
 
 const (
@@ -83,4 +88,40 @@ func SanitizeUploadName(name string, forbiddenExtensions map[string]struct{}) (*
 		UniqueID:  id,
 		Extension: ext,
 	}, nil
+}
+
+func UploadObjects(
+	ctx context.Context,
+	logger logging.Logger,
+	config *config.Config,
+	objs []storagedata.Object,
+) []error {
+	results := make(chan error, len(objs))
+	for _, obj := range objs {
+		go func() {
+			err := config.StorageBackend.StoreObject(ctx, obj)
+			if err != nil {
+				logger.Error(ctx, "storing object", "obj", obj, "error", err)
+			} else {
+				logger.Info(ctx, "successfully stored object", "obj", obj)
+			}
+			results <- err
+		}()
+	}
+
+	errs := make([]error, 0, len(objs))
+	for i := 0; i < len(objs); i++ {
+		select {
+		case err := <-results:
+			if err != nil {
+				logger.Error(ctx, "storing object", "error", err)
+				errs = append(errs, err)
+			}
+		case <-ctx.Done():
+			logger.Error(ctx, "context done while storing objects", "ctx.Err", ctx.Err())
+			return []error{ctx.Err()}
+		}
+	}
+
+	return errs
 }

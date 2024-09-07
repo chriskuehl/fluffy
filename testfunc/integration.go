@@ -13,12 +13,30 @@ import (
 	"time"
 
 	"github.com/chriskuehl/fluffy/server"
+	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
 )
 
-func NewConfig() *server.Config {
+type ConfigOption func(*config.Config) error
+
+func WithStorageBackend(backend config.StorageBackend) ConfigOption {
+	return func(c *config.Config) error {
+		c.StorageBackend = backend
+		return nil
+	}
+}
+
+func NewConfig(opt ...ConfigOption) *config.Config {
 	c := server.NewConfig()
 	c.Version = "(test)"
+	c.StorageBackend = NewMemoryStorageBackend()
+
+	for _, o := range opt {
+		if err := o(c); err != nil {
+			panic(fmt.Sprintf("unexpected error: %v", err))
+		}
+	}
+
 	return c
 }
 
@@ -28,7 +46,7 @@ type TestServer struct {
 	Port    int
 }
 
-func RunningServer(t *testing.T, config *server.Config) TestServer {
+func RunningServer(t *testing.T, config *config.Config) TestServer {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	var buf bytes.Buffer
@@ -54,7 +72,7 @@ type serverState struct {
 	err  error
 }
 
-func run(t *testing.T, ctx context.Context, w io.Writer, config *server.Config) (int, chan struct{}, error) {
+func run(t *testing.T, ctx context.Context, w io.Writer, config *config.Config) (int, chan struct{}, error) {
 	done := make(chan struct{})
 	logger := logging.NewSlogLogger(slog.New(slog.NewTextHandler(w, nil)))
 

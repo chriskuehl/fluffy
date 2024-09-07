@@ -8,20 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chriskuehl/fluffy/server/uploads"
+	"github.com/chriskuehl/fluffy/server/storage/storagedata"
 )
-
-type Object struct {
-	Key         uploads.SanitizedKey
-	Links       []string
-	MetadataURL string
-	Reader      io.Reader
-}
-
-type Backend interface {
-	StoreObject(ctx context.Context, obj Object) error
-	StoreHTML(ctx context.Context, obj Object) error
-}
 
 type FilesystemBackend struct {
 	ObjectRoot string
@@ -40,13 +28,13 @@ func absPath(path string) (string, error) {
 	return p, nil
 }
 
-func (b *FilesystemBackend) store(root string, obj Object) error {
+func (b *FilesystemBackend) store(root string, obj storagedata.Object) error {
 	realRoot, err := absPath(root)
 	if err != nil {
 		return fmt.Errorf("getting real root: %w", err)
 	}
 
-	parentPath, err := absPath(filepath.Join(root, filepath.Dir(obj.Key.String())))
+	parentPath, err := absPath(filepath.Join(root, filepath.Dir(obj.Key)))
 	if err != nil {
 		return fmt.Errorf("getting parent path: %w", err)
 	}
@@ -55,7 +43,7 @@ func (b *FilesystemBackend) store(root string, obj Object) error {
 		return fmt.Errorf("parent path %q is outside of root %q", parentPath, realRoot)
 	}
 
-	path := filepath.Join(parentPath, filepath.Base(obj.Key.String()))
+	path := filepath.Join(parentPath, filepath.Base(obj.Key))
 	file, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("creating file: %w", err)
@@ -68,10 +56,10 @@ func (b *FilesystemBackend) store(root string, obj Object) error {
 	return nil
 }
 
-func (b *FilesystemBackend) StoreObject(ctx context.Context, obj Object) error {
+func (b *FilesystemBackend) StoreObject(ctx context.Context, obj storagedata.Object) error {
 	return b.store(b.ObjectRoot, obj)
 }
 
-func (b *FilesystemBackend) StoreHTML(ctx context.Context, obj Object) error {
+func (b *FilesystemBackend) StoreHTML(ctx context.Context, obj storagedata.Object) error {
 	return b.store(b.HTMLRoot, obj)
 }

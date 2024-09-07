@@ -10,34 +10,27 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"time"
 
 	"github.com/chriskuehl/fluffy/server"
+	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
 )
 
 var Version = "(dev)"
 
-type config struct {
-	*server.Config
-
-	host string
-	port string
-}
-
-func newConfigFromArgs(args []string) (*config, error) {
-	c := config{
-		Config: server.NewConfig(),
-	}
+func newConfigFromArgs(args []string) (*config.Config, error) {
+	c := server.NewConfig()
 	fs := flag.NewFlagSet("fluffy", flag.ExitOnError)
-	fs.StringVar(&c.host, "host", "localhost", "host to listen on")
-	fs.StringVar(&c.port, "port", "8080", "port to listen on")
+	fs.StringVar(&c.Host, "host", "localhost", "host to listen on")
+	fs.UintVar(&c.Port, "port", 8080, "port to listen on")
 	fs.BoolVar(&c.DevMode, "dev", false, "enable dev mode")
 	if err := fs.Parse(args); err != nil {
 		return nil, err
 	}
 	c.Version = Version
-	return &c, nil
+	return c, nil
 }
 
 func run(ctx context.Context, w io.Writer, args []string) error {
@@ -51,13 +44,13 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 
 	logger := logging.NewSlogLogger(slog.New(slog.NewTextHandler(w, nil)))
 
-	handler, err := server.NewServer(logger, config.Config)
+	handler, err := server.NewServer(logger, config)
 	if err != nil {
 		return fmt.Errorf("creating server: %w", err)
 	}
 
 	httpServer := &http.Server{
-		Addr:    net.JoinHostPort(config.host, config.port),
+		Addr:    net.JoinHostPort(config.Host, strconv.FormatUint(uint64(config.Port), 10)),
 		Handler: handler,
 	}
 	go func() {

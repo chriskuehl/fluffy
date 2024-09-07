@@ -1,181 +1,115 @@
-package uploads
+package uploads_test
 
 import (
+	"bytes"
+	"context"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/chriskuehl/fluffy/server/storage/storagedata"
+	"github.com/chriskuehl/fluffy/server/uploads"
+	"github.com/chriskuehl/fluffy/testfunc"
 )
-
-func TestGetUniqueObjectID(t *testing.T) {
-	got, err := genUniqueObjectID()
-	if err != nil {
-		t.Fatalf("genUniqueObjectID() error = %v", err)
-	}
-	wantLength := 32
-	if len(got) != wantLength {
-		t.Fatalf("got genUniqueObjectID() = %q, want len() = %d", got, wantLength)
-	}
-}
-
-func TestExtractExtension(t *testing.T) {
-	tests := []struct {
-		name    string
-		in      string
-		want    string
-		wantErr error
-	}{
-		{
-			name: "no extension",
-			in:   "file",
-			want: "",
-		},
-		{
-			name: "regular extension",
-			in:   "file.txt",
-			want: ".txt",
-		},
-		{
-			name: "wrapped extension only",
-			in:   "file.gz",
-			want: ".gz",
-		},
-		{
-			name: "wrapped extension after regular extension",
-			in:   "file.tar.gz",
-			want: ".tar.gz",
-		},
-		{
-			name: "multiple wrapped extensions",
-			in:   "file.tar.gz.bz2",
-			want: ".tar.gz.bz2",
-		},
-		{
-			name: "multiple wrapped extensions with a regular extension",
-			in:   "file.txt.tar.gz.bz2",
-			want: ".tar.gz.bz2",
-		},
-		{
-			// Kind of nonsense, just making sure it doesn't remove more than it should.
-			name: "wrapped extensions before regular extension",
-			in:   "file.tar.gz.txt",
-			want: ".txt",
-		},
-		{
-			name: ". only",
-			in:   ".",
-			want: "",
-		},
-		{
-			name: "multiple wrapped extensions with empty extensions",
-			in:   "file.txt.tar.gz....bz2",
-			want: ".tar.gz.bz2",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := extractExtension(tt.in); got != tt.want {
-				t.Errorf("got extractExtension(%q) = %q, want %q", tt.in, got, tt.want)
-			}
-		})
-	}
-}
 
 func TestSanitizeUploadName(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      string
-		want    *SanitizedKey
+		want    *uploads.SanitizedKey
 		wantErr error
 	}{
 		{
 			name: "simple name",
 			in:   "file.txt",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: ".txt",
 			},
 		},
 		{
 			name: "dangerous name",
 			in:   "path/to/../../etc/resolv.conf",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: ".conf",
 			},
 		},
 		{
 			name: "dangerous extension",
 			in:   "resolv.conf/../../etc/passwd",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: "",
 			},
 		},
 		{
 			name: "dangerous name with windows path separators",
 			in:   "path\\to\\..\\..\\etc\\resolv.conf",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: ".conf",
 			},
 		},
 		{
 			name: "dangerous extension with windows path separators",
 			in:   "resolv.conf\\..\\..\\etc/passwd",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: "",
 			},
 		},
 		{
 			name: "empty name",
 			in:   "",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: "",
 			},
 		},
 		{
 			name: ".. only",
 			in:   "..",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: "",
 			},
 		},
 		{
 			name: ". only",
 			in:   ".",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: "",
 			},
 		},
 		{
 			name: "/ only",
 			in:   "/",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: "",
 			},
 		},
 		{
 			name: "/../ only",
 			in:   "/../",
-			want: &SanitizedKey{
+			want: &uploads.SanitizedKey{
 				Extension: "",
 			},
 		},
 		{
 			name:    "forbidden extension",
 			in:      "file.exe",
-			wantErr: ErrForbiddenExtension,
+			wantErr: uploads.ErrForbiddenExtension,
 		},
 		{
 			name:    "forbidden extension before wrapped extension",
 			in:      "file.exe.gz",
-			wantErr: ErrForbiddenExtension,
+			wantErr: uploads.ErrForbiddenExtension,
 		},
 		{
 			name:    "forbidden extension before wrapped extension with ..",
 			in:      "file.exe..gz",
-			wantErr: ErrForbiddenExtension,
+			wantErr: uploads.ErrForbiddenExtension,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SanitizeUploadName(
+			got, err := uploads.SanitizeUploadName(
 				tt.in,
 				map[string]struct{}{
 					"exe": {},
@@ -191,5 +125,44 @@ func TestSanitizeUploadName(t *testing.T) {
 				t.Fatalf("sanitizeUploadName(%q) mismatch (-want +got):\n%s", tt.in, diff)
 			}
 		})
+	}
+}
+
+func TestUploadObjects(t *testing.T) {
+	logger := testfunc.NewMemoryLogger()
+	storageBackend := testfunc.NewMemoryStorageBackend()
+
+	errs := uploads.UploadObjects(
+		context.Background(),
+		logger,
+		testfunc.NewConfig(
+			testfunc.WithStorageBackend(storageBackend),
+		),
+		[]storagedata.Object{
+			{
+				Key:    "file.txt",
+				Reader: bytes.NewReader([]byte("hello, world")),
+			},
+		},
+	)
+
+	if len(errs) != 0 {
+		t.Fatalf("UploadObjects() = %v, want no errors", errs)
+	}
+
+	obj, ok := storageBackend.Objects["file.txt"]
+	if !ok {
+		t.Fatalf("Object not stored")
+	}
+
+	buf := new(strings.Builder)
+	_, err := io.Copy(buf, obj.Reader)
+	if err != nil {
+		t.Fatalf("reading stored object: %v", err)
+	}
+	got := buf.String()
+	want := "hello, world"
+	if got != want {
+		t.Fatalf("stored object = %q, want %q", got, want)
 	}
 }

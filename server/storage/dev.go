@@ -1,14 +1,14 @@
-package server
+package storage
 
 import (
 	"net/http"
 	"strings"
 
+	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
-	"github.com/chriskuehl/fluffy/server/storage"
 )
 
-func handleDevStorage(config *Config, logger logging.Logger) http.HandlerFunc {
+func HandleDevStorage(config *config.Config, logger logging.Logger) http.HandlerFunc {
 	if !config.DevMode {
 		return func(w http.ResponseWriter, r *http.Request) {
 			logger.Warn(r.Context(), "storage cannot be served from the server in production")
@@ -17,7 +17,7 @@ func handleDevStorage(config *Config, logger logging.Logger) http.HandlerFunc {
 		}
 	}
 
-	storageBackend, ok := config.StorageBackend.(*storage.FilesystemBackend)
+	storageBackend, ok := config.StorageBackend.(*FilesystemBackend)
 	if !ok {
 		return func(w http.ResponseWriter, r *http.Request) {
 			logger.Error(r.Context(), "storage cannot be served from the server in dev mode if not using the filesystem backend")

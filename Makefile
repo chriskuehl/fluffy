@@ -39,11 +39,11 @@ server/static/app.css: $(wildcard scss/*.scss)
 	sass scss/app.scss $@
 
 .PHONY: assets
-assets: server/static/app.css
+assets: server/assets/static/app.css
 
 .PHONY: watch-assets
 watch-assets:
-	sass --watch scss/app.scss:server/static/app.css
+	sass --watch scss/app.scss:server/assets/static/app.css
 
 .PHONY: test
 test:
