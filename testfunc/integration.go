@@ -1,13 +1,12 @@
 package testfunc
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -45,15 +44,13 @@ func NewConfig(opt ...ConfigOption) *config.Config {
 
 type TestServer struct {
 	Cleanup func()
-	Logs    *bytes.Buffer
 	Port    int
 }
 
 func RunningServer(t *testing.T, config *config.Config) TestServer {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	var buf bytes.Buffer
-	port, done, err := run(t, ctx, &buf, config)
+	port, done, err := run(t, ctx, config)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -65,7 +62,6 @@ func RunningServer(t *testing.T, config *config.Config) TestServer {
 			cancel()
 			<-done
 		}),
-		Logs: &buf,
 		Port: port,
 	}
 }
@@ -75,9 +71,9 @@ type serverState struct {
 	err  error
 }
 
-func run(t *testing.T, ctx context.Context, w io.Writer, config *config.Config) (int, chan struct{}, error) {
+func run(t *testing.T, ctx context.Context, config *config.Config) (int, chan struct{}, error) {
 	done := make(chan struct{})
-	logger := logging.NewSlogLogger(slog.New(slog.NewTextHandler(w, nil)))
+	logger := logging.NewSlogLogger(slog.New(slog.NewTextHandler(os.Stderr, nil)))
 
 	handler, err := server.NewServer(logger, config)
 	if err != nil {

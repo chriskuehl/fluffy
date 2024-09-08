@@ -19,7 +19,7 @@ func TestHealthz(t *testing.T) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		t.Errorf("unexpected status code: got %d, want %d", resp.StatusCode, http.StatusOK)
+		t.Fatalf("unexpected status code: got %d, want %d", resp.StatusCode, http.StatusOK)
 	}
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -28,6 +28,6 @@ func TestHealthz(t *testing.T) {
 	want := "ok\n"
 	body := string(bodyBytes)
 	if body != want {
-		t.Errorf("unexpected body: got %q, want %q", body, want)
+		t.Fatalf("unexpected body: got %q, want %q", body, want)
 	}
 }
