@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -24,6 +25,7 @@ html_url_pattern = "http://i.foo.com/h/:path:"
 forbidden_file_extensions = ["foo", "bar"]
 host = "192.168.1.100"
 port = 5555
+global_timeout_ms = 5555
 
 [filesystem_storage_backend]
 object_root = "/tmp/objects"
@@ -44,6 +46,14 @@ func TestLoadConfigTOMLEmptyFile(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("config validation failed: %v", errs)
 	}
+}
+
+func diffConfig(c1, c2 config.Config) string {
+	for _, c := range []*config.Config{&c1, &c2} {
+		c.Assets = nil
+		c.Templates = nil
+	}
+	return cmp.Diff(c1, c2)
 }
 
 func TestLoadConfigTOMLWithEverything(t *testing.T) {
@@ -72,13 +82,14 @@ func TestLoadConfigTOMLWithEverything(t *testing.T) {
 		ForbiddenFileExtensions: map[string]struct{}{"foo": {}, "bar": {}},
 		Host:                    "192.168.1.100",
 		Port:                    5555,
+		GlobalTimeout:           5555 * time.Millisecond,
 		StorageBackend: &storage.FilesystemBackend{
 			ObjectRoot: "/tmp/objects",
 			HTMLRoot:   "/tmp/html",
 		},
 		Version: "(test)",
 	}
-	if diff := cmp.Diff(want, conf); diff != "" {
+	if diff := diffConfig(*want, *conf); diff != "" {
 		t.Fatalf("config mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -115,7 +126,7 @@ func TestRoundtripDumpLoadConfigTOML(t *testing.T) {
 		t.Fatalf("config validation failed: %v", errs)
 	}
 
-	if diff := cmp.Diff(conf, newConf); diff != "" {
+	if diff := diffConfig(*conf, *newConf); diff != "" {
 		t.Fatalf("config mismatch (-want +got):\n%s", diff)
 	}
 }

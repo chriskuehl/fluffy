@@ -27,7 +27,10 @@ func WithStorageBackend(backend config.StorageBackend) ConfigOption {
 }
 
 func NewConfig(opt ...ConfigOption) *config.Config {
-	c := server.NewConfig()
+	c, err := server.NewConfig()
+	if err != nil {
+		panic(fmt.Sprintf("unexpected error: %v", err))
+	}
 	c.Version = "(test)"
 	c.StorageBackend = NewMemoryStorageBackend()
 

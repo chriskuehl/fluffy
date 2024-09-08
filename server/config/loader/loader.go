@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/url"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/chriskuehl/fluffy/server/config"
@@ -27,6 +28,7 @@ type configFile struct {
 	ForbiddenFileExtensions []string `toml:"forbidden_file_extensions"`
 	Host                    string   `toml:"host"`
 	Port                    uint     `toml:"port"`
+	GlobalTimeoutMs         uint64   `toml:"global_timeout_ms"`
 
 	FilesystemStorageBackend *filesystemStorageBackend `toml:"filesystem_storage_backend"`
 }
@@ -85,6 +87,9 @@ func LoadConfigTOML(conf *config.Config, path string) error {
 	if cfg.Port != 0 {
 		conf.Port = cfg.Port
 	}
+	if cfg.GlobalTimeoutMs != 0 {
+		conf.GlobalTimeout = time.Duration(cfg.GlobalTimeoutMs) * time.Millisecond
+	}
 	if cfg.FilesystemStorageBackend != nil {
 		conf.StorageBackend = &storage.FilesystemBackend{
 			ObjectRoot: cfg.FilesystemStorageBackend.ObjectRoot,
@@ -107,6 +112,7 @@ func DumpConfigTOML(conf *config.Config) (string, error) {
 		ForbiddenFileExtensions: make([]string, 0, len(conf.ForbiddenFileExtensions)),
 		Host:                    conf.Host,
 		Port:                    conf.Port,
+		GlobalTimeoutMs:         uint64(conf.GlobalTimeout.Milliseconds()),
 	}
 	for ext := range conf.ForbiddenFileExtensions {
 		cfg.ForbiddenFileExtensions = append(cfg.ForbiddenFileExtensions, ext)

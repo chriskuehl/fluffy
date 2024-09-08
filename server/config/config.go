@@ -2,9 +2,11 @@ package config
 
 import (
 	"context"
+	"embed"
 	"html/template"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/chriskuehl/fluffy/server/storage/storagedata"
 )
@@ -14,8 +16,21 @@ type StorageBackend interface {
 	StoreHTML(ctx context.Context, obj storagedata.Object) error
 }
 
-type Config struct {
+type Assets struct {
+	FS             *embed.FS
+	Hashes         map[string]string
+	MimeExtensions map[string]struct{}
+}
 
+type Templates struct {
+	FS *embed.FS
+}
+
+func (t *Templates) Must(name string) *template.Template {
+	return template.Must(template.New("").ParseFS(t.FS, "templates/include/*.html", "templates/"+name))
+}
+
+type Config struct {
 	// Site configuration.
 	StorageBackend          StorageBackend
 	Branding                string
@@ -27,12 +42,15 @@ type Config struct {
 	ObjectURLPattern        *url.URL
 	HTMLURLPattern          *url.URL
 	ForbiddenFileExtensions map[string]struct{}
+	Host                    string
+	Port                    uint
+	GlobalTimeout           time.Duration
 
-	// Runtime options.
-	Host    string
-	Port    uint
-	DevMode bool
-	Version string
+	// Runtime options, cannot be set via config.
+	DevMode   bool
+	Version   string
+	Assets    *Assets
+	Templates *Templates
 }
 
 func (conf *Config) Validate() []string {
@@ -74,6 +92,12 @@ func (conf *Config) Validate() []string {
 	}
 	if conf.Version == "" {
 		errs = append(errs, "Version must not be empty")
+	}
+	if conf.Assets == nil {
+		errs = append(errs, "Assets must not be nil")
+	}
+	if conf.Templates == nil {
+		errs = append(errs, "Templates must not be nil")
 	}
 	return errs
 }

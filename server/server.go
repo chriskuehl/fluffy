@@ -1,9 +1,7 @@
 package server
 
 import (
-	"context"
-	"crypto/rand"
-	"encoding/hex"
+	"embed"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,10 +13,22 @@ import (
 	"github.com/chriskuehl/fluffy/server/assets"
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
+	"github.com/chriskuehl/fluffy/server/security"
 	"github.com/chriskuehl/fluffy/server/storage"
+	"github.com/chriskuehl/fluffy/server/views"
 )
 
-func NewConfig() *config.Config {
+//go:embed templates/*
+var templatesFS embed.FS
+
+//go:embed static/*
+var assetsFS embed.FS
+
+func NewConfig() (*config.Config, error) {
+	a, err := assets.LoadAssets(&assetsFS)
+	if err != nil {
+		return nil, fmt.Errorf("loading assets: %w", err)
+	}
 	return &config.Config{
 		StorageBackend: &storage.FilesystemBackend{
 			ObjectRoot: filepath.Join("tmp", "object"),
@@ -34,38 +44,10 @@ func NewConfig() *config.Config {
 		ForbiddenFileExtensions: make(map[string]struct{}),
 		Host:                    "127.0.0.1",
 		Port:                    8080,
-	}
-}
-
-func handleHealthz(logger logging.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Info(r.Context(), "healthz")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok\n"))
-	}
-}
-
-type cspNonceKey struct{}
-
-func newCSPMiddleware(conf *config.Config, next http.Handler) http.Handler {
-	objectURLBase := conf.ObjectURLPattern
-	objectURLBase.Path = ""
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		nonceBytes := make([]byte, 16)
-		if _, err := rand.Read(nonceBytes); err != nil {
-			panic("failed to generate nonce: " + err.Error())
-		}
-		nonce := hex.EncodeToString(nonceBytes)
-		ctx = context.WithValue(ctx, cspNonceKey{}, nonce)
-		csp := fmt.Sprintf(
-			"default-src 'self' %s; script-src https://ajax.googleapis.com 'nonce-%s' %[1]s; style-src 'self' https://fonts.googleapis.com %[1]s; font-src https://fonts.gstatic.com %[1]s",
-			objectURLBase.String(),
-			nonce,
-		)
-		w.Header().Set("Content-Security-Policy", csp)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		GlobalTimeout:           60 * time.Second,
+		Assets:                  a,
+		Templates:               &config.Templates{FS: &templatesFS},
+	}, nil
 }
 
 func addRoutes(
@@ -73,18 +55,18 @@ func addRoutes(
 	conf *config.Config,
 	logger logging.Logger,
 ) error {
-	mux.HandleFunc("GET /healthz", handleHealthz(logger))
-	if handler, err := handleIndex(conf, logger); err != nil {
+	mux.HandleFunc("GET /healthz", views.HandleHealthz(logger))
+	if handler, err := views.HandleIndex(conf, logger); err != nil {
 		return fmt.Errorf("handleIndex: %w", err)
 	} else {
 		mux.Handle("GET /{$}", handler)
 	}
-	if handler, err := handleUploadHistory(conf, logger); err != nil {
+	if handler, err := views.HandleUploadHistory(conf, logger); err != nil {
 		return fmt.Errorf("handleUploadHistory: %w", err)
 	} else {
 		mux.Handle("GET /upload-history", handler)
 	}
-	mux.Handle("POST /upload", handleUpload(conf, logger))
+	mux.Handle("POST /upload", views.HandleUpload(conf, logger))
 	mux.Handle("GET /dev/static/", assets.HandleDevStatic(conf, logger))
 	mux.Handle("GET /dev/storage/{type}/", storage.HandleDevStorage(conf, logger))
 	return nil
@@ -102,8 +84,8 @@ func NewServer(
 		return nil, fmt.Errorf("adding routes: %w", err)
 	}
 	var handler http.Handler = mux
-	handler = newCSPMiddleware(conf, handler)
+	handler = security.NewCSPMiddleware(conf, handler)
 	handler = logging.NewMiddleware(logger, handler)
-	handler = http.TimeoutHandler(handler, time.Second/2, "timeout")
+	handler = http.TimeoutHandler(handler, conf.GlobalTimeout, "global timeout")
 	return handler, nil
 }

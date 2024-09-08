@@ -29,9 +29,11 @@ type cmdConfig struct {
 }
 
 func newConfigFromArgs(args []string) (*cmdConfig, error) {
-	c := &cmdConfig{
-		conf: server.NewConfig(),
+	conf, err := server.NewConfig()
+	if err != nil {
+		return nil, fmt.Errorf("creating config: %w", err)
 	}
+	c := &cmdConfig{conf: conf}
 	fs := flag.NewFlagSet("fluffy", flag.ExitOnError)
 	fs.BoolVar(&c.printConfig, "print-config", false, "print the config and exit")
 	fs.StringVar(&c.configPath, "config", "", "path to config file")

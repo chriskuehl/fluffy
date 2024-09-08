@@ -35,15 +35,15 @@ release-server:
 	go run github.com/goreleaser/goreleaser/v2@latest release --clean --snapshot --verbose
 	rm -v dist/*.txt dist/*.yaml dist/*.json
 
-server/assets/static/app.css: $(wildcard scss/*.scss)
+server/static/app.css: $(wildcard scss/*.scss)
 	sass scss/app.scss $@
 
 .PHONY: assets
-assets: server/assets/static/app.css
+assets: server/static/app.css
 
 .PHONY: watch-assets
 watch-assets:
-	sass --watch scss/app.scss:server/assets/static/app.css
+	sass --watch scss/app.scss:server/static/app.css
 
 .PHONY: test
 test:

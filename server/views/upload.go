@@ -1,129 +1,21 @@
-package server
+package views
 
 import (
-	"bytes"
 	"context"
-	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
 
-	"github.com/chriskuehl/fluffy/server/assets"
 	"github.com/chriskuehl/fluffy/server/config"
-	"github.com/chriskuehl/fluffy/server/highlighting"
 	"github.com/chriskuehl/fluffy/server/logging"
 	"github.com/chriskuehl/fluffy/server/storage/storagedata"
 	"github.com/chriskuehl/fluffy/server/uploads"
 	"github.com/chriskuehl/fluffy/server/utils"
 )
-
-//go:embed templates/*
-var templatesFS embed.FS
-
-type pageConfig struct {
-	ID               string
-	ExtraHTMLClasses []string
-}
-
-func (p pageConfig) HTMLClasses() string {
-	return "page-" + p.ID + " " + strings.Join(p.ExtraHTMLClasses, " ")
-}
-
-func pageTemplate(name string) *template.Template {
-	return template.Must(template.New("").ParseFS(templatesFS, "templates/include/*.html", "templates/"+name))
-}
-
-func iconExtensions(conf *config.Config) (template.JS, error) {
-	extensionToURL := make(map[string]string)
-	for _, ext := range assets.MimeExtensions() {
-		url, err := assets.AssetURL(conf, "img/mime/small/"+ext+".png")
-		if err != nil {
-			return "", fmt.Errorf("failed to get asset URL for %q: %w", ext, err)
-		}
-		extensionToURL[ext] = url
-	}
-	json, err := json.Marshal(extensionToURL)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal mime extensions to JSON: %w", err)
-	}
-	return template.JS(json), nil
-}
-
-func handleIndex(conf *config.Config, logger logging.Logger) (http.HandlerFunc, error) {
-	extensions, err := iconExtensions(conf)
-	if err != nil {
-		return nil, fmt.Errorf("iconExtensions: %w", err)
-	}
-	tmpl := pageTemplate("index.html")
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		extraHTMLClasses := []string{}
-		text, ok := r.URL.Query()["text"]
-		if ok {
-			extraHTMLClasses = append(extraHTMLClasses, "start-on-paste")
-		}
-
-		data := struct {
-			Meta           meta
-			UILanguagesMap map[string]string
-			IconExtensions template.JS
-			Text           string
-		}{
-			Meta: NewMeta(r.Context(), conf, pageConfig{
-				ID:               "index",
-				ExtraHTMLClasses: extraHTMLClasses,
-			}),
-			UILanguagesMap: highlighting.UILanguagesMap,
-			IconExtensions: extensions,
-			Text:           strings.Join(text, ""),
-		}
-		buf := bytes.Buffer{}
-		if err := tmpl.ExecuteTemplate(&buf, "index.html", data); err != nil {
-			logger.Error(r.Context(), "executing template", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		} else {
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusOK)
-			w.Write(buf.Bytes())
-		}
-	}, nil
-}
-
-func handleUploadHistory(conf *config.Config, logger logging.Logger) (http.HandlerFunc, error) {
-	extensions, err := iconExtensions(conf)
-	if err != nil {
-		return nil, fmt.Errorf("iconExtensions: %w", err)
-	}
-	tmpl := pageTemplate("upload-history.html")
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		data := struct {
-			Meta           meta
-			IconExtensions template.JS
-		}{
-			Meta: NewMeta(r.Context(), conf, pageConfig{
-				ID: "upload-history",
-			}),
-			IconExtensions: extensions,
-		}
-		buf := bytes.Buffer{}
-		if err := tmpl.ExecuteTemplate(&buf, "upload-history.html", data); err != nil {
-			logger.Error(r.Context(), "executing template", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		} else {
-			w.Header().Set("Content-Type", "text/html")
-			w.WriteHeader(http.StatusOK)
-			w.Write(buf.Bytes())
-		}
-	}, nil
-}
 
 type errorResponse struct {
 	Success bool   `json:"success"`
@@ -199,7 +91,7 @@ func objectFromFileHeader(
 	}, nil
 }
 
-func handleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
+func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(conf.MaxMultipartMemoryBytes)
 		if err != nil {

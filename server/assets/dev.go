@@ -20,6 +20,6 @@ func HandleDevStatic(conf *config.Config, logger logging.Logger) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		strippedReq := r.Clone(r.Context())
 		strippedReq.URL.Path = strings.TrimPrefix(strippedReq.URL.Path, "/dev")
-		http.FileServer(http.FS(assetsFS)).ServeHTTP(w, strippedReq)
+		http.FileServer(http.FS(conf.Assets.FS)).ServeHTTP(w, strippedReq)
 	}
 }
