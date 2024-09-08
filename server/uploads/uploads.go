@@ -30,7 +30,7 @@ var (
 	}
 )
 
-func genUniqueObjectID() (string, error) {
+func GenUniqueObjectID() (string, error) {
 	var s strings.Builder
 	for i := 0; i < storedFileNameLength; i++ {
 		r, err := rand.Int(rand.Reader, big.NewInt(int64(len(storedFileNameChars))))
@@ -74,7 +74,7 @@ func (s SanitizedKey) String() string {
 func SanitizeUploadName(name string, forbiddenExtensions map[string]struct{}) (*SanitizedKey, error) {
 	name = strings.ReplaceAll(name, string(filepath.Separator), "/")
 	name = name[strings.LastIndex(name, "/")+1:]
-	id, err := genUniqueObjectID()
+	id, err := GenUniqueObjectID()
 	if err != nil {
 		return nil, fmt.Errorf("generating unique object ID: %w", err)
 	}

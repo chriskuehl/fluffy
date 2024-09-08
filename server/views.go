@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/chriskuehl/fluffy/server/assets"
@@ -157,7 +158,7 @@ type uploadResponse struct {
 	errorResponse
 	Redirect      string                  `json:"redirect"`
 	Metadata      string                  `json:"metadata"`
-	UploadedFiles map[string]uploadedFile `json:"uploadedFiles"`
+	UploadedFiles map[string]uploadedFile `json:"uploaded_files"`
 }
 
 func objectFromFileHeader(
@@ -234,7 +235,29 @@ func handleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			return
 		}
 
-		errs := uploads.UploadObjects(r.Context(), logger, conf, objs)
+		metadataKey, err := uploads.GenUniqueObjectID()
+		if err != nil {
+			logger.Error(r.Context(), "generating unique object ID", "error", err)
+			userError{http.StatusInternalServerError, "Failed to generate unique object ID."}.output(w)
+			return
+		}
+		metadataObject := storagedata.Object{
+			Key:    metadataKey + ".json",
+			Reader: strings.NewReader("TODO"),
+			Bytes:  int64(len("TODO")),
+		}
+		metadataURL := conf.ObjectURL(metadataObject.Key)
+		uploadObjs := append([]storagedata.Object{metadataObject}, objs...)
+		links := make([]*url.URL, len(uploadObjs))
+		for i, obj := range uploadObjs {
+			links[i] = conf.ObjectURL(obj.Key)
+		}
+		for _, obj := range uploadObjs {
+			obj.MetadataURL = metadataURL
+			obj.Links = links
+		}
+
+		errs := uploads.UploadObjects(r.Context(), logger, conf, uploadObjs)
 
 		if len(errs) > 0 {
 			logger.Error(r.Context(), "uploading objects failed", "errors", errs)
@@ -261,7 +284,7 @@ func handleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 					Success: true,
 				},
 				Redirect:      redirect,
-				Metadata:      "TODO",
+				Metadata:      metadataURL.String(),
 				UploadedFiles: uploadedFiles,
 			}
 			w.Header().Set("Content-Type", "application/json")

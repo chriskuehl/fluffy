@@ -60,21 +60,21 @@ func LoadConfigTOML(conf *config.Config, path string) error {
 		if err != nil {
 			return fmt.Errorf("parsing HomeURL: %w", err)
 		}
-		conf.HomeURL = *u
+		conf.HomeURL = u
 	}
 	if cfg.ObjectURLPattern != "" {
 		u, err := url.ParseRequestURI(cfg.ObjectURLPattern)
 		if err != nil {
 			return fmt.Errorf("parsing ObjectURLPattern: %w", err)
 		}
-		conf.ObjectURLPattern = *u
+		conf.ObjectURLPattern = u
 	}
 	if cfg.HTMLURLPattern != "" {
 		u, err := url.ParseRequestURI(cfg.HTMLURLPattern)
 		if err != nil {
 			return fmt.Errorf("parsing HTMLURLPattern: %w", err)
 		}
-		conf.HTMLURLPattern = *u
+		conf.HTMLURLPattern = u
 	}
 	for _, ext := range cfg.ForbiddenFileExtensions {
 		conf.ForbiddenFileExtensions[ext] = struct{}{}

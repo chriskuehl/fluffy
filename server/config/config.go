@@ -23,9 +23,9 @@ type Config struct {
 	AbuseContactEmail       string
 	MaxUploadBytes          int64
 	MaxMultipartMemoryBytes int64
-	HomeURL                 url.URL
-	ObjectURLPattern        url.URL
-	HTMLURLPattern          url.URL
+	HomeURL                 *url.URL
+	ObjectURLPattern        *url.URL
+	HTMLURLPattern          *url.URL
 	ForbiddenFileExtensions map[string]struct{}
 
 	// Runtime options.
@@ -49,13 +49,19 @@ func (conf *Config) Validate() []string {
 	if conf.MaxMultipartMemoryBytes <= 0 {
 		errs = append(errs, "MaxMultipartMemoryBytes must be greater than 0")
 	}
-	if strings.HasSuffix(conf.HomeURL.Path, "/") {
+	if conf.HomeURL == nil {
+		errs = append(errs, "HomeURL must not be nil")
+	} else if strings.HasSuffix(conf.HomeURL.Path, "/") {
 		errs = append(errs, "HomeURL must not end with a slash")
 	}
-	if !strings.Contains(conf.ObjectURLPattern.Path, ":path:") {
+	if conf.ObjectURLPattern == nil {
+		errs = append(errs, "ObjectURLPattern must not be nil")
+	} else if !strings.Contains(conf.ObjectURLPattern.Path, ":path:") {
 		errs = append(errs, "ObjectURLPattern must contain a ':path:' placeholder")
 	}
-	if !strings.Contains(conf.HTMLURLPattern.Path, ":path:") {
+	if conf.HTMLURLPattern == nil {
+		errs = append(errs, "HTMLURLPattern must not be nil")
+	} else if !strings.Contains(conf.HTMLURLPattern.Path, ":path:") {
 		errs = append(errs, "HTMLURLPattern must contain a ':path:' placeholder")
 	}
 	if conf.ForbiddenFileExtensions == nil {
@@ -75,5 +81,5 @@ func (conf *Config) Validate() []string {
 func (conf *Config) ObjectURL(path string) *url.URL {
 	url := conf.ObjectURLPattern
 	url.Path = strings.Replace(url.Path, ":path:", path, -1)
-	return &url
+	return url
 }

@@ -28,7 +28,7 @@ func TestAssetURLProd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	conf.ObjectURLPattern = *url
+	conf.ObjectURLPattern = url
 	conf.DevMode = false
 
 	got, err := assets.AssetURL(conf, "img/favicon.ico")

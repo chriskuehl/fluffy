@@ -28,9 +28,9 @@ func NewConfig() *config.Config {
 		AbuseContactEmail:       "abuse@example.com",
 		MaxUploadBytes:          1024 * 1024 * 10, // 10 MiB
 		MaxMultipartMemoryBytes: 1024 * 1024 * 10, // 10 MiB
-		HomeURL:                 url.URL{Scheme: "http", Host: "localhost:8080"},
-		ObjectURLPattern:        url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/object/:path:"},
-		HTMLURLPattern:          url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/html/:path:"},
+		HomeURL:                 &url.URL{Scheme: "http", Host: "localhost:8080"},
+		ObjectURLPattern:        &url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/object/:path:"},
+		HTMLURLPattern:          &url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/html/:path:"},
 		ForbiddenFileExtensions: make(map[string]struct{}),
 		Host:                    "127.0.0.1",
 		Port:                    8080,

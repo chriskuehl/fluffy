@@ -5,7 +5,7 @@ import (
 )
 
 func TestGetUniqueObjectID(t *testing.T) {
-	got, err := genUniqueObjectID()
+	got, err := GenUniqueObjectID()
 	if err != nil {
 		t.Fatalf("genUniqueObjectID() error = %v", err)
 	}
