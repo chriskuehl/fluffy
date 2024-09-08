@@ -79,9 +79,7 @@ func AssetURL(conf *config.Config, path string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("asset not found: %s", path)
 	}
-	url := conf.ObjectURLPattern
-	url.Path = strings.Replace(url.Path, ":path:", assetObjectPath(path, hash), -1)
-	return url.String(), nil
+	return conf.ObjectURL(assetObjectPath(path, hash)).String(), nil
 }
 
 // AssetAsString returns the contents of the asset as a string.

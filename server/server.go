@@ -29,8 +29,8 @@ func NewConfig() *config.Config {
 		MaxUploadBytes:          1024 * 1024 * 10, // 10 MiB
 		MaxMultipartMemoryBytes: 1024 * 1024 * 10, // 10 MiB
 		HomeURL:                 url.URL{Scheme: "http", Host: "localhost:8080"},
-		ObjectURLPattern:        url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/object/:path:"},
-		HTMLURLPattern:          url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/html/:path:"},
+		ObjectURLPattern:        url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/object/:path:"},
+		HTMLURLPattern:          url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/html/:path:"},
 		ForbiddenFileExtensions: make(map[string]struct{}),
 		Host:                    "127.0.0.1",
 		Port:                    8080,
@@ -59,7 +59,7 @@ func newCSPMiddleware(conf *config.Config, next http.Handler) http.Handler {
 		nonce := hex.EncodeToString(nonceBytes)
 		ctx = context.WithValue(ctx, cspNonceKey{}, nonce)
 		csp := fmt.Sprintf(
-			"default-src %s; script-src https://ajax.googleapis.com 'nonce-%s' %[1]s; style-src https://fonts.googleapis.com %[1]s; font-src https://fonts.gstatic.com %[1]s",
+			"default-src 'self' %s; script-src https://ajax.googleapis.com 'nonce-%s' %[1]s; style-src 'self' https://fonts.googleapis.com %[1]s; font-src https://fonts.gstatic.com %[1]s",
 			objectURLBase.String(),
 			nonce,
 		)

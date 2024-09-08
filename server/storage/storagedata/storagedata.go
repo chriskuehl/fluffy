@@ -9,4 +9,5 @@ type Object struct {
 	Links       []string
 	MetadataURL string
 	Reader      io.Reader
+	Bytes       int64
 }

@@ -71,3 +71,9 @@ func (conf *Config) Validate() []string {
 	}
 	return errs
 }
+
+func (conf *Config) ObjectURL(path string) *url.URL {
+	url := conf.ObjectURLPattern
+	url.Path = strings.Replace(url.Path, ":path:", path, -1)
+	return &url
+}

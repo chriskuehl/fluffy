@@ -2,11 +2,13 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
+	"mime/multipart"
 	"net/http"
 	"strings"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/chriskuehl/fluffy/server/logging"
 	"github.com/chriskuehl/fluffy/server/storage/storagedata"
 	"github.com/chriskuehl/fluffy/server/uploads"
+	"github.com/chriskuehl/fluffy/server/utils"
 )
 
 //go:embed templates/*
@@ -121,79 +124,113 @@ func handleUploadHistory(conf *config.Config, logger logging.Logger) (http.Handl
 	}, nil
 }
 
-type UploadResponse struct {
+type errorResponse struct {
 	Success bool   `json:"success"`
-	Error   string `json:"error"`
+	Error   string `json:"error,omitempty"`
+}
+
+type userError struct {
+	code    int
+	message string
+}
+
+func (e userError) Error() string {
+	return e.message
+}
+
+func (e userError) output(w http.ResponseWriter) {
+	w.WriteHeader(e.code)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(errorResponse{
+		Success: false,
+		Error:   e.message,
+	})
+}
+
+type uploadedFile struct {
+	Bytes int64  `json:"bytes"`
+	Raw   string `json:"raw"`
+	Paste string `json:"paste,omitempty"`
+}
+
+type uploadResponse struct {
+	errorResponse
+	Redirect      string                  `json:"redirect"`
+	Metadata      string                  `json:"metadata"`
+	UploadedFiles map[string]uploadedFile `json:"uploadedFiles"`
+}
+
+func objectFromFileHeader(
+	ctx context.Context,
+	conf *config.Config,
+	logger logging.Logger,
+	fileHeader *multipart.FileHeader,
+) (*storagedata.Object, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		logger.Error(ctx, "opening file", "error", err)
+		return nil, userError{http.StatusBadRequest, "Could not open file."}
+	}
+	defer file.Close()
+
+	if fileHeader.Size > conf.MaxUploadBytes {
+		logger.Info(ctx, "file too large", "size", fileHeader.Size)
+		return nil, userError{
+			http.StatusBadRequest,
+			fmt.Sprintf("File is too large; max size is %s.", utils.FormatBytes(conf.MaxUploadBytes)),
+		}
+	}
+
+	key, err := uploads.SanitizeUploadName(fileHeader.Filename, conf.ForbiddenFileExtensions)
+	if err != nil {
+		if errors.Is(err, uploads.ErrForbiddenExtension) {
+			logger.Info(ctx, "forbidden extension", "filename", fileHeader.Filename)
+			return nil, userError{http.StatusBadRequest, fmt.Sprintf("Sorry, %q has a forbidden file extension.", fileHeader.Filename)}
+		}
+		logger.Error(ctx, "sanitizing upload name", "error", err)
+		return nil, userError{http.StatusInternalServerError, "Failed to sanitize upload name."}
+	}
+
+	return &storagedata.Object{
+		Key:    key.String(),
+		Reader: file,
+		Bytes:  fileHeader.Size,
+	}, nil
 }
 
 func handleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		jsonError := func(statusCode int, msg string) {
-			w.WriteHeader(statusCode)
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(UploadResponse{
-				Success: false,
-				Error:   msg,
-			})
-		}
-
 		err := r.ParseMultipartForm(conf.MaxMultipartMemoryBytes)
 		if err != nil {
 			logger.Error(r.Context(), "parsing multipart form", "error", err)
-			jsonError(http.StatusBadRequest, "Could not parse multipart form.")
+			userError{http.StatusBadRequest, "Could not parse multipart form."}.output(w)
 			return
 		}
 
-		_, json := r.URL.Query()["json"]
+		_, jsonResponse := r.URL.Query()["json"]
 		if _, ok := r.MultipartForm.Value["json"]; ok {
-			json = true
+			jsonResponse = true
 		}
-		fmt.Printf("json: %v\n", json)
 
 		objs := []storagedata.Object{}
 
-		fmt.Printf("files: %v\n", r.MultipartForm.File["file"])
-
 		for _, fileHeader := range r.MultipartForm.File["file"] {
-			fmt.Printf("file: %v\n", fileHeader.Filename)
-			file, err := fileHeader.Open()
+			obj, err := objectFromFileHeader(r.Context(), conf, logger, fileHeader)
 			if err != nil {
-				logger.Error(r.Context(), "opening file", "error", err)
-				jsonError(http.StatusInternalServerError, "Could not open file.")
-				return
-			}
-			defer file.Close()
-
-			// TODO: check file size (keep in mind fileHeader.Size might be a lie?)
-			//    -- but maybe not? since Go buffers it first?
-			key, err := uploads.SanitizeUploadName(fileHeader.Filename, conf.ForbiddenFileExtensions)
-			if err != nil {
-				if errors.Is(err, uploads.ErrForbiddenExtension) {
-					logger.Info(r.Context(), "forbidden extension", "filename", fileHeader.Filename)
-					jsonError(
-						http.StatusBadRequest,
-						fmt.Sprintf("Sorry, %q has a forbidden file extension.", fileHeader.Filename),
-					)
-					return
+				userErr, ok := err.(userError)
+				if !ok {
+					logger.Error(r.Context(), "unexpected error", "error", err)
+					userErr = userError{http.StatusInternalServerError, "An unexpected error occurred."}
 				}
-				logger.Error(r.Context(), "sanitizing upload name", "error", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("Failed to sanitize upload name.\n"))
+				userErr.output(w)
 				return
 			}
-
-			obj := storagedata.Object{
-				Key:    key.String(),
-				Reader: file,
-			}
-			objs = append(objs, obj)
+			objs = append(objs, *obj)
 		}
 
-		fmt.Printf("objs: %v\n", objs)
-
 		if len(objs) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("No files uploaded.\n"))
+			logger.Info(r.Context(), "no files uploaded")
+			userError{http.StatusBadRequest, "No files uploaded."}.output(w)
 			return
 		}
 
@@ -201,13 +238,37 @@ func handleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 
 		if len(errs) > 0 {
 			logger.Error(r.Context(), "uploading objects failed", "errors", errs)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Failed to store object.\n"))
+			userError{http.StatusInternalServerError, "Failed to store object."}.output(w)
 			return
 		}
 
 		logger.Info(r.Context(), "uploaded", "objects", len(objs))
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Uploaded.\n"))
+
+		redirect := conf.ObjectURL(objs[0].Key).String()
+
+		if jsonResponse {
+			uploadedFiles := make(map[string]uploadedFile, len(objs))
+			for _, obj := range objs {
+				uploadedFiles[obj.Key] = uploadedFile{
+					Bytes: obj.Bytes,
+					Raw:   conf.ObjectURL(obj.Key).String(),
+					// TODO: Paste for text files
+				}
+			}
+
+			resp := uploadResponse{
+				errorResponse: errorResponse{
+					Success: true,
+				},
+				Redirect:      redirect,
+				Metadata:      "TODO",
+				UploadedFiles: uploadedFiles,
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(resp)
+		} else {
+			http.Redirect(w, r, redirect, http.StatusSeeOther)
+		}
 	}
 }
