@@ -1,3 +1,5 @@
 /dist
 /server/assets/static/app.css
 /server/assets/static/app.css.map
+/cover.out
+/cover.html

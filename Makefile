@@ -3,19 +3,19 @@ minimal: bin/server bin/fpb bin/fput assets
 
 .PHONY: bin/server
 bin/server:
-	go build -o $@ ./cmd/server
+	go build -race -o $@ ./cmd/server
 
 .PHONY: bin/fpb
 bin/fpb:
-	go build -o $@ ./cmd/fpb
+	go build -race -o $@ ./cmd/fpb
 
 .PHONY: bin/fput
 bin/fput:
-	go build -o $@ ./cmd/fput
+	go build -race -o $@ ./cmd/fput
 
 .PHONY: dev
 dev:
-	go run github.com/cespare/reflex@latest -v -s -r '^server/|^go\.mod$$' -- go run ./cmd/server --dev
+	go run github.com/cespare/reflex@latest -v -s -r '^server/|^go\.mod$$' -- go run -race ./cmd/server --dev
 
 .PHONY: delve
 delve:
@@ -47,4 +47,5 @@ watch-assets:
 
 .PHONY: test
 test:
-	go test ./...
+	go test -coverprofile cover.out -race ./...
+	go tool cover -html=cover.out -o cover.html
