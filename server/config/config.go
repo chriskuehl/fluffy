@@ -52,11 +52,11 @@ func (conf *Config) Validate() []string {
 	if strings.HasSuffix(conf.HomeURL.Path, "/") {
 		errs = append(errs, "HomeURL must not end with a slash")
 	}
-	if !strings.Contains(conf.ObjectURLPattern.Path, "{path}") {
-		errs = append(errs, "ObjectURLPattern must contain a '{path}' placeholder")
+	if !strings.Contains(conf.ObjectURLPattern.Path, ":path:") {
+		errs = append(errs, "ObjectURLPattern must contain a ':path:' placeholder")
 	}
-	if !strings.Contains(conf.HTMLURLPattern.Path, "{path}") {
-		errs = append(errs, "HTMLURLPattern must contain a '{path}' placeholder")
+	if !strings.Contains(conf.HTMLURLPattern.Path, ":path:") {
+		errs = append(errs, "HTMLURLPattern must contain a ':path:' placeholder")
 	}
 	if conf.ForbiddenFileExtensions == nil {
 		errs = append(errs, "ForbiddenFileExtensions must not be nil")
