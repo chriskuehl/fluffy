@@ -77,3 +77,21 @@ func TestExtractExtension(t *testing.T) {
 		})
 	}
 }
+
+func TestIsAllowedMIMEType(t *testing.T) {
+	tests := map[string]bool{
+		"application/javascript": true,
+		"audio/mpeg":             true,
+		"font/woff":              false,
+		"image/png":              true,
+		"text/html":              false,
+		"text/plain":             true,
+	}
+	for mimeType, want := range tests {
+		t.Run(mimeType, func(t *testing.T) {
+			if got := isAllowedMIMEType(mimeType); got != want {
+				t.Errorf("got isAllowedMIMEType(%q) = %t, want %t", mimeType, got, want)
+			}
+		})
+	}
+}

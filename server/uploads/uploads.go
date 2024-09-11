@@ -3,6 +3,7 @@ package uploads
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -181,7 +182,7 @@ func ProbablyText(reader io.ReadSeeker) (isText bool, err error) {
 	}()
 	buf := make([]byte, 1024)
 	n, err := reader.Read(buf)
-	if err != nil {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return false, fmt.Errorf("reading: %w", err)
 	}
 	for _, b := range buf[:n] {
