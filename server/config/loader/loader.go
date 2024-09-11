@@ -16,6 +16,13 @@ type filesystemStorageBackend struct {
 	HTMLRoot   string `toml:"html_root"`
 }
 
+type s3StorageBackend struct {
+	Region          string `toml:"region"`
+	Bucket          string `toml:"bucket"`
+	ObjectKeyPrefix string `toml:"object_key_prefix"`
+	HTMLKeyPrefix   string `toml:"html_key_prefix"`
+}
+
 type configFile struct {
 	Branding                string   `toml:"branding"`
 	CustomFooterHTML        string   `toml:"custom_footer_html"`
@@ -31,6 +38,7 @@ type configFile struct {
 	GlobalTimeoutMs         uint64   `toml:"global_timeout_ms"`
 
 	FilesystemStorageBackend *filesystemStorageBackend `toml:"filesystem_storage_backend"`
+	S3StorageBackend         *s3StorageBackend         `toml:"s3_storage_backend"`
 }
 
 func LoadConfigTOML(conf *config.Config, path string) error {
@@ -96,6 +104,18 @@ func LoadConfigTOML(conf *config.Config, path string) error {
 			HTMLRoot:   cfg.FilesystemStorageBackend.HTMLRoot,
 		}
 	}
+	if cfg.S3StorageBackend != nil {
+		b, err := storage.NewS3Backend(
+			cfg.S3StorageBackend.Region,
+			cfg.S3StorageBackend.Bucket,
+			cfg.S3StorageBackend.ObjectKeyPrefix,
+			cfg.S3StorageBackend.HTMLKeyPrefix,
+		)
+		if err != nil {
+			return fmt.Errorf("creating S3 backend: %w", err)
+		}
+		conf.StorageBackend = b
+	}
 	return nil
 }
 
@@ -121,6 +141,14 @@ func DumpConfigTOML(conf *config.Config) (string, error) {
 		cfg.FilesystemStorageBackend = &filesystemStorageBackend{
 			ObjectRoot: fs.ObjectRoot,
 			HTMLRoot:   fs.HTMLRoot,
+		}
+	}
+	if s3, ok := conf.StorageBackend.(*storage.S3Backend); ok {
+		cfg.S3StorageBackend = &s3StorageBackend{
+			Region:          s3.Region,
+			Bucket:          s3.Bucket,
+			ObjectKeyPrefix: s3.ObjectKeyPrefix,
+			HTMLKeyPrefix:   s3.HTMLKeyPrefix,
 		}
 	}
 	buf, err := toml.Marshal(cfg)

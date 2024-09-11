@@ -21,7 +21,7 @@ func CSPNonce(ctx context.Context) (string, error) {
 }
 
 func NewCSPMiddleware(conf *config.Config, next http.Handler) http.Handler {
-	objectURLBase := conf.ObjectURLPattern
+	objectURLBase := *conf.ObjectURLPattern
 	objectURLBase.Path = ""
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

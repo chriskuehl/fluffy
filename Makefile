@@ -3,23 +3,23 @@ minimal: bin/server bin/fpb bin/fput assets
 
 .PHONY: bin/server
 bin/server:
-	go build -race -o $@ ./cmd/server
+	go build -o $@ ./cmd/server
 
 .PHONY: bin/fpb
 bin/fpb:
-	go build -race -o $@ ./cmd/fpb
+	go build -o $@ ./cmd/fpb
 
 .PHONY: bin/fput
 bin/fput:
-	go build -race -o $@ ./cmd/fput
+	go build -o $@ ./cmd/fput
 
 .PHONY: dev
 dev:
-	go run github.com/cespare/reflex@latest -v -s -r '^server/|^go\.mod$$' -- go run -race ./cmd/server --dev
+	go run github.com/cespare/reflex@latest -v -s -r '^server/|^go\.mod$$' -- go run -race ./cmd/server --dev --config ~/tmp/fluffy.toml
 
 .PHONY: delve
 delve:
-	dlv debug ./cmd/server -- --dev
+	dlv debug ./cmd/server -- --dev --config ~/tmp/fluffy.toml
 
 .PHONY: release-cli
 release-cli: export GORELEASER_CURRENT_TAG ?= 0.0.0

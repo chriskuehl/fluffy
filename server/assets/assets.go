@@ -19,8 +19,8 @@ func LoadAssets(assetsFS *embed.FS) (*config.Assets, error) {
 	assets := config.Assets{
 		FS:     assetsFS,
 		Hashes: map[string]string{},
-		// MimeExtensions is a set of all the mime extensions, without dot, e.g. "png", "jpg".
-		MimeExtensions: map[string]struct{}{},
+		// MIMEExtensions is a set of all the mime extensions, without dot, e.g. "png", "jpg".
+		MIMEExtensions: map[string]struct{}{},
 	}
 
 	if err := fs.WalkDir(assetsFS, "static", func(path string, d fs.DirEntry, err error) error {
@@ -53,7 +53,7 @@ func LoadAssets(assetsFS *embed.FS) (*config.Assets, error) {
 		}
 
 		name := filepath.Base(path)
-		assets.MimeExtensions[name[:len(name)-len(".png")]] = struct{}{}
+		assets.MIMEExtensions[name[:len(name)-len(".png")]] = struct{}{}
 		return nil
 	}); err != nil {
 		return nil, fmt.Errorf("walking mime icons: %w", err)
@@ -75,7 +75,7 @@ func assetObjectPath(path, hash string) string {
 // this will return a URL to the object store.
 func AssetURL(conf *config.Config, path string) (string, error) {
 	if conf.DevMode {
-		url := conf.HomeURL
+		url := *conf.HomeURL
 		url.Path = "/dev/static/" + path
 		return url.String(), nil
 	}

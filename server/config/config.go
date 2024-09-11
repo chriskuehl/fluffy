@@ -4,22 +4,39 @@ import (
 	"context"
 	"embed"
 	"html/template"
+	"io"
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/chriskuehl/fluffy/server/storage/storagedata"
 )
 
+type BaseStoredObject interface {
+	Key() string
+	Links() []*url.URL
+	MetadataURL() *url.URL
+	ReadCloser() (io.ReadCloser, error)
+	Bytes() int64
+	MIMEType() string
+}
+
+type StoredObject interface {
+	BaseStoredObject
+}
+
+type StoredHTML interface {
+	BaseStoredObject
+}
+
 type StorageBackend interface {
-	StoreObject(ctx context.Context, obj storagedata.Object) error
-	StoreHTML(ctx context.Context, obj storagedata.Object) error
+	StoreObject(ctx context.Context, obj StoredObject) error
+	StoreHTML(ctx context.Context, html StoredHTML) error
+	Validate() []string
 }
 
 type Assets struct {
 	FS             *embed.FS
 	Hashes         map[string]string
-	MimeExtensions map[string]struct{}
+	MIMEExtensions map[string]struct{}
 }
 
 type Templates struct {
@@ -55,6 +72,11 @@ type Config struct {
 
 func (conf *Config) Validate() []string {
 	var errs []string
+	if conf.StorageBackend == nil {
+		errs = append(errs, "StorageBackend must not be nil")
+	} else {
+		errs = append(errs, conf.StorageBackend.Validate()...)
+	}
 	if conf.Branding == "" {
 		errs = append(errs, "Branding must not be empty")
 	}
@@ -103,7 +125,7 @@ func (conf *Config) Validate() []string {
 }
 
 func (conf *Config) ObjectURL(path string) *url.URL {
-	url := conf.ObjectURLPattern
+	url := *conf.ObjectURLPattern
 	url.Path = strings.Replace(url.Path, ":path:", path, -1)
-	return url
+	return &url
 }

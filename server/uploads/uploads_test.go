@@ -9,7 +9,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/chriskuehl/fluffy/server/storage/storagedata"
+	"github.com/chriskuehl/fluffy/server/config"
+	"github.com/chriskuehl/fluffy/server/storage"
 	"github.com/chriskuehl/fluffy/server/uploads"
 	"github.com/chriskuehl/fluffy/testfunc"
 )
@@ -138,10 +139,12 @@ func TestUploadObjects(t *testing.T) {
 		testfunc.NewConfig(
 			testfunc.WithStorageBackend(storageBackend),
 		),
-		[]storagedata.Object{
-			{
-				Key:    "file.txt",
-				Reader: bytes.NewReader([]byte("hello, world")),
+		[]config.StoredObject{
+			&storage.StoredObject{
+				BaseStoredObject: storage.BaseStoredObject{
+					ObjKey:        "file.txt",
+					ObjReadCloser: io.NopCloser(bytes.NewReader([]byte("hello, world"))),
+				},
 			},
 		},
 	)
@@ -156,7 +159,12 @@ func TestUploadObjects(t *testing.T) {
 	}
 
 	buf := new(strings.Builder)
-	_, err := io.Copy(buf, obj.Reader)
+	readCloser, err := obj.ReadCloser()
+	if err != nil {
+		t.Fatalf("getting read closer: %v", err)
+	}
+	defer readCloser.Close()
+	_, err = io.Copy(buf, readCloser)
 	if err != nil {
 		t.Fatalf("reading stored object: %v", err)
 	}
