@@ -95,3 +95,19 @@ func TestIsAllowedMIMEType(t *testing.T) {
 		})
 	}
 }
+
+func TestIsInlineDisplayMIME(t *testing.T) {
+	tests := map[string]bool{
+		"application/pdf":  true,
+		"application/json": false,
+		"image/png":        true,
+		"text/plain":       false,
+	}
+	for mimeType, want := range tests {
+		t.Run(mimeType, func(t *testing.T) {
+			if got := isInlineDisplayMIME(mimeType); got != want {
+				t.Errorf("got isInlineDisplayMIME(%q) = %t, want %t", mimeType, got, want)
+			}
+		})
+	}
+}

@@ -54,12 +54,7 @@ func (b *FilesystemBackend) store(root string, obj config.BaseStoredObject) erro
 	}
 	defer file.Close()
 
-	readCloser, err := obj.ReadCloser()
-	if err != nil {
-		return fmt.Errorf("getting read closer: %w", err)
-	}
-	defer readCloser.Close()
-	if _, err := io.Copy(file, readCloser); err != nil {
+	if _, err := io.Copy(file, obj); err != nil {
 		return fmt.Errorf("copying file: %w", err)
 	}
 	return nil
@@ -120,23 +115,18 @@ func (b *S3Backend) StoreObject(ctx context.Context, obj config.StoredObject) er
 	for _, link := range obj.Links() {
 		links = append(links, link.String())
 	}
+	contentDisposition := obj.ContentDisposition()
 	mimeType := obj.MIMEType()
-	readCloser, err := obj.ReadCloser()
-	if err != nil {
-		return fmt.Errorf("getting read closer: %w", err)
-	}
-	defer readCloser.Close()
-	_, err = b.client.PutObject(ctx, &s3.PutObjectInput{
+	_, err := b.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &b.Bucket,
 		Key:    &key,
-		// TODO: ContentDisposition=obj.content_disposition_header,
-		//ContentDisposition: obj.ContentDisposition,
-		Body: readCloser,
+		Body:   obj,
 		Metadata: map[string]string{
 			"fluffy-links":    strings.Join(links, "; "),
 			"fluffy-metadata": obj.MetadataURL().String(),
 		},
-		ContentType: &mimeType,
+		ContentDisposition: &contentDisposition,
+		ContentType:        &mimeType,
 		// Allow the bucket owner to control the object, for cases where the
 		// bucket is owned by a different account.
 		ACL: types.ObjectCannedACLBucketOwnerFullControl,

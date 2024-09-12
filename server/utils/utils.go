@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"io"
 )
 
 func Pluralize(s string, n int64) string {
@@ -32,4 +33,36 @@ func FormatBytes(bytes int64) string {
 	default:
 		return fmt.Sprintf("%d %s", bytes, Pluralize("byte", bytes))
 	}
+}
+
+// Convert a ReadSeeker to a ReadSeekCloser with a no-op Close method.
+//
+// Like io.NopCloser, but for ReadSeeker instead of just Reader.
+func NopReadSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
+	return nopReadSeekCloser{r}
+}
+
+type nopReadSeekCloser struct {
+	io.ReadSeeker
+}
+
+func (nopReadSeekCloser) Close() error { return nil }
+
+func FileSizeBytes(r io.ReadSeeker) (int64, error) {
+	prev, err := r.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return 0, fmt.Errorf("seeking to current position: %w", err)
+	}
+	_, err = r.Seek(0, io.SeekStart)
+	if err != nil {
+		return 0, fmt.Errorf("seeking to start: %w", err)
+	}
+	end, err := r.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return 0, fmt.Errorf("seeking to current position: %w", err)
+	}
+	if _, err := r.Seek(prev, io.SeekStart); err != nil {
+		return 0, fmt.Errorf("seeking back to original position: %w", err)
+	}
+	return end, nil
 }

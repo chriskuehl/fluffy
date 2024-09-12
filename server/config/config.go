@@ -11,11 +11,11 @@ import (
 )
 
 type BaseStoredObject interface {
+	io.ReadSeekCloser
 	Key() string
 	Links() []*url.URL
 	MetadataURL() *url.URL
-	ReadCloser() (io.ReadCloser, error)
-	Bytes() int64
+	ContentDisposition() string
 	MIMEType() string
 }
 

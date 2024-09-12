@@ -8,6 +8,7 @@ import (
 	"io"
 	"math/big"
 	"mime"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -48,6 +49,14 @@ var (
 		"text/x-sh":              {},
 	}
 	mimePrefixAllowlist = []string{
+		"audio/",
+		"image/",
+		"video/",
+	}
+	inlineDisplayMIMEAllowlist = map[string]struct{}{
+		"application/pdf": {},
+	}
+	inlineDisplayMIMEPrefixAllowlist = []string{
 		"audio/",
 		"image/",
 		"video/",
@@ -227,4 +236,28 @@ func DetermineMIMEType(filename string, contentType string, probablyText bool) s
 	} else {
 		return mimeGenericBinary
 	}
+}
+
+func isInlineDisplayMIME(mimeType string) bool {
+	if _, ok := inlineDisplayMIMEAllowlist[mimeType]; ok {
+		return true
+	}
+	for _, prefix := range inlineDisplayMIMEPrefixAllowlist {
+		if strings.HasPrefix(mimeType, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func DetermineContentDisposition(filename string, mimeType string, probablyText bool) string {
+	renderType := "attachment"
+	if probablyText || isInlineDisplayMIME(mimeType) {
+		renderType = "inline"
+	}
+	return fmt.Sprintf(`%s; filename="%s"; filename*=utf-8''%s`,
+		renderType,
+		strings.ReplaceAll(filename, `"`, ""),
+		url.PathEscape(filename),
+	)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/storage"
 	"github.com/chriskuehl/fluffy/server/uploads"
+	"github.com/chriskuehl/fluffy/server/utils"
 	"github.com/chriskuehl/fluffy/testfunc"
 )
 
@@ -140,12 +141,10 @@ func TestUploadObjects(t *testing.T) {
 			testfunc.WithStorageBackend(storageBackend),
 		),
 		[]config.StoredObject{
-			&storage.StoredObject{
-				BaseStoredObject: storage.BaseStoredObject{
-					ObjKey:        "file.txt",
-					ObjReadCloser: io.NopCloser(bytes.NewReader([]byte("hello, world"))),
-				},
-			},
+			storage.NewStoredObject(
+				utils.NopReadSeekCloser(bytes.NewReader([]byte("hello, world"))),
+				storage.WithKey("file.txt"),
+			),
 		},
 	)
 
@@ -159,13 +158,7 @@ func TestUploadObjects(t *testing.T) {
 	}
 
 	buf := new(strings.Builder)
-	readCloser, err := obj.ReadCloser()
-	if err != nil {
-		t.Fatalf("getting read closer: %v", err)
-	}
-	defer readCloser.Close()
-	_, err = io.Copy(buf, readCloser)
-	if err != nil {
+	if _, err := io.Copy(buf, obj); err != nil {
 		t.Fatalf("reading stored object: %v", err)
 	}
 	got := buf.String()
@@ -271,6 +264,52 @@ func TestDetermineMIMEType(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := uploads.DetermineMIMEType(tt.filename, tt.contentType, tt.probablyText); got != tt.want {
 				t.Errorf("got determineMIMEType(%q, %q, %t) = %q, want %q", tt.filename, tt.contentType, tt.probablyText, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDetermineContentDisposition(t *testing.T) {
+	tests := []struct {
+		name         string
+		filename     string
+		mimeType     string
+		probablyText bool
+		want         string
+	}{
+		{
+			name:         "text file",
+			filename:     "file.txt",
+			mimeType:     "text/plain",
+			probablyText: true,
+			want:         `inline; filename="file.txt"; filename*=utf-8''file.txt`,
+		},
+		{
+			name:         "binary file with inline mime",
+			filename:     "image.png",
+			mimeType:     "image/png",
+			probablyText: false,
+			want:         `inline; filename="image.png"; filename*=utf-8''image.png`,
+		},
+		{
+			name:         "binary file with random mime",
+			filename:     "file",
+			mimeType:     "application/octet-stream",
+			probablyText: false,
+			want:         `attachment; filename="file"; filename*=utf-8''file`,
+		},
+		{
+			name:         "special characters",
+			filename:     "file with spaces and éóñəå  ⊂(◉‿◉)つ(ノ≥∇≤)ノ",
+			mimeType:     "text/plain",
+			probablyText: true,
+			want:         `inline; filename="file with spaces and éóñəå  ⊂(◉‿◉)つ(ノ≥∇≤)ノ"; filename*=utf-8''file%20with%20spaces%20and%20%C3%A9%C3%B3%C3%B1%C9%99%C3%A5%20%20%E2%8A%82%28%E2%97%89%E2%80%BF%E2%97%89%29%E3%81%A4%28%E3%83%8E%E2%89%A5%E2%88%87%E2%89%A4%29%E3%83%8E`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := uploads.DetermineContentDisposition(tt.filename, tt.mimeType, tt.probablyText); got != tt.want {
+				t.Errorf("got determineContentDisposition(%q, %q, %t) = %q, want %q", tt.filename, tt.mimeType, tt.probablyText, got, tt.want)
 			}
 		})
 	}

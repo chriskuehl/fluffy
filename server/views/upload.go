@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -54,15 +53,15 @@ type uploadResponse struct {
 	UploadedFiles map[string]uploadedFile `json:"uploaded_files"`
 }
 
-// objectFromFileHeader creates a storage.StoredObject from a multipart.FileHeader.
+// objectFromFileHeader creates a StoredObject from a multipart.FileHeader.
 //
-// Note: The *caller* is responsible for closing the ReadCloser in the returned object.
+// Note: The *caller* is responsible for closing the returned object.
 func objectFromFileHeader(
 	ctx context.Context,
 	conf *config.Config,
 	logger logging.Logger,
 	fileHeader *multipart.FileHeader,
-) (*storage.StoredObject, error) {
+) (config.StoredObject, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
 		logger.Error(ctx, "opening file", "error", err)
@@ -93,15 +92,24 @@ func objectFromFileHeader(
 		return nil, userError{http.StatusInternalServerError, "Failed to determine if file is text."}
 	}
 
-	return &storage.StoredObject{
-		// TODO: this needs other fields, like mimetype, etc.
-		BaseStoredObject: storage.BaseStoredObject{
-			ObjKey:        key.String(),
-			ObjReadCloser: file,
-			ObjBytes:      fileHeader.Size,
-		},
-		ObjMIMEType: uploads.DetermineMIMEType(fileHeader.Filename, fileHeader.Header.Get("Content-Type"), probablyText),
-	}, nil
+	mimeType := uploads.DetermineMIMEType(
+		fileHeader.Filename,
+		fileHeader.Header.Get("Content-Type"),
+		probablyText,
+	)
+
+	return storage.NewStoredObject(
+		file,
+		storage.WithKey(key.String()),
+		storage.WithMIMEType(mimeType),
+		storage.WithContentDisposition(
+			uploads.DetermineContentDisposition(
+				fileHeader.Filename,
+				mimeType,
+				probablyText,
+			),
+		),
+	), nil
 }
 
 func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
@@ -118,7 +126,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			jsonResponse = true
 		}
 
-		objs := []*storage.StoredObject{}
+		objs := []config.StoredObject{}
 
 		for _, fileHeader := range r.MultipartForm.File["file"] {
 			obj, err := objectFromFileHeader(r.Context(), conf, logger, fileHeader)
@@ -131,6 +139,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 				userErr.output(w)
 				return
 			}
+			defer obj.Close()
 			objs = append(objs, obj)
 		}
 
@@ -146,18 +155,16 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			userError{http.StatusInternalServerError, "Failed to generate unique object ID."}.output(w)
 			return
 		}
-		metadataObject := &storage.StoredObject{
-			BaseStoredObject: storage.BaseStoredObject{
-				ObjKey:        metadataKey + ".json",
-				ObjReadCloser: io.NopCloser(strings.NewReader("TODO")),
-				ObjBytes:      int64(len("TODO")),
-			},
-		}
+		metadataObject := storage.NewStoredObject(
+			utils.NopReadSeekCloser(strings.NewReader("TODO")),
+			storage.WithKey(metadataKey+".json"),
+			storage.WithMIMEType("application/json"),
+		)
 		metadataURL := conf.ObjectURL(metadataObject.Key())
 
 		// uploadObjs includes extra objects like metadata, auto-generated pastes, etc. which
 		// shouldn't be in the returned JSON.
-		uploadObjs := append([]*storage.StoredObject{metadataObject}, objs...)
+		uploadObjs := append([]config.StoredObject{metadataObject}, objs...)
 		links := make([]*url.URL, len(uploadObjs))
 		for i, obj := range uploadObjs {
 			links[i] = conf.ObjectURL(obj.Key())
@@ -165,8 +172,11 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 
 		var uploadObjsIface []config.StoredObject
 		for _, obj := range uploadObjs {
-			obj.BaseStoredObject.ObjMetadataURL = metadataURL
-			obj.BaseStoredObject.ObjLinks = links
+			obj = storage.UpdatedStoredObject(
+				obj,
+				storage.WithMetadataURL(metadataURL),
+				storage.WithLinks(links),
+			)
 			uploadObjsIface = append(uploadObjsIface, obj)
 		}
 
@@ -185,8 +195,14 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		if jsonResponse {
 			uploadedFiles := make(map[string]uploadedFile, len(objs))
 			for _, obj := range objs {
+				bytes, err := utils.FileSizeBytes(obj)
+				if err != nil {
+					logger.Error(r.Context(), "getting file size", "error", err)
+					userError{http.StatusInternalServerError, "Failed to get file size."}.output(w)
+					return
+				}
 				uploadedFiles[obj.Key()] = uploadedFile{
-					Bytes: obj.Bytes(),
+					Bytes: bytes,
 					Raw:   conf.ObjectURL(obj.Key()).String(),
 					// TODO: Paste for text files
 				}
