@@ -36,6 +36,7 @@ func TestDevStorageDev(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tmp := t.TempDir()
 
 			objectRoot := filepath.Join(tmp, "object")
@@ -93,6 +94,7 @@ func TestDevStorageProd(t *testing.T) {
 	}
 	for name, url := range urls {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ts := testfunc.RunningServer(t, testfunc.NewConfig())
 			defer ts.Cleanup()
 

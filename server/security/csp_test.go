@@ -25,6 +25,7 @@ var cspRegexp = regexp.MustCompile(
 )
 
 func TestCSP(t *testing.T) {
+	t.Parallel()
 	conf := testfunc.NewConfig()
 	conf.ObjectURLPattern = &url.URL{Scheme: "https", Host: "fancy-cdn.com", Path: ":path:"}
 	ts := testfunc.RunningServer(t, conf)

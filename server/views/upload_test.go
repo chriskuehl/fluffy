@@ -36,6 +36,7 @@ func addFile(t *testing.T, writer *multipart.Writer, filename, content string) {
 }
 
 func TestUpload(t *testing.T) {
+	t.Parallel()
 	ts := testfunc.RunningServer(t, testfunc.NewConfig())
 	defer ts.Cleanup()
 
@@ -70,6 +71,7 @@ func TestUpload(t *testing.T) {
 }
 
 func TestUploadJSON(t *testing.T) {
+	t.Parallel()
 	ts := testfunc.RunningServer(t, testfunc.NewConfig())
 	defer ts.Cleanup()
 
@@ -120,6 +122,7 @@ func TestUploadJSON(t *testing.T) {
 }
 
 func TestUploadNoMultipart(t *testing.T) {
+	t.Parallel()
 	ts := testfunc.RunningServer(t, testfunc.NewConfig())
 	defer ts.Cleanup()
 
@@ -135,6 +138,7 @@ func TestUploadNoMultipart(t *testing.T) {
 }
 
 func TestUploadTooLarge(t *testing.T) {
+	t.Parallel()
 	conf := testfunc.NewConfig()
 	conf.MaxUploadBytes = 1
 	ts := testfunc.RunningServer(t, conf)

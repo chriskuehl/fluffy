@@ -131,6 +131,7 @@ func TestSanitizeUploadName(t *testing.T) {
 }
 
 func TestUploadObjects(t *testing.T) {
+	t.Parallel()
 	logger := testfunc.NewMemoryLogger()
 	storageBackend := testfunc.NewMemoryStorageBackend()
 

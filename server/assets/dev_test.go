@@ -9,6 +9,7 @@ import (
 )
 
 func TestDevStaticDev(t *testing.T) {
+	t.Parallel()
 	conf := testfunc.NewConfig()
 	conf.DevMode = true
 	ts := testfunc.RunningServer(t, conf)
@@ -29,6 +30,7 @@ func TestDevStaticDev(t *testing.T) {
 }
 
 func TestDevStaticProd(t *testing.T) {
+	t.Parallel()
 	ts := testfunc.RunningServer(t, testfunc.NewConfig())
 	defer ts.Cleanup()
 

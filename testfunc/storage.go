@@ -55,9 +55,12 @@ type StoredS3Object struct {
 
 type FakeS3Client struct {
 	Objects map[string]StoredS3Object
+	mu      sync.Mutex
 }
 
 func (f *FakeS3Client) PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	var buf bytes.Buffer
 	if _, err := io.Copy(&buf, params.Body); err != nil {
 		return nil, fmt.Errorf("copying object: %w", err)

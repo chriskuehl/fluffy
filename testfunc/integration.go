@@ -48,6 +48,7 @@ type TestServer struct {
 }
 
 func RunningServer(t *testing.T, config *config.Config) TestServer {
+	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	port, done, err := run(t, ctx, config)

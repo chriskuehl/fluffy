@@ -11,6 +11,7 @@ import (
 )
 
 func TestIndex(t *testing.T) {
+	t.Parallel()
 	ts := testfunc.RunningServer(t, testfunc.NewConfig())
 	defer ts.Cleanup()
 
