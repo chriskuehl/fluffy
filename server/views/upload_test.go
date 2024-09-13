@@ -80,7 +80,7 @@ func TestUploadJSON(t *testing.T) {
 		t.Fatalf("closing writer: %v", err)
 	}
 
-	resp, err := httpClientNoRedirects.Post(
+	resp, err := http.Post(
 		fmt.Sprintf("http://localhost:%d/upload?json", ts.Port),
 		writer.FormDataContentType(),
 		postBody,
@@ -147,7 +147,7 @@ func TestUploadTooLarge(t *testing.T) {
 		t.Fatalf("closing writer: %v", err)
 	}
 
-	resp, err := httpClientNoRedirects.Post(
+	resp, err := http.Post(
 		fmt.Sprintf("http://localhost:%d/upload", ts.Port),
 		writer.FormDataContentType(),
 		postBody,

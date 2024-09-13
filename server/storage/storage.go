@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -80,11 +81,15 @@ func (b *FilesystemBackend) Validate() []string {
 }
 
 type S3Backend struct {
-	client          *s3.Client
+	Client          S3Client
 	Region          string
 	Bucket          string
 	ObjectKeyPrefix string
 	HTMLKeyPrefix   string
+}
+
+type S3Client interface {
+	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
 }
 
 func NewS3Backend(
@@ -92,16 +97,17 @@ func NewS3Backend(
 	bucket string,
 	objectKeyPrefix string,
 	htmlKeyPrefix string,
+	clientFactory func(aws.Config, func(*s3.Options)) S3Client,
 ) (*S3Backend, error) {
 	awsCfg, err := awsConfig.LoadDefaultConfig(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("loading AWS config: %w", err)
 	}
-	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+	client := clientFactory(awsCfg, func(o *s3.Options) {
 		o.Region = region
 	})
 	return &S3Backend{
-		client:          client,
+		Client:          client,
 		Region:          region,
 		Bucket:          bucket,
 		ObjectKeyPrefix: objectKeyPrefix,
@@ -109,15 +115,14 @@ func NewS3Backend(
 	}, nil
 }
 
-func (b *S3Backend) StoreObject(ctx context.Context, obj config.StoredObject) error {
-	key := b.ObjectKeyPrefix + obj.Key()
+func (b *S3Backend) store(ctx context.Context, key string, obj config.BaseStoredObject) error {
 	links := []string{}
 	for _, link := range obj.Links() {
 		links = append(links, link.String())
 	}
 	contentDisposition := obj.ContentDisposition()
 	mimeType := obj.MIMEType()
-	_, err := b.client.PutObject(ctx, &s3.PutObjectInput{
+	_, err := b.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &b.Bucket,
 		Key:    &key,
 		Body:   obj,
@@ -134,8 +139,12 @@ func (b *S3Backend) StoreObject(ctx context.Context, obj config.StoredObject) er
 	return err
 }
 
+func (b *S3Backend) StoreObject(ctx context.Context, obj config.StoredObject) error {
+	return b.store(ctx, b.ObjectKeyPrefix+obj.Key(), obj)
+}
+
 func (b *S3Backend) StoreHTML(ctx context.Context, obj config.StoredHTML) error {
-	panic("not implemented")
+	return b.store(ctx, b.HTMLKeyPrefix+obj.Key(), obj)
 }
 
 func (b *S3Backend) Validate() []string {

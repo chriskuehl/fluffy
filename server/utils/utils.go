@@ -57,7 +57,7 @@ func FileSizeBytes(r io.ReadSeeker) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("seeking to start: %w", err)
 	}
-	end, err := r.Seek(0, io.SeekCurrent)
+	end, err := r.Seek(0, io.SeekEnd)
 	if err != nil {
 		return 0, fmt.Errorf("seeking to current position: %w", err)
 	}

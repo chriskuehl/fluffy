@@ -126,7 +126,13 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			jsonResponse = true
 		}
 
-		objs := []config.StoredObject{}
+		type directUploadStoredObject struct {
+			config.StoredObject
+			// User-provided name for the object. Only used for display purposes.
+			Name string
+		}
+
+		objs := []directUploadStoredObject{}
 
 		for _, fileHeader := range r.MultipartForm.File["file"] {
 			obj, err := objectFromFileHeader(r.Context(), conf, logger, fileHeader)
@@ -140,7 +146,10 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 				return
 			}
 			defer obj.Close()
-			objs = append(objs, obj)
+			objs = append(objs, directUploadStoredObject{
+				StoredObject: obj,
+				Name:         fileHeader.Filename,
+			})
 		}
 
 		if len(objs) == 0 {
@@ -164,23 +173,24 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 
 		// uploadObjs includes extra objects like metadata, auto-generated pastes, etc. which
 		// shouldn't be in the returned JSON.
-		uploadObjs := append([]config.StoredObject{metadataObject}, objs...)
+		uploadObjs := []config.StoredObject{metadataObject}
+		for _, obj := range objs {
+			uploadObjs = append(uploadObjs, obj.StoredObject)
+		}
 		links := make([]*url.URL, len(uploadObjs))
 		for i, obj := range uploadObjs {
 			links[i] = conf.ObjectURL(obj.Key())
 		}
 
-		var uploadObjsIface []config.StoredObject
-		for _, obj := range uploadObjs {
-			obj = storage.UpdatedStoredObject(
-				obj,
+		for i := range uploadObjs {
+			uploadObjs[i] = storage.UpdatedStoredObject(
+				uploadObjs[i],
 				storage.WithMetadataURL(metadataURL),
 				storage.WithLinks(links),
 			)
-			uploadObjsIface = append(uploadObjsIface, obj)
 		}
 
-		errs := uploads.UploadObjects(r.Context(), logger, conf, uploadObjsIface)
+		errs := uploads.UploadObjects(r.Context(), logger, conf, uploadObjs)
 
 		if len(errs) > 0 {
 			logger.Error(r.Context(), "uploading objects failed", "errors", errs)
@@ -201,7 +211,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 					userError{http.StatusInternalServerError, "Failed to get file size."}.output(w)
 					return
 				}
-				uploadedFiles[obj.Key()] = uploadedFile{
+				uploadedFiles[obj.Name] = uploadedFile{
 					Bytes: bytes,
 					Raw:   conf.ObjectURL(obj.Key()).String(),
 					// TODO: Paste for text files

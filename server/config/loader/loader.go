@@ -7,6 +7,9 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/storage"
 )
@@ -110,6 +113,9 @@ func LoadConfigTOML(conf *config.Config, path string) error {
 			cfg.S3StorageBackend.Bucket,
 			cfg.S3StorageBackend.ObjectKeyPrefix,
 			cfg.S3StorageBackend.HTMLKeyPrefix,
+			func(awsCfg aws.Config, optFn func(*s3.Options)) storage.S3Client {
+				return s3.NewFromConfig(awsCfg, optFn)
+			},
 		)
 		if err != nil {
 			return fmt.Errorf("creating S3 backend: %w", err)
