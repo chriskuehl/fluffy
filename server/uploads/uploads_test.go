@@ -145,6 +145,7 @@ func TestUploadObjects(t *testing.T) {
 			storage.NewStoredObject(
 				utils.NopReadSeekCloser(bytes.NewReader([]byte("hello, world"))),
 				storage.WithKey("file.txt"),
+				storage.WithName("file.txt"),
 			),
 		},
 	)
@@ -311,6 +312,70 @@ func TestDetermineContentDisposition(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := uploads.DetermineContentDisposition(tt.filename, tt.mimeType, tt.probablyText); got != tt.want {
 				t.Errorf("got determineContentDisposition(%q, %q, %t) = %q, want %q", tt.filename, tt.mimeType, tt.probablyText, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewUploadMetadata(t *testing.T) {
+	tests := []struct {
+		name  string
+		files []config.StoredObject
+		want  uploads.UploadMetadata
+	}{
+		{
+			name: "several_files",
+			files: []config.StoredObject{
+				storage.NewStoredObject(
+					utils.NopReadSeekCloser(bytes.NewReader([]byte("abcd"))),
+					storage.WithKey("aaaaaa"),
+					storage.WithName("file"),
+				),
+				storage.NewStoredObject(
+					utils.NopReadSeekCloser(bytes.NewReader([]byte("abcd"))),
+					storage.WithKey("bbbbbb.png"),
+					storage.WithName("image.png"),
+				),
+				storage.NewStoredObject(
+					utils.NopReadSeekCloser(bytes.NewReader([]byte("abcd"))),
+					storage.WithKey("cccccc.txt"),
+					storage.WithName("text.txt"),
+				),
+			},
+			want: uploads.UploadMetadata{
+				ServerVersion: "(test)",
+				UploadType:    uploads.UploadTypeFile,
+				UploadedFiles: []uploads.UploadedFile{
+					{
+						Name:  "file",
+						Bytes: 4,
+						Raw:   "http://localhost:8080/dev/storage/object/aaaaaa",
+					},
+					{
+						Name:  "image.png",
+						Bytes: 4,
+						Raw:   "http://localhost:8080/dev/storage/object/bbbbbb.png",
+					},
+					{
+						Name:  "text.txt",
+						Bytes: 4,
+						Raw:   "http://localhost:8080/dev/storage/object/cccccc.txt",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			conf := testfunc.NewConfig()
+			got, err := uploads.NewUploadMetadata(conf, tt.files)
+			if err != nil {
+				t.Fatalf("newUploadMetadata() error = %v", err)
+			}
+			tt.want.Timestamp = got.Timestamp
+			if diff := cmp.Diff(*got, tt.want); diff != "" {
+				t.Fatalf("newUploadMetadata() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

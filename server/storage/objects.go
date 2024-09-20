@@ -71,6 +71,7 @@ type storedObject struct {
 	baseStoredObject
 	mimeType           string
 	contentDisposition string
+	name               string
 }
 
 type storedObjectOption func(*storedObject)
@@ -88,6 +89,12 @@ func WithMIMEType(mimeType string) storedObjectOption {
 func WithContentDisposition(contentDisposition string) storedObjectOption {
 	return func(o *storedObject) {
 		o.contentDisposition = contentDisposition
+	}
+}
+
+func WithName(name string) storedObjectOption {
+	return func(o *storedObject) {
+		o.name = name
 	}
 }
 
@@ -126,6 +133,10 @@ func (o *storedObject) MIMEType() string {
 
 func (o *storedObject) ContentDisposition() string {
 	return o.contentDisposition
+}
+
+func (o *storedObject) Name() string {
+	return o.name
 }
 
 type storedHTML struct {

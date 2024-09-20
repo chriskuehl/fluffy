@@ -11,9 +11,11 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
+	"github.com/chriskuehl/fluffy/server/utils"
 )
 
 const (
@@ -260,4 +262,53 @@ func DetermineContentDisposition(filename string, mimeType string, probablyText 
 		strings.ReplaceAll(filename, `"`, ""),
 		url.PathEscape(filename),
 	)
+}
+
+type uploadType string
+
+const (
+	UploadTypeFile uploadType = "file"
+	// TODO: add UploadTypePaste once paste support is added.
+)
+
+type UploadedFile struct {
+	Name  string `json:"name"`
+	Bytes int64  `json:"bytes"`
+	Raw   string `json:"raw"`
+	Paste string `json:"paste,omitempty"`
+}
+
+type UploadMetadata struct {
+	ServerVersion string         `json:"server_version"`
+	Timestamp     int64          `json:"timestamp"`
+	UploadType    uploadType     `json:"upload_type"`
+	UploadedFiles []UploadedFile `json:"uploaded_files"`
+	// TODO: add PasteDetails once paste support is added.
+}
+
+func NewUploadMetadata(conf *config.Config, files []config.StoredObject) (*UploadMetadata, error) {
+	// TODO: probably make this same function work for pastes with additional arguments.
+	ret := UploadMetadata{
+		ServerVersion: conf.Version,
+		Timestamp:     time.Now().Unix(),
+		// TODO: set this to UploadTypePaste once paste support is added.
+		UploadType:    UploadTypeFile,
+		UploadedFiles: make([]UploadedFile, 0, len(files)),
+	}
+	for _, file := range files {
+		// TODO: consider calculating this once and storing it, since it's used in multiple places
+		// and it keeps forcing introduction of "impossible" errors in return types that must
+		// nevertheless be handled.
+		bytes, err := utils.FileSizeBytes(file)
+		if err != nil {
+			return nil, fmt.Errorf("getting file size: %w", err)
+		}
+		ret.UploadedFiles = append(ret.UploadedFiles, UploadedFile{
+			Name:  file.Name(),
+			Bytes: bytes,
+			Raw:   conf.ObjectURL(file.Key()).String(),
+		})
+	}
+	return &ret, nil
+
 }

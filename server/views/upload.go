@@ -1,6 +1,7 @@
 package views
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -8,7 +9,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
@@ -98,9 +98,15 @@ func objectFromFileHeader(
 		probablyText,
 	)
 
+	name := "file"
+	if fileHeader.Filename != "" {
+		name = fileHeader.Filename
+	}
+
 	return storage.NewStoredObject(
 		file,
 		storage.WithKey(key.String()),
+		storage.WithName(name),
 		storage.WithMIMEType(mimeType),
 		storage.WithContentDisposition(
 			uploads.DetermineContentDisposition(
@@ -126,13 +132,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			jsonResponse = true
 		}
 
-		type directUploadStoredObject struct {
-			config.StoredObject
-			// User-provided name for the object. Only used for display purposes.
-			Name string
-		}
-
-		objs := []directUploadStoredObject{}
+		objs := []config.StoredObject{}
 
 		for _, fileHeader := range r.MultipartForm.File["file"] {
 			obj, err := objectFromFileHeader(r.Context(), conf, logger, fileHeader)
@@ -146,10 +146,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 				return
 			}
 			defer obj.Close()
-			objs = append(objs, directUploadStoredObject{
-				StoredObject: obj,
-				Name:         fileHeader.Filename,
-			})
+			objs = append(objs, obj)
 		}
 
 		if len(objs) == 0 {
@@ -164,9 +161,26 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			userError{http.StatusInternalServerError, "Failed to generate unique object ID."}.output(w)
 			return
 		}
+
+		metadata, err := uploads.NewUploadMetadata(conf, objs)
+		if err != nil {
+			logger.Error(r.Context(), "creating metadata", "error", err)
+			userError{http.StatusInternalServerError, "Failed to create metadata."}.output(w)
+			return
+		}
+
+		// Convert the metadata to JSON.
+		var metadataJSON bytes.Buffer
+		if err := json.NewEncoder(&metadataJSON).Encode(metadata); err != nil {
+			logger.Error(r.Context(), "encoding metadata", "error", err)
+			userError{http.StatusInternalServerError, "Failed to encode metadata."}.output(w)
+			return
+		}
+
 		metadataObject := storage.NewStoredObject(
-			utils.NopReadSeekCloser(strings.NewReader("TODO")),
+			utils.NopReadSeekCloser(bytes.NewReader(metadataJSON.Bytes())),
 			storage.WithKey(metadataKey+".json"),
+			storage.WithName("metadata.json"),
 			storage.WithMIMEType("application/json"),
 		)
 		metadataURL := conf.ObjectURL(metadataObject.Key())
@@ -175,7 +189,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		// shouldn't be in the returned JSON.
 		uploadObjs := []config.StoredObject{metadataObject}
 		for _, obj := range objs {
-			uploadObjs = append(uploadObjs, obj.StoredObject)
+			uploadObjs = append(uploadObjs, obj)
 		}
 		links := make([]*url.URL, len(uploadObjs))
 		for i, obj := range uploadObjs {
@@ -211,7 +225,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 					userError{http.StatusInternalServerError, "Failed to get file size."}.output(w)
 					return
 				}
-				uploadedFiles[obj.Name] = uploadedFile{
+				uploadedFiles[obj.Name()] = uploadedFile{
 					Bytes: bytes,
 					Raw:   conf.ObjectURL(obj.Key()).String(),
 					// TODO: Paste for text files

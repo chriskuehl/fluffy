@@ -21,6 +21,8 @@ type BaseStoredObject interface {
 
 type StoredObject interface {
 	BaseStoredObject
+	// Name returns the human-readable, non-sanitized, non-unique name of the object.
+	Name() string
 }
 
 type StoredHTML interface {
@@ -124,6 +126,10 @@ func (conf *Config) Validate() []string {
 	return errs
 }
 
+// ObjectURL returns a URL for the given object path.
+//
+// Typically, the `path` is the key of a stored object and has no slashes in it. This is not always
+// true, however, as e.g. assets are also stored as objects.
 func (conf *Config) ObjectURL(path string) *url.URL {
 	url := *conf.ObjectURLPattern
 	url.Path = strings.Replace(url.Path, ":path:", path, -1)
