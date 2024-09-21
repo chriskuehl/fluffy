@@ -13,13 +13,10 @@ import (
 	"github.com/chriskuehl/fluffy/server/config"
 )
 
-var mimeExtensions = []string{}
-
 func LoadAssets(assetsFS *embed.FS) (*config.Assets, error) {
 	assets := config.Assets{
-		FS:     assetsFS,
-		Hashes: map[string]string{},
-		// MIMEExtensions is a set of all the mime extensions, without dot, e.g. "png", "jpg".
+		FS:             assetsFS,
+		Hashes:         map[string]string{},
 		MIMEExtensions: map[string]struct{}{},
 	}
 

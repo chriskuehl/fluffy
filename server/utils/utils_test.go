@@ -7,6 +7,69 @@ import (
 	"github.com/chriskuehl/fluffy/server/utils"
 )
 
+func TestHumanFileExtension(t *testing.T) {
+	tests := []struct {
+		name    string
+		in      string
+		want    string
+		wantErr error
+	}{
+		{
+			name: "no extension",
+			in:   "file",
+			want: "",
+		},
+		{
+			name: "regular extension",
+			in:   "file.txt",
+			want: ".txt",
+		},
+		{
+			name: "wrapped extension only",
+			in:   "file.gz",
+			want: ".gz",
+		},
+		{
+			name: "wrapped extension after regular extension",
+			in:   "file.tar.gz",
+			want: ".tar.gz",
+		},
+		{
+			name: "multiple wrapped extensions",
+			in:   "file.tar.gz.bz2",
+			want: ".tar.gz.bz2",
+		},
+		{
+			name: "multiple wrapped extensions with a regular extension",
+			in:   "file.txt.tar.gz.bz2",
+			want: ".tar.gz.bz2",
+		},
+		{
+			// Kind of nonsense, just making sure it doesn't remove more than it should.
+			name: "wrapped extensions before regular extension",
+			in:   "file.tar.gz.txt",
+			want: ".txt",
+		},
+		{
+			name: ". only",
+			in:   ".",
+			want: "",
+		},
+		{
+			name: "multiple wrapped extensions with empty extensions",
+			in:   "file.txt.tar.gz....bz2",
+			want: ".tar.gz.bz2",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := utils.HumanFileExtension(tt.in); got != tt.want {
+				t.Errorf("%q: got %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestPluralize(t *testing.T) {
 	tests := map[int64]string{
 		0: "things",

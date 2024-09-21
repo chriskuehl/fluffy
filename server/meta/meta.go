@@ -10,6 +10,7 @@ import (
 	"github.com/chriskuehl/fluffy/server/assets"
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/security"
+	"github.com/chriskuehl/fluffy/server/utils"
 )
 
 type PageConfig struct {
@@ -66,4 +67,24 @@ func (m Meta) AssetURL(path string) string {
 		panic("loading asset: " + err.Error())
 	}
 	return url
+}
+
+func (m Meta) MIMEIcon(filename string) string {
+	// Try "file.tar.gz" => "tar.gz" => "gz" => "unknown".
+	parts := strings.Split(filename, ".")
+	for i := 0; i < len(parts); i++ {
+		ext := strings.Join(parts[i:], ".")
+		if _, ok := m.Conf.Assets.MIMEExtensions[ext]; ok {
+			return ext
+		}
+	}
+	return "unknown"
+}
+
+func (m Meta) MIMEIconSmallURL(iconName string) string {
+	return m.AssetURL("img/mime/small/" + iconName + ".png")
+}
+
+func (m Meta) FormatBytes(bytes int64) string {
+	return utils.FormatBytes(bytes)
 }

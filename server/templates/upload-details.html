@@ -1,10 +1,42 @@
 {{define "extraHead"}}{{end}}
 
 {{define "content"}}
-CONTENT HERE
+    <div id="files">
+        {{range .UploadedFiles}}
+            <div class="file-holder">
+                <div class="file{{if .IsImage}} image{{end}}">
+                    <div class="filename">
+                        <img src="{{$.Meta.MIMEIconSmallURL ($.Meta.MIMEIcon .Name)}}" />
+                        {{.Name}}
+                    </div>
+
+                    {{if .IsImage}}
+                        <div class="image-holder">
+                            <a href="{{$.Meta.Conf.FileURL .Key}}">
+                                <img src="{{$.Meta.Conf.FileURL .Key}}" />
+                            </a>
+                        </div>
+                    {{end}}
+
+                    <div class="metadata-bar">
+                        <div class="filesize">
+                            {{$.Meta.FormatBytes .Bytes}}
+                        </div>
+
+                        <div class="buttons">
+                            <a href="{{$.Meta.Conf.FileURL .Key}}" class="download">Direct Link</a>
+                            <!-- TODO: implement this! -->
+                            <a href="TODO_PASTE_URL" class="view-paste">View Text</a>
+                        </div>
+
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+        {{end}}
+    </div>
 {{end}}
 
-{{define "inlineJS"}}
-{{end}}
+{{define "inlineJS"}}{{end}}
 
 {{template "base.html" .}}

@@ -3,7 +3,43 @@ package utils
 import (
 	"fmt"
 	"io"
+	"path/filepath"
+	"strings"
 )
+
+// Extensions that traditionally wrap another file extension.
+var wrapperExtensions = map[string]struct{}{
+	"bz2": {},
+	"gz":  {},
+	"xz":  {},
+	"zst": {},
+}
+
+// HumanFileExtension returns the "human" file extension of a file name.
+//
+// This function tries to mimic what a human would consider the file extension rather than always
+// returning just the last extension. For example, "file.tar.gz" would return ".tar.gz" instead of
+// just ".gz".
+//
+// Files with no extension will return an empty string.
+//
+// This function should not be used for any kind of validation purposes.
+func HumanFileExtension(filename string) string {
+	fullExt := ""
+	for strings.Contains(filename, ".") {
+		ext := filepath.Ext(filename)
+		filename = strings.TrimSuffix(filename, ext)
+		if ext == "." {
+			// Don't add ".", but keep processing any additional extensions.
+			continue
+		}
+		fullExt = ext + fullExt
+		if _, ok := wrapperExtensions[strings.TrimPrefix(ext, ".")]; !ok {
+			return fullExt
+		}
+	}
+	return fullExt
+}
 
 func Pluralize(s string, n int64) string {
 	if n == 1 {

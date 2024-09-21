@@ -205,10 +205,32 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		}
 
 		var uploadDetails bytes.Buffer
+
+		type uploadedFileData struct {
+			config.StoredFile
+			IsImage bool
+			Bytes   int64
+		}
 		uploadDetailsData := struct {
-			Meta *meta.Meta
+			Meta          *meta.Meta
+			UploadedFiles []uploadedFileData
 		}{
-			Meta: uploadDetailsMeta,
+			Meta:          uploadDetailsMeta,
+			UploadedFiles: make([]uploadedFileData, 0, len(files)),
+		}
+		for _, file := range files {
+			// TODO: this is ridiculous, we've done this a bajillion times now
+			bytes, err := utils.FileSizeBytes(file)
+			if err != nil {
+				logger.Error(r.Context(), "getting file size", "error", err)
+				userError{http.StatusInternalServerError, "Failed to get file size."}.output(w)
+				return
+			}
+			uploadDetailsData.UploadedFiles = append(uploadDetailsData.UploadedFiles, uploadedFileData{
+				StoredFile: file,
+				IsImage:    uploads.IsImageMIME(file.MIMEType()),
+				Bytes:      bytes,
+			})
 		}
 		if err := uploadDetailsTmpl.ExecuteTemplate(&uploadDetails, "upload-details.html", uploadDetailsData); err != nil {
 			logger.Error(r.Context(), "executing template", "error", err)

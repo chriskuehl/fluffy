@@ -29,14 +29,6 @@ const (
 var (
 	ErrForbiddenExtension = fmt.Errorf("forbidden extension")
 
-	// Extensions that traditionally wrap another file extension.
-	wrapperExtensions = map[string]struct{}{
-		"bz2": {},
-		"gz":  {},
-		"xz":  {},
-		"zst": {},
-	}
-
 	// MIME types which are allowed to be presented as detected.
 	// TODO: I think we actually only need to prevent text/html (and any HTML
 	// variants like XHTML)?
@@ -63,6 +55,14 @@ var (
 		"image/",
 		"video/",
 	}
+	imageMIMEAllowlist = map[string]struct{}{
+		"image/gif":     {},
+		"image/jpeg":    {},
+		"image/png":     {},
+		"image/svg+xml": {},
+		"image/tiff":    {},
+		"image/webp":    {},
+	}
 )
 
 // GenUniqueObjectKey returns a random string for use as object key.
@@ -81,23 +81,6 @@ func GenUniqueObjectKey() (string, error) {
 	return s.String(), nil
 }
 
-func extractExtension(name string) string {
-	fullExt := ""
-	for strings.Contains(name, ".") {
-		ext := filepath.Ext(name)
-		name = strings.TrimSuffix(name, ext)
-		if ext == "." {
-			// Don't add ".", but keep processing any additional extensions.
-			continue
-		}
-		fullExt = ext + fullExt
-		if _, ok := wrapperExtensions[strings.TrimPrefix(ext, ".")]; !ok {
-			return fullExt
-		}
-	}
-	return fullExt
-}
-
 type SanitizedKey struct {
 	UniqueID  string
 	Extension string
@@ -114,15 +97,15 @@ func SanitizeUploadName(name string, forbiddenExtensions map[string]struct{}) (*
 	if err != nil {
 		return nil, fmt.Errorf("generating unique object key: %w", err)
 	}
-	ext := extractExtension(name)
-	for _, extPart := range strings.Split(ext, ".") {
-		if _, ok := forbiddenExtensions[extPart]; ok {
+	lowercaseName := strings.ToLower(name)
+	for ext := range forbiddenExtensions {
+		if strings.HasSuffix(lowercaseName, "."+ext) || strings.Contains(lowercaseName, "."+ext+".") {
 			return nil, ErrForbiddenExtension
 		}
 	}
 	return &SanitizedKey{
 		UniqueID:  id,
-		Extension: ext,
+		Extension: utils.HumanFileExtension(name),
 	}, nil
 }
 
@@ -264,6 +247,11 @@ func isInlineDisplayMIME(mimeType string) bool {
 		}
 	}
 	return false
+}
+
+func IsImageMIME(mimeType string) bool {
+	_, ok := imageMIMEAllowlist[mimeType]
+	return ok
 }
 
 func DetermineContentDisposition(filename string, mimeType string, probablyText bool) string {

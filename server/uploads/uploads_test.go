@@ -99,13 +99,18 @@ func TestSanitizeUploadName(t *testing.T) {
 			wantErr: uploads.ErrForbiddenExtension,
 		},
 		{
+			name:    "forbidden extension with caps",
+			in:      "file.EXE",
+			wantErr: uploads.ErrForbiddenExtension,
+		},
+		{
 			name:    "forbidden extension before wrapped extension",
 			in:      "file.exe.gz",
 			wantErr: uploads.ErrForbiddenExtension,
 		},
 		{
 			name:    "forbidden extension before wrapped extension with ..",
-			in:      "file.exe..gz",
+			in:      "file.Exe..gz",
 			wantErr: uploads.ErrForbiddenExtension,
 		},
 	}

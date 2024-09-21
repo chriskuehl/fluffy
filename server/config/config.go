@@ -49,8 +49,10 @@ type StorageBackend interface {
 }
 
 type Assets struct {
-	FS             *embed.FS
-	Hashes         map[string]string
+	FS *embed.FS
+	// Hashes is a map of file paths to their SHA-256 hashes.
+	Hashes map[string]string
+	// MIMEExtensions is a set of all the mime extensions, without dot, e.g. "png", "jpg".
 	MIMEExtensions map[string]struct{}
 }
 
@@ -73,6 +75,9 @@ type Config struct {
 	HomeURL                 *url.URL
 	FileURLPattern          *url.URL
 	HTMLURLPattern          *url.URL
+	// ForbiddenFileExtensions is the set of file extensions that are not allowed to be uploaded.
+	// The extensions should not start with a dot, but may contain one if trying to match multiple
+	// extensions, e.g. "tar.gz".
 	ForbiddenFileExtensions map[string]struct{}
 	Host                    string
 	Port                    uint
@@ -125,6 +130,9 @@ func (conf *Config) Validate() []string {
 	for ext := range conf.ForbiddenFileExtensions {
 		if strings.HasPrefix(ext, ".") {
 			errs = append(errs, "ForbiddenFileExtensions should not start with a dot: "+ext)
+		}
+		if strings.ToLower(ext) != ext {
+			errs = append(errs, "ForbiddenFileExtensions should be lowercase: "+ext)
 		}
 	}
 	if conf.Version == "" {
