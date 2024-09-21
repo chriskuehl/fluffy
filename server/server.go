@@ -67,6 +67,7 @@ func addRoutes(
 		mux.Handle("GET /upload-history", handler)
 	}
 	mux.Handle("POST /upload", views.HandleUpload(conf, logger))
+	mux.Handle("POST /paste", views.HandlePaste(conf, logger))
 	mux.Handle("GET /dev/static/", assets.HandleDevStatic(conf, logger))
 	mux.Handle("GET /dev/storage/{type}/", storage.HandleDevStorage(conf, logger))
 	return nil
