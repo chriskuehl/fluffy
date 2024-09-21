@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	ErrForbiddenExtension = fmt.Errorf("forbidden extension")
+	ErrForbiddenExtension = errors.New("forbidden extension")
 
 	// MIME types which are allowed to be presented as detected.
 	// TODO: I think we actually only need to prevent text/html (and any HTML
@@ -74,7 +74,7 @@ func GenUniqueObjectKey() (string, error) {
 			return "", fmt.Errorf("generating random number: %w", err)
 		}
 		if !r.IsInt64() {
-			return "", fmt.Errorf("random number is not an int64")
+			return "", errors.New("random number is not an int64")
 		}
 		s.WriteByte(storedFileNameChars[r.Int64()])
 	}
