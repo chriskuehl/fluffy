@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 )
 
 type Line struct {
@@ -13,6 +14,7 @@ type Line struct {
 
 type MemoryLogger struct {
 	lines []Line
+	mu    sync.Mutex
 }
 
 func (ml *MemoryLogger) log(level string, msg string, args ...any) {
@@ -25,6 +27,8 @@ func (ml *MemoryLogger) log(level string, msg string, args ...any) {
 			line.WriteString(fmt.Sprintf("%v", arg))
 		}
 	}
+	ml.mu.Lock()
+	defer ml.mu.Unlock()
 	ml.lines = append(ml.lines, Line{
 		Level:   level,
 		Message: line.String(),

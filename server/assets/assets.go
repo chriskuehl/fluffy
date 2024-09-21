@@ -62,17 +62,18 @@ func LoadAssets(assetsFS *embed.FS) (*config.Assets, error) {
 	return &assets, nil
 }
 
-// AssetObjectPath returns the path to the asset in the object store.
+// assetKey returns the key for an asset in the file store.
 //
-// Keep in mind the object may not exist yet depending on when this function is called.
-func assetObjectPath(path, hash string) string {
+// Keep in mind the asset may not exist yet in the file store depending on when this function is
+// called.
+func assetKey(path, hash string) string {
 	return filepath.Join("static", hash, path)
 }
 
 // AssetURL returns the URL to the asset.
 //
 // In development mode, this will return a URL served by the fluffy server itself. In production,
-// this will return a URL to the object store.
+// this will return a URL to the file store.
 func AssetURL(conf *config.Config, path string) (string, error) {
 	if conf.DevMode {
 		url := *conf.HomeURL
@@ -84,7 +85,7 @@ func AssetURL(conf *config.Config, path string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("asset not found: %s", path)
 	}
-	return conf.ObjectURL(assetObjectPath(path, hash)).String(), nil
+	return conf.FileURL(assetKey(path, hash)).String(), nil
 }
 
 // AssetAsString returns the contents of the asset as a string.

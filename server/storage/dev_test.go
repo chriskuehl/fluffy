@@ -22,8 +22,8 @@ func TestDevStorageDev(t *testing.T) {
 		wantContent     string
 	}{
 		{
-			name:            "object",
-			url:             "http://localhost:%d/dev/storage/object/test.txt",
+			name:            "file",
+			url:             "http://localhost:%d/dev/storage/file/test.txt",
 			wantContentType: "text/plain; charset=utf-8",
 			wantContent:     "test content\n",
 		},
@@ -39,12 +39,12 @@ func TestDevStorageDev(t *testing.T) {
 			t.Parallel()
 			tmp := t.TempDir()
 
-			objectRoot := filepath.Join(tmp, "object")
-			if err := os.MkdirAll(objectRoot, 0755); err != nil {
-				t.Fatalf("failed to create object root: %v", err)
+			fileRoot := filepath.Join(tmp, "file")
+			if err := os.MkdirAll(fileRoot, 0755); err != nil {
+				t.Fatalf("failed to create file root: %v", err)
 			}
-			if err := os.WriteFile(filepath.Join(objectRoot, "test.txt"), []byte("test content\n"), 0644); err != nil {
-				t.Fatalf("failed to write object file: %v", err)
+			if err := os.WriteFile(filepath.Join(fileRoot, "test.txt"), []byte("test content\n"), 0644); err != nil {
+				t.Fatalf("failed to write file: %v", err)
 			}
 
 			htmlRoot := filepath.Join(tmp, "html")
@@ -58,8 +58,8 @@ func TestDevStorageDev(t *testing.T) {
 			conf := testfunc.NewConfig()
 			conf.DevMode = true
 			conf.StorageBackend = &storage.FilesystemBackend{
-				ObjectRoot: objectRoot,
-				HTMLRoot:   htmlRoot,
+				FileRoot: fileRoot,
+				HTMLRoot: htmlRoot,
 			}
 			ts := testfunc.RunningServer(t, conf)
 			defer ts.Cleanup()
@@ -89,8 +89,8 @@ func TestDevStorageDev(t *testing.T) {
 
 func TestDevStorageProd(t *testing.T) {
 	urls := map[string]string{
-		"object": "http://localhost:%d/dev/storage/object/test.txt",
-		"html":   "http://localhost:%d/dev/storage/html/test.html",
+		"file": "http://localhost:%d/dev/storage/file/test.txt",
+		"html": "http://localhost:%d/dev/storage/html/test.html",
 	}
 	for name, url := range urls {
 		t.Run(name, func(t *testing.T) {

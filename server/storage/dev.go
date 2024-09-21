@@ -32,9 +32,9 @@ func HandleDevStorage(conf *config.Config, logger logging.Logger) http.HandlerFu
 
 		var root string
 
-		if strings.HasPrefix(strippedReq.URL.Path, "/object/") {
-			root = storageBackend.ObjectRoot
-			strippedReq.URL.Path = strings.TrimPrefix(strippedReq.URL.Path, "/object/")
+		if strings.HasPrefix(strippedReq.URL.Path, "/file/") {
+			root = storageBackend.FileRoot
+			strippedReq.URL.Path = strings.TrimPrefix(strippedReq.URL.Path, "/file/")
 		} else if strings.HasPrefix(strippedReq.URL.Path, "/html/") {
 			root = storageBackend.HTMLRoot
 			strippedReq.URL.Path = strings.TrimPrefix(strippedReq.URL.Path, "/html/")

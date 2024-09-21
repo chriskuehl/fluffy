@@ -17,8 +17,8 @@ import (
 )
 
 type FilesystemBackend struct {
-	ObjectRoot string
-	HTMLRoot   string
+	FileRoot string
+	HTMLRoot string
 }
 
 func absPath(path string) (string, error) {
@@ -61,18 +61,18 @@ func (b *FilesystemBackend) store(root string, obj config.BaseStoredObject) erro
 	return nil
 }
 
-func (b *FilesystemBackend) StoreObject(ctx context.Context, obj config.StoredObject) error {
-	return b.store(b.ObjectRoot, obj)
+func (b *FilesystemBackend) StoreFile(ctx context.Context, file config.StoredFile) error {
+	return b.store(b.FileRoot, file)
 }
 
-func (b *FilesystemBackend) StoreHTML(ctx context.Context, obj config.StoredHTML) error {
-	return b.store(b.HTMLRoot, obj)
+func (b *FilesystemBackend) StoreHTML(ctx context.Context, html config.StoredHTML) error {
+	return b.store(b.HTMLRoot, html)
 }
 
 func (b *FilesystemBackend) Validate() []string {
 	var errs []string
-	if b.ObjectRoot == "" {
-		errs = append(errs, "ObjectRoot must not be empty")
+	if b.FileRoot == "" {
+		errs = append(errs, "FileRoot must not be empty")
 	}
 	if b.HTMLRoot == "" {
 		errs = append(errs, "HTMLRoot must not be empty")
@@ -81,11 +81,11 @@ func (b *FilesystemBackend) Validate() []string {
 }
 
 type S3Backend struct {
-	Client          S3Client
-	Region          string
-	Bucket          string
-	ObjectKeyPrefix string
-	HTMLKeyPrefix   string
+	Client        S3Client
+	Region        string
+	Bucket        string
+	FileKeyPrefix string
+	HTMLKeyPrefix string
 }
 
 type S3Client interface {
@@ -95,7 +95,7 @@ type S3Client interface {
 func NewS3Backend(
 	region string,
 	bucket string,
-	objectKeyPrefix string,
+	fileKeyPrefix string,
 	htmlKeyPrefix string,
 	clientFactory func(aws.Config, func(*s3.Options)) S3Client,
 ) (*S3Backend, error) {
@@ -107,11 +107,11 @@ func NewS3Backend(
 		o.Region = region
 	})
 	return &S3Backend{
-		Client:          client,
-		Region:          region,
-		Bucket:          bucket,
-		ObjectKeyPrefix: objectKeyPrefix,
-		HTMLKeyPrefix:   htmlKeyPrefix,
+		Client:        client,
+		Region:        region,
+		Bucket:        bucket,
+		FileKeyPrefix: fileKeyPrefix,
+		HTMLKeyPrefix: htmlKeyPrefix,
 	}, nil
 }
 
@@ -139,12 +139,12 @@ func (b *S3Backend) store(ctx context.Context, key string, obj config.BaseStored
 	return err
 }
 
-func (b *S3Backend) StoreObject(ctx context.Context, obj config.StoredObject) error {
-	return b.store(ctx, b.ObjectKeyPrefix+obj.Key(), obj)
+func (b *S3Backend) StoreFile(ctx context.Context, file config.StoredFile) error {
+	return b.store(ctx, b.FileKeyPrefix+file.Key(), file)
 }
 
-func (b *S3Backend) StoreHTML(ctx context.Context, obj config.StoredHTML) error {
-	return b.store(ctx, b.HTMLKeyPrefix+obj.Key(), obj)
+func (b *S3Backend) StoreHTML(ctx context.Context, html config.StoredHTML) error {
+	return b.store(ctx, b.HTMLKeyPrefix+html.Key(), html)
 }
 
 func (b *S3Backend) Validate() []string {
@@ -155,8 +155,8 @@ func (b *S3Backend) Validate() []string {
 	if b.Bucket == "" {
 		errs = append(errs, "Bucket must not be empty")
 	}
-	if b.ObjectKeyPrefix != "" && !strings.HasSuffix(b.ObjectKeyPrefix, "/") {
-		errs = append(errs, "ObjectKeyPrefix must end with a / if nonempty")
+	if b.FileKeyPrefix != "" && !strings.HasSuffix(b.FileKeyPrefix, "/") {
+		errs = append(errs, "FileKeyPrefix must end with a / if nonempty")
 	}
 	if b.HTMLKeyPrefix != "" && !strings.HasSuffix(b.HTMLKeyPrefix, "/") {
 		errs = append(errs, "HTMLKeyPrefix must end with a / if nonempty")

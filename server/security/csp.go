@@ -21,8 +21,8 @@ func CSPNonce(ctx context.Context) (string, error) {
 }
 
 func NewCSPMiddleware(conf *config.Config, next http.Handler) http.Handler {
-	objectURLBase := *conf.ObjectURLPattern
-	objectURLBase.Path = ""
+	fileURLBase := *conf.FileURLPattern
+	fileURLBase.Path = ""
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		nonceBytes := make([]byte, 16)
@@ -33,7 +33,7 @@ func NewCSPMiddleware(conf *config.Config, next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, cspNonceKey{}, nonce)
 		csp := fmt.Sprintf(
 			"default-src 'self' %s; script-src https://ajax.googleapis.com 'nonce-%s' %[1]s; style-src 'self' https://fonts.googleapis.com %[1]s; font-src https://fonts.gstatic.com %[1]s",
-			objectURLBase.String(),
+			fileURLBase.String(),
 			nonce,
 		)
 		w.Header().Set("Content-Security-Policy", csp)

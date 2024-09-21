@@ -24,11 +24,11 @@ func TestAssetURLDev(t *testing.T) {
 
 func TestAssetURLProd(t *testing.T) {
 	conf := testfunc.NewConfig()
-	url, err := url.ParseRequestURI("https://fancy-cdn.com/:path:")
+	url, err := url.ParseRequestURI("https://fancy-cdn.com/:key:")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	conf.ObjectURLPattern = url
+	conf.FileURLPattern = url
 	conf.DevMode = false
 
 	got, err := assets.AssetURL(conf, "img/favicon.ico")

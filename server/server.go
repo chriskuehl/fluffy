@@ -31,16 +31,16 @@ func NewConfig() (*config.Config, error) {
 	}
 	return &config.Config{
 		StorageBackend: &storage.FilesystemBackend{
-			ObjectRoot: filepath.Join("tmp", "object"),
-			HTMLRoot:   filepath.Join("tmp", "html"),
+			FileRoot: filepath.Join("tmp", "file"),
+			HTMLRoot: filepath.Join("tmp", "html"),
 		},
 		Branding:                "fluffy",
 		AbuseContactEmail:       "abuse@example.com",
 		MaxUploadBytes:          1024 * 1024 * 10, // 10 MiB
 		MaxMultipartMemoryBytes: 1024 * 1024 * 10, // 10 MiB
 		HomeURL:                 &url.URL{Scheme: "http", Host: "localhost:8080"},
-		ObjectURLPattern:        &url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/object/:path:"},
-		HTMLURLPattern:          &url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/html/:path:"},
+		FileURLPattern:          &url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/file/:key:"},
+		HTMLURLPattern:          &url.URL{Scheme: "http", Host: "localhost:8080", Path: "/dev/storage/html/:key:"},
 		ForbiddenFileExtensions: make(map[string]struct{}),
 		Host:                    "127.0.0.1",
 		Port:                    8080,

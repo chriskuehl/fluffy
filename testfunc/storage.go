@@ -13,22 +13,22 @@ import (
 )
 
 type MemoryStorageBackend struct {
-	Objects map[string]config.StoredObject
-	HTML    map[string]config.StoredHTML
-	mu      sync.Mutex
+	Files map[string]config.StoredFile
+	HTMLs map[string]config.StoredHTML
+	mu    sync.Mutex
 }
 
-func (b *MemoryStorageBackend) StoreObject(ctx context.Context, obj config.StoredObject) error {
+func (b *MemoryStorageBackend) StoreFile(ctx context.Context, obj config.StoredFile) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.Objects[obj.Key()] = obj
+	b.Files[obj.Key()] = obj
 	return nil
 }
 
 func (b *MemoryStorageBackend) StoreHTML(ctx context.Context, obj config.StoredHTML) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.HTML[obj.Key()] = obj
+	b.HTMLs[obj.Key()] = obj
 	return nil
 }
 
@@ -38,8 +38,8 @@ func (b *MemoryStorageBackend) Validate() []string {
 
 func NewMemoryStorageBackend() *MemoryStorageBackend {
 	return &MemoryStorageBackend{
-		Objects: make(map[string]config.StoredObject),
-		HTML:    make(map[string]config.StoredHTML),
+		Files: make(map[string]config.StoredFile),
+		HTMLs: make(map[string]config.StoredHTML),
 	}
 }
 

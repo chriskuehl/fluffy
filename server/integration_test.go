@@ -26,8 +26,10 @@ import (
 type objectType int
 
 const (
-	objectTypeObject objectType = iota
-	objectTypeHTML   objectType = iota
+	objectTypeFile objectType = iota
+	objectTypeHTML objectType = iota
+
+	doNotCompareContentSentinel = "DO_NOT_COMPARE_CONTENT"
 )
 
 type CanonicalizedLinks string
@@ -55,7 +57,7 @@ func keyFromURL(u *url.URL) string {
 	return s[strings.LastIndex(s, "/")+1:]
 }
 
-func TestIntegration(t *testing.T) {
+func TestIntegrationUpload(t *testing.T) {
 	tests := []struct {
 		name                   string
 		config                 func(t *testing.T) *config.Config
@@ -75,12 +77,12 @@ func TestIntegration(t *testing.T) {
 			getObject: func(objType objectType, conf *config.Config, key string) (*storedObject, error) {
 				storageBackend := conf.StorageBackend.(*testfunc.MemoryStorageBackend)
 				var obj config.BaseStoredObject
-				if objType == objectTypeObject {
-					if o, ok := storageBackend.Objects[key]; ok {
+				if objType == objectTypeFile {
+					if o, ok := storageBackend.Files[key]; ok {
 						obj = o
 					}
 				} else {
-					if o, ok := storageBackend.HTML[key]; ok {
+					if o, ok := storageBackend.HTMLs[key]; ok {
 						obj = o
 					}
 				}
@@ -105,19 +107,19 @@ func TestIntegration(t *testing.T) {
 			config: func(t *testing.T) *config.Config {
 				t.Helper()
 				htmlRoot := t.TempDir()
-				objectRoot := t.TempDir()
+				fileRoot := t.TempDir()
 				return testfunc.NewConfig(
 					testfunc.WithStorageBackend(&storage.FilesystemBackend{
-						ObjectRoot: objectRoot,
-						HTMLRoot:   htmlRoot,
+						FileRoot: fileRoot,
+						HTMLRoot: htmlRoot,
 					}),
 				)
 			},
 			getObject: func(objType objectType, conf *config.Config, key string) (*storedObject, error) {
 				storageBackend := conf.StorageBackend.(*storage.FilesystemBackend)
 				var path string
-				if objType == objectTypeObject {
-					path = filepath.Join(storageBackend.ObjectRoot, key)
+				if objType == objectTypeFile {
+					path = filepath.Join(storageBackend.FileRoot, key)
 				} else {
 					path = filepath.Join(storageBackend.HTMLRoot, key)
 				}
@@ -145,7 +147,7 @@ func TestIntegration(t *testing.T) {
 				backend, err := storage.NewS3Backend(
 					"fake-region",
 					"fake-bucket",
-					"object/",
+					"file/",
 					"html/",
 					func(awsCfg aws.Config, optFn func(*s3.Options)) storage.S3Client {
 						return testfunc.NewFakeS3Client()
@@ -161,8 +163,8 @@ func TestIntegration(t *testing.T) {
 				client := storageBackend.Client.(*testfunc.FakeS3Client)
 
 				var path string
-				if objType == objectTypeObject {
-					path = storageBackend.ObjectKeyPrefix + key
+				if objType == objectTypeFile {
+					path = storageBackend.FileKeyPrefix + key
 				} else {
 					path = storageBackend.HTMLKeyPrefix + key
 				}
@@ -239,6 +241,7 @@ func TestIntegration(t *testing.T) {
 			var result struct {
 				Success       bool   `json:"success"`
 				Metadata      string `json:"metadata"`
+				Redirect      string `json:"redirect"`
 				UploadedFiles map[string]struct {
 					// TODO: verify the paste by reading the "paste" key here once paste support is
 					// added.
@@ -262,8 +265,10 @@ func TestIntegration(t *testing.T) {
 				)
 			}
 
-			// TODO: `redirect` is actually supposed to be a redirect to an HTML page. Update this
-			// to verify `redirect` once this is in place.
+			uploadDetailsURL, err := url.ParseRequestURI(result.Redirect)
+			if err != nil {
+				t.Fatalf("parsing redirect URL: %v", err)
+			}
 
 			rawURL, err := url.ParseRequestURI(result.UploadedFiles["test.txt"].Raw)
 			if err != nil {
@@ -274,27 +279,43 @@ func TestIntegration(t *testing.T) {
 				t.Fatalf("parsing metadata URL: %v", err)
 			}
 
-			key := keyFromURL(rawURL)
+			links := []*url.URL{rawURL, metadataURL, uploadDetailsURL}
 
-			obj, err := tt.getObject(objectTypeObject, conf, key)
-			if err != nil {
-				t.Fatalf("getting object: %v", err)
+			assertObject := func(objType objectType, key string, want *storedObject) *storedObject {
+				t.Helper()
+				obj, err := tt.getObject(objType, conf, key)
+				if err != nil {
+					t.Fatalf("getting object: %v", err)
+				}
+				if tt.stripUnsupportedFields != nil {
+					tt.stripUnsupportedFields(want)
+				}
+				if want.Content == doNotCompareContentSentinel {
+					want.Content = obj.Content
+				}
+				if diff := cmp.Diff(want, obj); diff != "" {
+					t.Fatalf("unexpected object (-want +got):\n%s", diff)
+				}
+				return obj
 			}
 
-			links := []*url.URL{rawURL, metadataURL}
-
-			want := &storedObject{
+			assertObject(objectTypeFile, keyFromURL(rawURL), &storedObject{
 				Content:            "test",
 				MIMEType:           "text/plain",
 				ContentDisposition: `inline; filename="test.txt"; filename*=utf-8''test.txt`,
 				Links:              canonicalizeLinks(links),
-				MetadataURL:        obj.MetadataURL,
-			}
-			if tt.stripUnsupportedFields != nil {
-				tt.stripUnsupportedFields(want)
-			}
-			if diff := cmp.Diff(want, obj); diff != "" {
-				t.Fatalf("unexpected object (-want +got):\n%s", diff)
+				MetadataURL:        metadataURL.String(),
+			})
+
+			uploadDetails := assertObject(objectTypeHTML, keyFromURL(uploadDetailsURL), &storedObject{
+				Content:            doNotCompareContentSentinel,
+				MIMEType:           "text/html; charset=utf-8",
+				ContentDisposition: "inline",
+				Links:              canonicalizeLinks(links),
+				MetadataURL:        metadataURL.String(),
+			})
+			if !strings.Contains(uploadDetails.Content, "<html") {
+				t.Fatalf("upload details missing <html> tag:\n%s", uploadDetails.Content)
 			}
 		})
 	}

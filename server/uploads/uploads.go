@@ -65,7 +65,8 @@ var (
 	}
 )
 
-func GenUniqueObjectID() (string, error) {
+// GenUniqueObjectKey returns a random string for use as object key.
+func GenUniqueObjectKey() (string, error) {
 	var s strings.Builder
 	for i := 0; i < storedFileNameLength; i++ {
 		r, err := rand.Int(rand.Reader, big.NewInt(int64(len(storedFileNameChars))))
@@ -109,9 +110,9 @@ func (s SanitizedKey) String() string {
 func SanitizeUploadName(name string, forbiddenExtensions map[string]struct{}) (*SanitizedKey, error) {
 	name = strings.ReplaceAll(name, string(filepath.Separator), "/")
 	name = name[strings.LastIndex(name, "/")+1:]
-	id, err := GenUniqueObjectID()
+	id, err := GenUniqueObjectKey()
 	if err != nil {
-		return nil, fmt.Errorf("generating unique object ID: %w", err)
+		return nil, fmt.Errorf("generating unique object key: %w", err)
 	}
 	ext := extractExtension(name)
 	for _, extPart := range strings.Split(ext, ".") {
@@ -129,23 +130,36 @@ func UploadObjects(
 	ctx context.Context,
 	logger logging.Logger,
 	conf *config.Config,
-	objs []config.StoredObject,
+	files []config.StoredFile,
+	htmls []config.StoredHTML,
 ) []error {
-	results := make(chan error, len(objs))
-	for _, obj := range objs {
+	// TODO: Consider consolidating file uploads and HTML uploads somehow.
+	results := make(chan error, len(files)+len(htmls))
+	for _, file := range files {
 		go func() {
-			err := conf.StorageBackend.StoreObject(ctx, obj)
+			err := conf.StorageBackend.StoreFile(ctx, file)
 			if err != nil {
-				logger.Error(ctx, "storing object", "obj", obj, "error", err)
+				logger.Error(ctx, "storing file", "file", file, "error", err)
 			} else {
-				logger.Info(ctx, "successfully stored object", "obj", obj)
+				logger.Info(ctx, "successfully stored file", "file", file)
+			}
+			results <- err
+		}()
+	}
+	for _, html := range htmls {
+		go func() {
+			err := conf.StorageBackend.StoreHTML(ctx, html)
+			if err != nil {
+				logger.Error(ctx, "storing HTML", "html", html, "error", err)
+			} else {
+				logger.Info(ctx, "successfully stored HTML", "html", html)
 			}
 			results <- err
 		}()
 	}
 
-	errs := make([]error, 0, len(objs))
-	for i := 0; i < len(objs); i++ {
+	errs := make([]error, 0, len(files)+len(htmls))
+	for i := 0; i < len(files)+len(htmls); i++ {
 		select {
 		case err := <-results:
 			if err != nil {
@@ -286,7 +300,7 @@ type UploadMetadata struct {
 	// TODO: add PasteDetails once paste support is added.
 }
 
-func NewUploadMetadata(conf *config.Config, files []config.StoredObject) (*UploadMetadata, error) {
+func NewUploadMetadata(conf *config.Config, files []config.StoredFile) (*UploadMetadata, error) {
 	// TODO: probably make this same function work for pastes with additional arguments.
 	ret := UploadMetadata{
 		ServerVersion: conf.Version,
@@ -306,7 +320,7 @@ func NewUploadMetadata(conf *config.Config, files []config.StoredObject) (*Uploa
 		ret.UploadedFiles = append(ret.UploadedFiles, UploadedFile{
 			Name:  file.Name(),
 			Bytes: bytes,
-			Raw:   conf.ObjectURL(file.Key()).String(),
+			Raw:   conf.FileURL(file.Key()).String(),
 		})
 	}
 	return &ret, nil

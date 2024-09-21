@@ -19,19 +19,32 @@ type BaseStoredObject interface {
 	MIMEType() string
 }
 
-type StoredObject interface {
+// StoredFile represents a file to be stored.
+type StoredFile interface {
 	BaseStoredObject
-	// Name returns the human-readable, non-sanitized, non-unique name of the object.
+	// Name returns the human-readable, non-sanitized, non-unique name of the file.
 	Name() string
 }
 
+// StoredHTML represents an HTML object to be stored. This object should be stored in such a way
+// that it can be served to clients with a text/html MIME type. Additional properties
+// (Content-Disposition, links, etc.) may not be available with all storage backends.
 type StoredHTML interface {
 	BaseStoredObject
 }
 
 type StorageBackend interface {
-	StoreObject(ctx context.Context, obj StoredObject) error
+	// StoreFile stores the given file object. This file object should be stored in such a way that
+	// it is never served as rendered HTML, even if the uploaded file happens to be HTML.
+	// Additional properties (custom MIME type, Content-Disposition, etc.) may also be stored, but
+	// support varies by storage backend.
+	StoreFile(ctx context.Context, file StoredFile) error
+
+	// StoreHTML stores the given HTML object. This HTML object should be stored in such a way that
+	// it can be served to clients with a text/html MIME type.
 	StoreHTML(ctx context.Context, html StoredHTML) error
+
+	// Validate returns a list of errors if the storage backend's configuration is invalid.
 	Validate() []string
 }
 
@@ -58,7 +71,7 @@ type Config struct {
 	MaxUploadBytes          int64
 	MaxMultipartMemoryBytes int64
 	HomeURL                 *url.URL
-	ObjectURLPattern        *url.URL
+	FileURLPattern          *url.URL
 	HTMLURLPattern          *url.URL
 	ForbiddenFileExtensions map[string]struct{}
 	Host                    string
@@ -96,15 +109,15 @@ func (conf *Config) Validate() []string {
 	} else if strings.HasSuffix(conf.HomeURL.Path, "/") {
 		errs = append(errs, "HomeURL must not end with a slash")
 	}
-	if conf.ObjectURLPattern == nil {
-		errs = append(errs, "ObjectURLPattern must not be nil")
-	} else if !strings.Contains(conf.ObjectURLPattern.Path, ":path:") {
-		errs = append(errs, "ObjectURLPattern must contain a ':path:' placeholder")
+	if conf.FileURLPattern == nil {
+		errs = append(errs, "FileURLPattern must not be nil")
+	} else if !strings.Contains(conf.FileURLPattern.Path, ":key:") {
+		errs = append(errs, "FileURLPattern must contain a ':key:' placeholder")
 	}
 	if conf.HTMLURLPattern == nil {
 		errs = append(errs, "HTMLURLPattern must not be nil")
-	} else if !strings.Contains(conf.HTMLURLPattern.Path, ":path:") {
-		errs = append(errs, "HTMLURLPattern must contain a ':path:' placeholder")
+	} else if !strings.Contains(conf.HTMLURLPattern.Path, ":key:") {
+		errs = append(errs, "HTMLURLPattern must contain a ':key:' placeholder")
 	}
 	if conf.ForbiddenFileExtensions == nil {
 		errs = append(errs, "ForbiddenFileExtensions must not be nil")
@@ -126,12 +139,16 @@ func (conf *Config) Validate() []string {
 	return errs
 }
 
-// ObjectURL returns a URL for the given object path.
-//
-// Typically, the `path` is the key of a stored object and has no slashes in it. This is not always
-// true, however, as e.g. assets are also stored as objects.
-func (conf *Config) ObjectURL(path string) *url.URL {
-	url := *conf.ObjectURLPattern
-	url.Path = strings.Replace(url.Path, ":path:", path, -1)
+// FileURL returns a URL for the given stored file.
+func (conf *Config) FileURL(key string) *url.URL {
+	url := *conf.FileURLPattern
+	url.Path = strings.Replace(url.Path, ":key:", key, -1)
+	return &url
+}
+
+// HTMLURL returns a URL for the given stored HTML.
+func (conf *Config) HTMLURL(key string) *url.URL {
+	url := *conf.HTMLURLPattern
+	url.Path = strings.Replace(url.Path, ":key:", key, -1)
 	return &url
 }

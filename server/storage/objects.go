@@ -26,8 +26,8 @@ func (b *baseStoredObject) MetadataURL() *url.URL {
 	return b.metadataURL
 }
 
-type StoredObjectOption interface {
-	applyToStoredObject(*storedObject)
+type StoredFileOption interface {
+	applyToStoredFile(*storedFile)
 }
 
 type StoredHTMLOption interface {
@@ -35,13 +35,13 @@ type StoredHTMLOption interface {
 }
 
 type BaseStoredObjectOption interface {
-	StoredObjectOption
+	StoredFileOption
 	StoredHTMLOption
 }
 
 type baseStoredObjectOption func(*baseStoredObject)
 
-func (o baseStoredObjectOption) applyToStoredObject(obj *storedObject) {
+func (o baseStoredObjectOption) applyToStoredFile(obj *storedFile) {
 	o(&obj.baseStoredObject)
 }
 
@@ -67,75 +67,75 @@ func WithMetadataURL(metadataURL *url.URL) baseStoredObjectOption {
 	}
 }
 
-type storedObject struct {
+type storedFile struct {
 	baseStoredObject
 	mimeType           string
 	contentDisposition string
 	name               string
 }
 
-type storedObjectOption func(*storedObject)
+type storedFileOption func(*storedFile)
 
-func (o storedObjectOption) applyToStoredObject(obj *storedObject) {
-	o(obj)
+func (o storedFileOption) applyToStoredFile(file *storedFile) {
+	o(file)
 }
 
-func WithMIMEType(mimeType string) storedObjectOption {
-	return func(o *storedObject) {
+func WithMIMEType(mimeType string) storedFileOption {
+	return func(o *storedFile) {
 		o.mimeType = mimeType
 	}
 }
 
-func WithContentDisposition(contentDisposition string) storedObjectOption {
-	return func(o *storedObject) {
+func WithContentDisposition(contentDisposition string) storedFileOption {
+	return func(o *storedFile) {
 		o.contentDisposition = contentDisposition
 	}
 }
 
-func WithName(name string) storedObjectOption {
-	return func(o *storedObject) {
+func WithName(name string) storedFileOption {
+	return func(o *storedFile) {
 		o.name = name
 	}
 }
 
-func NewStoredObject(readSeekCloser io.ReadSeekCloser, opts ...StoredObjectOption) config.StoredObject {
-	ret := &storedObject{
+func NewStoredFile(readSeekCloser io.ReadSeekCloser, opts ...StoredFileOption) config.StoredFile {
+	ret := &storedFile{
 		baseStoredObject: baseStoredObject{
 			ReadSeekCloser: readSeekCloser,
 		},
 	}
 	for _, opt := range opts {
-		opt.applyToStoredObject(ret)
+		opt.applyToStoredFile(ret)
 	}
 	return ret
 }
 
-func UpdatedStoredObject(obj config.StoredObject, opts ...StoredObjectOption) config.StoredObject {
-	ret := &storedObject{
+func UpdatedStoredFile(file config.StoredFile, opts ...StoredFileOption) config.StoredFile {
+	ret := &storedFile{
 		baseStoredObject: baseStoredObject{
-			ReadSeekCloser: obj,
-			key:            obj.Key(),
-			links:          obj.Links(),
-			metadataURL:    obj.MetadataURL(),
+			ReadSeekCloser: file,
+			key:            file.Key(),
+			links:          file.Links(),
+			metadataURL:    file.MetadataURL(),
 		},
-		mimeType:           obj.MIMEType(),
-		contentDisposition: obj.ContentDisposition(),
+		mimeType:           file.MIMEType(),
+		contentDisposition: file.ContentDisposition(),
 	}
 	for _, opt := range opts {
-		opt.applyToStoredObject(ret)
+		opt.applyToStoredFile(ret)
 	}
 	return ret
 }
 
-func (o *storedObject) MIMEType() string {
+func (o *storedFile) MIMEType() string {
 	return o.mimeType
 }
 
-func (o *storedObject) ContentDisposition() string {
+func (o *storedFile) ContentDisposition() string {
 	return o.contentDisposition
 }
 
-func (o *storedObject) Name() string {
+func (o *storedFile) Name() string {
 	return o.name
 }
 
@@ -143,10 +143,25 @@ type storedHTML struct {
 	baseStoredObject
 }
 
-func NewStoredHTML(key string, readSeekCloser io.ReadSeekCloser, opts ...StoredHTMLOption) config.StoredHTML {
+func NewStoredHTML(readSeekCloser io.ReadSeekCloser, opts ...StoredHTMLOption) config.StoredHTML {
 	ret := &storedHTML{
 		baseStoredObject: baseStoredObject{
 			ReadSeekCloser: readSeekCloser,
+		},
+	}
+	for _, opt := range opts {
+		opt.applyToStoredHTML(ret)
+	}
+	return ret
+}
+
+func UpdatedStoredHTML(html config.StoredHTML, opts ...StoredHTMLOption) config.StoredHTML {
+	ret := &storedHTML{
+		baseStoredObject: baseStoredObject{
+			ReadSeekCloser: html,
+			key:            html.Key(),
+			links:          html.Links(),
+			metadataURL:    html.MetadataURL(),
 		},
 	}
 	for _, opt := range opts {

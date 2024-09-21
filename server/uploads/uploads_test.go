@@ -141,11 +141,17 @@ func TestUploadObjects(t *testing.T) {
 		testfunc.NewConfig(
 			testfunc.WithStorageBackend(storageBackend),
 		),
-		[]config.StoredObject{
-			storage.NewStoredObject(
+		[]config.StoredFile{
+			storage.NewStoredFile(
 				utils.NopReadSeekCloser(bytes.NewReader([]byte("hello, world"))),
 				storage.WithKey("file.txt"),
 				storage.WithName("file.txt"),
+			),
+		},
+		[]config.StoredHTML{
+			storage.NewStoredHTML(
+				utils.NopReadSeekCloser(strings.NewReader("<html>hello, world</html>")),
+				storage.WithKey("file.html"),
 			),
 		},
 	)
@@ -154,19 +160,34 @@ func TestUploadObjects(t *testing.T) {
 		t.Fatalf("UploadObjects() = %v, want no errors", errs)
 	}
 
-	obj, ok := storageBackend.Objects["file.txt"]
+	file, ok := storageBackend.Files["file.txt"]
 	if !ok {
-		t.Fatalf("Object not stored")
+		t.Fatalf("file not stored")
 	}
 
-	buf := new(strings.Builder)
-	if _, err := io.Copy(buf, obj); err != nil {
-		t.Fatalf("reading stored object: %v", err)
+	fileBuf := new(strings.Builder)
+	if _, err := io.Copy(fileBuf, file); err != nil {
+		t.Fatalf("reading stored file: %v", err)
 	}
-	got := buf.String()
+	got := fileBuf.String()
 	want := "hello, world"
 	if got != want {
-		t.Fatalf("stored object = %q, want %q", got, want)
+		t.Fatalf("stored file = %q, want %q", got, want)
+	}
+
+	html, ok := storageBackend.HTMLs["file.html"]
+	if !ok {
+		t.Fatalf("HTML not stored")
+	}
+
+	htmlBuf := new(strings.Builder)
+	if _, err := io.Copy(htmlBuf, html); err != nil {
+		t.Fatalf("reading stored HTML: %v", err)
+	}
+	got = htmlBuf.String()
+	want = "<html>hello, world</html>"
+	if got != want {
+		t.Fatalf("stored HTML = %q, want %q", got, want)
 	}
 }
 
@@ -320,23 +341,23 @@ func TestDetermineContentDisposition(t *testing.T) {
 func TestNewUploadMetadata(t *testing.T) {
 	tests := []struct {
 		name  string
-		files []config.StoredObject
+		files []config.StoredFile
 		want  uploads.UploadMetadata
 	}{
 		{
 			name: "several_files",
-			files: []config.StoredObject{
-				storage.NewStoredObject(
+			files: []config.StoredFile{
+				storage.NewStoredFile(
 					utils.NopReadSeekCloser(bytes.NewReader([]byte("abcd"))),
 					storage.WithKey("aaaaaa"),
 					storage.WithName("file"),
 				),
-				storage.NewStoredObject(
+				storage.NewStoredFile(
 					utils.NopReadSeekCloser(bytes.NewReader([]byte("abcd"))),
 					storage.WithKey("bbbbbb.png"),
 					storage.WithName("image.png"),
 				),
-				storage.NewStoredObject(
+				storage.NewStoredFile(
 					utils.NopReadSeekCloser(bytes.NewReader([]byte("abcd"))),
 					storage.WithKey("cccccc.txt"),
 					storage.WithName("text.txt"),
@@ -349,17 +370,17 @@ func TestNewUploadMetadata(t *testing.T) {
 					{
 						Name:  "file",
 						Bytes: 4,
-						Raw:   "http://localhost:8080/dev/storage/object/aaaaaa",
+						Raw:   "http://localhost:8080/dev/storage/file/aaaaaa",
 					},
 					{
 						Name:  "image.png",
 						Bytes: 4,
-						Raw:   "http://localhost:8080/dev/storage/object/bbbbbb.png",
+						Raw:   "http://localhost:8080/dev/storage/file/bbbbbb.png",
 					},
 					{
 						Name:  "text.txt",
 						Bytes: 4,
-						Raw:   "http://localhost:8080/dev/storage/object/cccccc.txt",
+						Raw:   "http://localhost:8080/dev/storage/file/cccccc.txt",
 					},
 				},
 			},

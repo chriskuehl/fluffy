@@ -15,11 +15,11 @@ bin/fput:
 
 .PHONY: dev
 dev:
-	go run github.com/cespare/reflex@latest -v -s -r '^server/|^go\.mod$$' -- go run -race ./cmd/server --dev --config ~/tmp/fluffy.toml
+	go run github.com/cespare/reflex@latest -v -s -r '^server/|^go\.mod$$' -- go run -race ./cmd/server --dev
 
 .PHONY: delve
 delve:
-	dlv debug ./cmd/server -- --dev --config ~/tmp/fluffy.toml
+	dlv debug ./cmd/server -- --dev
 
 .PHONY: release-cli
 release-cli: export GORELEASER_CURRENT_TAG ?= 0.0.0

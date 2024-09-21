@@ -20,15 +20,15 @@ abuse_contact_email = "abuse@foo.com"
 max_upload_bytes = 123
 max_multipart_memory_bytes = 456
 home_url = "http://foo.com"
-object_url_pattern = "http://i.foo.com/o/:path:"
-html_url_pattern = "http://i.foo.com/h/:path:"
+file_url_pattern = "http://i.foo.com/o/:key:"
+html_url_pattern = "http://i.foo.com/h/:key:"
 forbidden_file_extensions = ["foo", "bar"]
 host = "192.168.1.100"
 port = 5555
 global_timeout_ms = 5555
 
 [filesystem_storage_backend]
-object_root = "/tmp/objects"
+file_root = "/tmp/file"
 html_root = "/tmp/html"
 `)
 
@@ -77,15 +77,15 @@ func TestLoadConfigTOMLWithEverything(t *testing.T) {
 		MaxUploadBytes:          123,
 		MaxMultipartMemoryBytes: 456,
 		HomeURL:                 &url.URL{Scheme: "http", Host: "foo.com"},
-		ObjectURLPattern:        &url.URL{Scheme: "http", Host: "i.foo.com", Path: "/o/:path:"},
-		HTMLURLPattern:          &url.URL{Scheme: "http", Host: "i.foo.com", Path: "/h/:path:"},
+		FileURLPattern:          &url.URL{Scheme: "http", Host: "i.foo.com", Path: "/o/:key:"},
+		HTMLURLPattern:          &url.URL{Scheme: "http", Host: "i.foo.com", Path: "/h/:key:"},
 		ForbiddenFileExtensions: map[string]struct{}{"foo": {}, "bar": {}},
 		Host:                    "192.168.1.100",
 		Port:                    5555,
 		GlobalTimeout:           5555 * time.Millisecond,
 		StorageBackend: &storage.FilesystemBackend{
-			ObjectRoot: "/tmp/objects",
-			HTMLRoot:   "/tmp/html",
+			FileRoot: "/tmp/file",
+			HTMLRoot: "/tmp/html",
 		},
 		Version: "(test)",
 	}

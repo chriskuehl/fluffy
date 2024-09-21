@@ -12,6 +12,7 @@ import (
 
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
+	"github.com/chriskuehl/fluffy/server/meta"
 	"github.com/chriskuehl/fluffy/server/storage"
 	"github.com/chriskuehl/fluffy/server/uploads"
 	"github.com/chriskuehl/fluffy/server/utils"
@@ -53,15 +54,15 @@ type uploadResponse struct {
 	UploadedFiles map[string]uploadedFile `json:"uploaded_files"`
 }
 
-// objectFromFileHeader creates a StoredObject from a multipart.FileHeader.
+// storedFileFromFileHeader creates a StoredFile from a multipart.FileHeader.
 //
-// Note: The *caller* is responsible for closing the returned object.
-func objectFromFileHeader(
+// Note: The *caller* is responsible for closing the returned StoredFile.
+func storedFileFromFileHeader(
 	ctx context.Context,
 	conf *config.Config,
 	logger logging.Logger,
 	fileHeader *multipart.FileHeader,
-) (config.StoredObject, error) {
+) (config.StoredFile, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
 		logger.Error(ctx, "opening file", "error", err)
@@ -103,7 +104,7 @@ func objectFromFileHeader(
 		name = fileHeader.Filename
 	}
 
-	return storage.NewStoredObject(
+	return storage.NewStoredFile(
 		file,
 		storage.WithKey(key.String()),
 		storage.WithName(name),
@@ -119,6 +120,8 @@ func objectFromFileHeader(
 }
 
 func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
+	uploadDetailsTmpl := conf.Templates.Must("upload-details.html")
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(conf.MaxMultipartMemoryBytes)
 		if err != nil {
@@ -132,10 +135,10 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			jsonResponse = true
 		}
 
-		objs := []config.StoredObject{}
+		files := []config.StoredFile{}
 
 		for _, fileHeader := range r.MultipartForm.File["file"] {
-			obj, err := objectFromFileHeader(r.Context(), conf, logger, fileHeader)
+			file, err := storedFileFromFileHeader(r.Context(), conf, logger, fileHeader)
 			if err != nil {
 				userErr, ok := err.(userError)
 				if !ok {
@@ -145,31 +148,31 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 				userErr.output(w)
 				return
 			}
-			defer obj.Close()
-			objs = append(objs, obj)
+			defer file.Close()
+			files = append(files, file)
 		}
 
-		if len(objs) == 0 {
+		if len(files) == 0 {
 			logger.Info(r.Context(), "no files uploaded")
 			userError{http.StatusBadRequest, "No files uploaded."}.output(w)
 			return
 		}
 
-		metadataKey, err := uploads.GenUniqueObjectID()
+		// Metadata
+		metadataKey, err := uploads.GenUniqueObjectKey()
 		if err != nil {
-			logger.Error(r.Context(), "generating unique object ID", "error", err)
-			userError{http.StatusInternalServerError, "Failed to generate unique object ID."}.output(w)
+			logger.Error(r.Context(), "generating unique object key", "error", err)
+			userError{http.StatusInternalServerError, "Failed to generate unique object key."}.output(w)
 			return
 		}
 
-		metadata, err := uploads.NewUploadMetadata(conf, objs)
+		metadata, err := uploads.NewUploadMetadata(conf, files)
 		if err != nil {
 			logger.Error(r.Context(), "creating metadata", "error", err)
 			userError{http.StatusInternalServerError, "Failed to create metadata."}.output(w)
 			return
 		}
 
-		// Convert the metadata to JSON.
 		var metadataJSON bytes.Buffer
 		if err := json.NewEncoder(&metadataJSON).Encode(metadata); err != nil {
 			logger.Error(r.Context(), "encoding metadata", "error", err)
@@ -177,57 +180,96 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			return
 		}
 
-		metadataObject := storage.NewStoredObject(
+		metadataFile := storage.NewStoredFile(
 			utils.NopReadSeekCloser(bytes.NewReader(metadataJSON.Bytes())),
 			storage.WithKey(metadataKey+".json"),
-			storage.WithName("metadata.json"),
 			storage.WithMIMEType("application/json"),
 		)
-		metadataURL := conf.ObjectURL(metadataObject.Key())
+		metadataURL := conf.FileURL(metadataFile.Key())
 
-		// uploadObjs includes extra objects like metadata, auto-generated pastes, etc. which
-		// shouldn't be in the returned JSON.
-		uploadObjs := []config.StoredObject{metadataObject}
-		for _, obj := range objs {
-			uploadObjs = append(uploadObjs, obj)
-		}
-		links := make([]*url.URL, len(uploadObjs))
-		for i, obj := range uploadObjs {
-			links[i] = conf.ObjectURL(obj.Key())
+		// Upload details HTML page
+		uploadDetailsKey, err := uploads.GenUniqueObjectKey()
+		if err != nil {
+			logger.Error(r.Context(), "generating unique object key", "error", err)
+			userError{http.StatusInternalServerError, "Failed to generate unique object key."}.output(w)
+			return
 		}
 
-		for i := range uploadObjs {
-			uploadObjs[i] = storage.UpdatedStoredObject(
-				uploadObjs[i],
+		uploadDetailsMeta, err := meta.NewMeta(r.Context(), conf, meta.PageConfig{
+			ID: "upload-details",
+		})
+		if err != nil {
+			logger.Error(r.Context(), "creating meta", "error", err)
+			userError{http.StatusInternalServerError, "Failed to create response."}.output(w)
+			return
+		}
+
+		var uploadDetails bytes.Buffer
+		uploadDetailsData := struct {
+			Meta *meta.Meta
+		}{
+			Meta: uploadDetailsMeta,
+		}
+		if err := uploadDetailsTmpl.ExecuteTemplate(&uploadDetails, "upload-details.html", uploadDetailsData); err != nil {
+			logger.Error(r.Context(), "executing template", "error", err)
+			userError{http.StatusInternalServerError, "Failed to create response."}.output(w)
+			return
+		}
+		uploadDetailsHTML := storage.NewStoredHTML(
+			utils.NopReadSeekCloser(bytes.NewReader(uploadDetails.Bytes())),
+			storage.WithKey(uploadDetailsKey+".html"),
+		)
+
+		// Update metadata and links for everything we're about to update.
+		uploadHTMLs := []config.StoredHTML{uploadDetailsHTML}
+		uploadFiles := append([]config.StoredFile{metadataFile}, files...)
+		links := make([]*url.URL, 0, len(uploadFiles)+len(uploadHTMLs))
+		for _, file := range uploadFiles {
+			links = append(links, conf.FileURL(file.Key()))
+		}
+		for _, html := range uploadHTMLs {
+			links = append(links, conf.HTMLURL(html.Key()))
+		}
+
+		for i := range uploadHTMLs {
+			uploadHTMLs[i] = storage.UpdatedStoredHTML(
+				uploadHTMLs[i],
+				storage.WithMetadataURL(metadataURL),
+				storage.WithLinks(links),
+			)
+		}
+		for i := range uploadFiles {
+			uploadFiles[i] = storage.UpdatedStoredFile(
+				uploadFiles[i],
 				storage.WithMetadataURL(metadataURL),
 				storage.WithLinks(links),
 			)
 		}
 
-		errs := uploads.UploadObjects(r.Context(), logger, conf, uploadObjs)
+		errs := uploads.UploadObjects(r.Context(), logger, conf, uploadFiles, uploadHTMLs)
 
 		if len(errs) > 0 {
 			logger.Error(r.Context(), "uploading objects failed", "errors", errs)
-			userError{http.StatusInternalServerError, "Failed to store object."}.output(w)
+			userError{http.StatusInternalServerError, "Failed to store objects."}.output(w)
 			return
 		}
 
-		logger.Info(r.Context(), "uploaded", "objects", len(objs))
+		logger.Info(r.Context(), "uploaded", "files", len(uploadFiles), "htmls", len(uploadHTMLs))
 
-		redirect := conf.ObjectURL(objs[0].Key()).String()
+		redirect := conf.HTMLURL(uploadDetailsHTML.Key()).String()
 
 		if jsonResponse {
-			uploadedFiles := make(map[string]uploadedFile, len(objs))
-			for _, obj := range objs {
-				bytes, err := utils.FileSizeBytes(obj)
+			uploadedFiles := make(map[string]uploadedFile, len(files))
+			for _, file := range files {
+				bytes, err := utils.FileSizeBytes(file)
 				if err != nil {
 					logger.Error(r.Context(), "getting file size", "error", err)
 					userError{http.StatusInternalServerError, "Failed to get file size."}.output(w)
 					return
 				}
-				uploadedFiles[obj.Name()] = uploadedFile{
+				uploadedFiles[file.Name()] = uploadedFile{
 					Bytes: bytes,
-					Raw:   conf.ObjectURL(obj.Key()).String(),
+					Raw:   conf.FileURL(file.Key()).String(),
 					// TODO: Paste for text files
 				}
 			}

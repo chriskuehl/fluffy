@@ -68,6 +68,8 @@ func TestUpload(t *testing.T) {
 	}
 
 	// TODO: add assertions based on the redirect location to ensure files were actually uploaded
+	// TODO: assert metadata was uploaded
+	// TODO: assert upload details looks right
 }
 
 func TestUploadJSON(t *testing.T) {

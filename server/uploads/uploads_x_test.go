@@ -4,14 +4,14 @@ import (
 	"testing"
 )
 
-func TestGetUniqueObjectID(t *testing.T) {
-	got, err := GenUniqueObjectID()
+func TestGetUniqueObjectKey(t *testing.T) {
+	got, err := GenUniqueObjectKey()
 	if err != nil {
-		t.Fatalf("genUniqueObjectID() error = %v", err)
+		t.Fatalf("GenUniqueObjectKey() error = %v", err)
 	}
 	wantLength := 32
 	if len(got) != wantLength {
-		t.Fatalf("got genUniqueObjectID() = %q, want len() = %d", got, wantLength)
+		t.Fatalf("got GenUniqueObjectKey() = %q, want len() = %d", got, wantLength)
 	}
 }
 
