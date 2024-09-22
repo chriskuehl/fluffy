@@ -1,28 +1,3 @@
-{% set page_name = 'paste' %}
-{% extends 'layouts/text.html' %}
-
-{% if highlighter.is_diff %}
-    {% set extra_html_classes = "diff-side-by-side" %}
-{% endif %}
-
-{#
-    Terminal output gets its own preferred theme setting, since many people
-    seem to prefer a dark background for terminal output, but a light
-    background for regular code.
-#}
-{% if highlighter.is_terminal_output %}
-    {% set preferredStyleVar = 'preferredStyleTerminal' %}
-    {% set defaultStyle = 'monokai' %}
-{% else %}
-    {% set preferredStyleVar = 'preferredStyle' %}
-    {% set defaultStyle = 'default' %}
-{% endif %}
-{% block highlight_class %}highlight-{{defaultStyle}}{% endblock %}
-
-{% block extra_head %}
-    <link rel="stylesheet" href="{{asset_url('pygments.css')}}" />
-{% endblock %}
-
 {% block info %}
     {% if texts|length == 1 %}
         {{num_lines(texts[0].text)}} {{'line'|pluralize(num_lines(texts[0].text))}} of

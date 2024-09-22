@@ -120,6 +120,7 @@ func UpdatedStoredFile(file config.StoredFile, opts ...StoredFileOption) config.
 		},
 		mimeType:           file.MIMEType(),
 		contentDisposition: file.ContentDisposition(),
+		name:               file.Name(),
 	}
 	for _, opt := range opts {
 		opt.applyToStoredFile(ret)

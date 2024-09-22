@@ -1,8 +1,10 @@
 package uploads
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +17,7 @@ import (
 
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
+	"github.com/chriskuehl/fluffy/server/storage"
 	"github.com/chriskuehl/fluffy/server/utils"
 )
 
@@ -115,27 +118,76 @@ func UploadObjects(
 	conf *config.Config,
 	files []config.StoredFile,
 	htmls []config.StoredHTML,
+	metadata *uploadMetadata,
 ) []error {
 	// TODO: Consider consolidating file uploads and HTML uploads somehow.
-	results := make(chan error, len(files)+len(htmls))
+	metadataFile, err := metadata.StoredFile()
+	if err != nil {
+		return []error{fmt.Errorf("creating metadata file: %w", err)}
+	}
+
+	files = append(files, metadataFile)
+	links := make([]*url.URL, 0, len(files)+len(htmls))
 	for _, file := range files {
+		links = append(links, conf.FileURL(file.Key()))
+	}
+	for _, html := range htmls {
+		links = append(links, conf.HTMLURL(html.Key()))
+	}
+	for i := range files {
+		files[i] = storage.UpdatedStoredFile(
+			files[i],
+			storage.WithMetadataURL(metadata.URL(conf)),
+			storage.WithLinks(links),
+		)
+	}
+	for i := range htmls {
+		htmls[i] = storage.UpdatedStoredHTML(
+			htmls[i],
+			storage.WithMetadataURL(metadata.URL(conf)),
+			storage.WithLinks(links),
+		)
+	}
+
+	logger.Info(ctx, "uploading", "files", len(files), "htmls", len(htmls))
+
+	results := make(chan error, len(files)+len(htmls))
+	for i, file := range files {
 		go func() {
+			// TODO: add file_size once we have it easily accessible here.
+			// TODO: provide way to get a sub-logger with these set?
+			logParams := []interface{}{
+				"file_key", file.Key(),
+				"file_name", file.Name(),
+				"file_mime_type", file.MIMEType(),
+				"file_upload_index", fmt.Sprintf("%d/%d", i+1, len(files)),
+			}
+
+			logger.Info(ctx, "storing file", logParams...)
 			err := conf.StorageBackend.StoreFile(ctx, file)
 			if err != nil {
-				logger.Error(ctx, "storing file", "file", file, "error", err)
+				logger.Error(ctx, "storing file", append(logParams, "error", err)...)
 			} else {
-				logger.Info(ctx, "successfully stored file", "file", file)
+				logger.Info(ctx, "successfully stored file", logParams...)
 			}
 			results <- err
 		}()
 	}
-	for _, html := range htmls {
+	for i, html := range htmls {
 		go func() {
+			// TODO: add html_size once we have it easily accessible here.
+			// TODO: provide way to get a sub-logger with these set?
+			logParams := []interface{}{
+				"html_key", html.Key(),
+				"html_upload_index", fmt.Sprintf("%d/%d", i+1, len(htmls)),
+			}
+
+			logger.Info(ctx, "storing HTML", logParams...)
 			err := conf.StorageBackend.StoreHTML(ctx, html)
 			if err != nil {
-				logger.Error(ctx, "storing HTML", "html", html, "error", err)
+				logger.Error(ctx, "storing HTML", append(logParams, "error", err)...)
 			} else {
-				logger.Info(ctx, "successfully stored HTML", "html", html)
+				logger.Info(ctx, "successfully stored HTML", logParams...)
 			}
 			results <- err
 		}()
@@ -153,6 +205,18 @@ func UploadObjects(
 			logger.Error(ctx, "context done while storing objects", "ctx.Err", ctx.Err())
 			return []error{ctx.Err()}
 		}
+	}
+
+	// TODO: unique request ID to tie these together?
+	if len(errs) == 0 {
+		logger.Info(ctx, "sucessfully uploaded", "files", len(files), "htmls", len(htmls))
+	} else {
+		logger.Error(ctx, "upload failed with errors",
+			"success_count", len(files)+len(htmls)-len(errs),
+			"error_count", len(errs),
+			"files", len(files),
+			"htmls", len(htmls),
+		)
 	}
 
 	return errs
@@ -280,22 +344,50 @@ type UploadedFile struct {
 	Paste string `json:"paste,omitempty"`
 }
 
-type UploadMetadata struct {
+type UploadMetadataFile struct {
 	ServerVersion string         `json:"server_version"`
 	Timestamp     int64          `json:"timestamp"`
 	UploadType    uploadType     `json:"upload_type"`
 	UploadedFiles []UploadedFile `json:"uploaded_files"`
+}
+
+type uploadMetadata struct {
+	key  string
+	File UploadMetadataFile
 	// TODO: add PasteDetails once paste support is added.
 }
 
-func NewUploadMetadata(conf *config.Config, files []config.StoredFile) (*UploadMetadata, error) {
+func (m *uploadMetadata) URL(conf *config.Config) *url.URL {
+	return conf.FileURL(m.key)
+}
+
+func (m *uploadMetadata) StoredFile() (config.StoredFile, error) {
+	var metadataJSON bytes.Buffer
+	if err := json.NewEncoder(&metadataJSON).Encode(m); err != nil {
+		return nil, fmt.Errorf("encoding metadata JSON: %w", err)
+	}
+	return storage.NewStoredFile(
+		utils.NopReadSeekCloser(bytes.NewReader(metadataJSON.Bytes())),
+		storage.WithKey(m.key),
+		storage.WithMIMEType("application/json"),
+	), nil
+}
+
+func NewUploadMetadata(conf *config.Config, files []config.StoredFile) (*uploadMetadata, error) {
 	// TODO: probably make this same function work for pastes with additional arguments.
-	ret := UploadMetadata{
-		ServerVersion: conf.Version,
-		Timestamp:     time.Now().Unix(),
-		// TODO: set this to UploadTypePaste once paste support is added.
-		UploadType:    UploadTypeFile,
-		UploadedFiles: make([]UploadedFile, 0, len(files)),
+	key, err := GenUniqueObjectKey()
+	if err != nil {
+		return nil, fmt.Errorf("generating unique object key: %w", err)
+	}
+	ret := uploadMetadata{
+		key: key + ".json",
+		File: UploadMetadataFile{
+			ServerVersion: conf.Version,
+			Timestamp:     time.Now().Unix(),
+			// TODO: set this to UploadTypePaste once paste support is added.
+			UploadType:    UploadTypeFile,
+			UploadedFiles: make([]UploadedFile, 0, len(files)),
+		},
 	}
 	for _, file := range files {
 		// TODO: consider calculating this once and storing it, since it's used in multiple places
@@ -305,7 +397,7 @@ func NewUploadMetadata(conf *config.Config, files []config.StoredFile) (*UploadM
 		if err != nil {
 			return nil, fmt.Errorf("getting file size: %w", err)
 		}
-		ret.UploadedFiles = append(ret.UploadedFiles, UploadedFile{
+		ret.File.UploadedFiles = append(ret.File.UploadedFiles, UploadedFile{
 			Name:  file.Name(),
 			Bytes: bytes,
 			Raw:   conf.FileURL(file.Key()).String(),

@@ -139,26 +139,32 @@ func TestUploadObjects(t *testing.T) {
 	t.Parallel()
 	logger := testfunc.NewMemoryLogger()
 	storageBackend := testfunc.NewMemoryStorageBackend()
+	conf := testfunc.NewConfig(testfunc.WithStorageBackend(storageBackend))
+	files := []config.StoredFile{
+		storage.NewStoredFile(
+			utils.NopReadSeekCloser(bytes.NewReader([]byte("hello, world"))),
+			storage.WithKey("file.txt"),
+			storage.WithName("file.txt"),
+		),
+	}
+
+	metadata, err := uploads.NewUploadMetadata(conf, files)
+	if err != nil {
+		t.Fatalf("generating metadata: %s", err)
+	}
 
 	errs := uploads.UploadObjects(
 		context.Background(),
 		logger,
-		testfunc.NewConfig(
-			testfunc.WithStorageBackend(storageBackend),
-		),
-		[]config.StoredFile{
-			storage.NewStoredFile(
-				utils.NopReadSeekCloser(bytes.NewReader([]byte("hello, world"))),
-				storage.WithKey("file.txt"),
-				storage.WithName("file.txt"),
-			),
-		},
+		conf,
+		files,
 		[]config.StoredHTML{
 			storage.NewStoredHTML(
 				utils.NopReadSeekCloser(strings.NewReader("<html>hello, world</html>")),
 				storage.WithKey("file.html"),
 			),
 		},
+		metadata,
 	)
 
 	if len(errs) != 0 {
@@ -347,7 +353,7 @@ func TestNewUploadMetadata(t *testing.T) {
 	tests := []struct {
 		name  string
 		files []config.StoredFile
-		want  uploads.UploadMetadata
+		want  uploads.UploadMetadataFile
 	}{
 		{
 			name: "several_files",
@@ -368,7 +374,7 @@ func TestNewUploadMetadata(t *testing.T) {
 					storage.WithName("text.txt"),
 				),
 			},
-			want: uploads.UploadMetadata{
+			want: uploads.UploadMetadataFile{
 				ServerVersion: "(test)",
 				UploadType:    uploads.UploadTypeFile,
 				UploadedFiles: []uploads.UploadedFile{
@@ -395,12 +401,13 @@ func TestNewUploadMetadata(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			conf := testfunc.NewConfig()
-			got, err := uploads.NewUploadMetadata(conf, tt.files)
+			metadata, err := uploads.NewUploadMetadata(conf, tt.files)
 			if err != nil {
 				t.Fatalf("newUploadMetadata() error = %v", err)
 			}
+			got := metadata.File
 			tt.want.Timestamp = got.Timestamp
-			if diff := cmp.Diff(*got, tt.want); diff != "" {
+			if diff := cmp.Diff(got, tt.want); diff != "" {
 				t.Fatalf("newUploadMetadata() mismatch (-want +got):\n%s", diff)
 			}
 		})

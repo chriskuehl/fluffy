@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
-	"net/url"
+	"strings"
 
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/logging"
@@ -77,11 +77,16 @@ func storedFileFromFileHeader(
 		}
 	}
 
-	key, err := uploads.SanitizeUploadName(fileHeader.Filename, conf.ForbiddenFileExtensions)
+	name := "file"
+	if fileHeader.Filename != "" {
+		name = fileHeader.Filename
+	}
+
+	key, err := uploads.SanitizeUploadName(name, conf.ForbiddenFileExtensions)
 	if err != nil {
 		if errors.Is(err, uploads.ErrForbiddenExtension) {
-			logger.Info(ctx, "forbidden extension", "filename", fileHeader.Filename)
-			return nil, userError{http.StatusBadRequest, fmt.Sprintf("Sorry, %q has a forbidden file extension.", fileHeader.Filename)}
+			logger.Info(ctx, "forbidden extension", "filename", name)
+			return nil, userError{http.StatusBadRequest, fmt.Sprintf("Sorry, %q has a forbidden file extension.", name)}
 		}
 		logger.Error(ctx, "sanitizing upload name", "error", err)
 		return nil, userError{http.StatusInternalServerError, "Failed to sanitize upload name."}
@@ -93,16 +98,7 @@ func storedFileFromFileHeader(
 		return nil, userError{http.StatusInternalServerError, "Failed to determine if file is text."}
 	}
 
-	mimeType := uploads.DetermineMIMEType(
-		fileHeader.Filename,
-		fileHeader.Header.Get("Content-Type"),
-		probablyText,
-	)
-
-	name := "file"
-	if fileHeader.Filename != "" {
-		name = fileHeader.Filename
-	}
+	mimeType := uploads.DetermineMIMEType(name, fileHeader.Header.Get("Content-Type"), probablyText)
 
 	return storage.NewStoredFile(
 		file,
@@ -159,33 +155,12 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		}
 
 		// Metadata
-		metadataKey, err := uploads.GenUniqueObjectKey()
-		if err != nil {
-			logger.Error(r.Context(), "generating unique object key", "error", err)
-			userError{http.StatusInternalServerError, "Failed to generate unique object key."}.output(w)
-			return
-		}
-
 		metadata, err := uploads.NewUploadMetadata(conf, files)
 		if err != nil {
 			logger.Error(r.Context(), "creating metadata", "error", err)
 			userError{http.StatusInternalServerError, "Failed to create metadata."}.output(w)
 			return
 		}
-
-		var metadataJSON bytes.Buffer
-		if err := json.NewEncoder(&metadataJSON).Encode(metadata); err != nil {
-			logger.Error(r.Context(), "encoding metadata", "error", err)
-			userError{http.StatusInternalServerError, "Failed to encode metadata."}.output(w)
-			return
-		}
-
-		metadataFile := storage.NewStoredFile(
-			utils.NopReadSeekCloser(bytes.NewReader(metadataJSON.Bytes())),
-			storage.WithKey(metadataKey+".json"),
-			storage.WithMIMEType("application/json"),
-		)
-		metadataURL := conf.FileURL(metadataFile.Key())
 
 		// Upload details HTML page
 		uploadDetailsKey, err := uploads.GenUniqueObjectKey()
@@ -196,7 +171,8 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		}
 
 		uploadDetailsMeta, err := meta.NewMeta(r.Context(), conf, meta.PageConfig{
-			ID: "upload-details",
+			ID:       "upload-details",
+			IsStatic: true,
 		})
 		if err != nil {
 			logger.Error(r.Context(), "creating meta", "error", err)
@@ -242,41 +218,13 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			storage.WithKey(uploadDetailsKey+".html"),
 		)
 
-		// Update metadata and links for everything we're about to update.
-		uploadHTMLs := []config.StoredHTML{uploadDetailsHTML}
-		uploadFiles := append([]config.StoredFile{metadataFile}, files...)
-		links := make([]*url.URL, 0, len(uploadFiles)+len(uploadHTMLs))
-		for _, file := range uploadFiles {
-			links = append(links, conf.FileURL(file.Key()))
-		}
-		for _, html := range uploadHTMLs {
-			links = append(links, conf.HTMLURL(html.Key()))
-		}
-
-		for i := range uploadHTMLs {
-			uploadHTMLs[i] = storage.UpdatedStoredHTML(
-				uploadHTMLs[i],
-				storage.WithMetadataURL(metadataURL),
-				storage.WithLinks(links),
-			)
-		}
-		for i := range uploadFiles {
-			uploadFiles[i] = storage.UpdatedStoredFile(
-				uploadFiles[i],
-				storage.WithMetadataURL(metadataURL),
-				storage.WithLinks(links),
-			)
-		}
-
-		errs := uploads.UploadObjects(r.Context(), logger, conf, uploadFiles, uploadHTMLs)
-
+		// Upload
+		errs := uploads.UploadObjects(r.Context(), logger, conf, files, []config.StoredHTML{uploadDetailsHTML}, metadata)
 		if len(errs) > 0 {
 			logger.Error(r.Context(), "uploading objects failed", "errors", errs)
 			userError{http.StatusInternalServerError, "Failed to store objects."}.output(w)
 			return
 		}
-
-		logger.Info(r.Context(), "uploaded", "files", len(uploadFiles), "htmls", len(uploadHTMLs))
 
 		redirect := conf.HTMLURL(uploadDetailsHTML.Key()).String()
 
@@ -301,7 +249,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 					Success: true,
 				},
 				Redirect:      redirect,
-				Metadata:      metadataURL.String(),
+				Metadata:      metadata.URL(conf).String(),
 				UploadedFiles: uploadedFiles,
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -310,5 +258,125 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		} else {
 			http.Redirect(w, r, redirect, http.StatusSeeOther)
 		}
+	}
+}
+
+func normalizeFormText(text string) string {
+	return strings.Replace(text, "\r\n", "\n", -1)
+}
+
+func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
+	pasteTmpl := conf.Templates.Must("paste.html")
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			logger.Error(r.Context(), "parsing multipart form", "error", err)
+			userError{http.StatusBadRequest, "Could not parse multipart form."}.output(w)
+			return
+		}
+
+		_, jsonResponse := r.URL.Query()["json"]
+		if _, ok := r.Form["json"]; ok {
+			jsonResponse = true
+		}
+		fmt.Printf("jsonResponse: %v\n", jsonResponse)
+
+		text := normalizeFormText(r.Form.Get("text"))
+		fmt.Printf("text: %q\n", text)
+
+		// Raw paste
+		rawKey, err := uploads.GenUniqueObjectKey()
+		if err != nil {
+			logger.Error(r.Context(), "generating unique object key", "error", err)
+			userError{http.StatusInternalServerError, "Failed to generate unique object key."}.output(w)
+			return
+		}
+
+		rawFile := storage.NewStoredFile(
+			utils.NopReadSeekCloser(strings.NewReader(text)),
+			storage.WithKey(rawKey+".txt"),
+			storage.WithMIMEType("text/plain"),
+		)
+
+		// Paste HTML page
+		pasteKey, err := uploads.GenUniqueObjectKey()
+		if err != nil {
+			logger.Error(r.Context(), "generating unique object key", "error", err)
+			userError{http.StatusInternalServerError, "Failed to generate unique object key."}.output(w)
+			return
+		}
+
+		pasteMeta, err := meta.NewMeta(r.Context(), conf, meta.PageConfig{
+			ID:       "paste",
+			IsStatic: true,
+		})
+		if err != nil {
+			logger.Error(r.Context(), "creating meta", "error", err)
+			userError{http.StatusInternalServerError, "Failed to create response."}.output(w)
+			return
+		}
+
+		var paste bytes.Buffer
+
+		pasteData := struct {
+			Meta *meta.Meta
+			// localStorage variable name for preferred style (either "preferredStyle" or
+			// "preferredStyleTerminal").
+			PreferredStyleVar string
+			// Default style to use if no preferred style is set in the user's localStorage.
+			DefaultStyle    string
+			CopyAndEditText string
+			RawURL          string
+		}{
+			Meta:              pasteMeta,
+			PreferredStyleVar: "preferredStyle",
+			DefaultStyle:      "default",
+			// TODO: does this need any transformation?
+			CopyAndEditText: text,
+			RawURL:          conf.FileURL(rawFile.Key()).String(),
+		}
+
+		// Terminal output gets its own preferred theme setting since many people
+		// seem to prefer a dark background for terminal output, but a light
+		// background for regular code.
+		if false { // TODO: if highlighter.is_terminal_output
+			pasteData.PreferredStyleVar = "preferredStyleTerminal"
+			pasteData.DefaultStyle = "monokai"
+		}
+
+		if false { // TODO: if highlighter.is_diff
+			pasteMeta.PageConf.ExtraHTMLClasses = append(pasteMeta.PageConf.ExtraHTMLClasses, "diff-side-by-side")
+		}
+
+		if err := pasteTmpl.ExecuteTemplate(&paste, "paste.html", pasteData); err != nil {
+			logger.Error(r.Context(), "executing template", "error", err)
+			userError{http.StatusInternalServerError, "Failed to create response."}.output(w)
+			return
+		}
+		pasteHTML := storage.NewStoredHTML(
+			utils.NopReadSeekCloser(bytes.NewReader(paste.Bytes())),
+			storage.WithKey(pasteKey+".html"),
+		)
+
+		// Metadata
+		// TODO: update for pastes
+		metadata, err := uploads.NewUploadMetadata(conf, []config.StoredFile{rawFile})
+		if err != nil {
+			logger.Error(r.Context(), "creating metadata", "error", err)
+			userError{http.StatusInternalServerError, "Failed to create metadata."}.output(w)
+			return
+		}
+
+		// Upload
+		errs := uploads.UploadObjects(r.Context(), logger, conf, []config.StoredFile{rawFile}, []config.StoredHTML{pasteHTML}, metadata)
+		if len(errs) > 0 {
+			logger.Error(r.Context(), "uploading objects failed", "errors", errs)
+			userError{http.StatusInternalServerError, "Failed to store objects."}.output(w)
+			return
+		}
+
+		fmt.Printf("raw: %s\n", conf.FileURL(rawFile.Key()).String())
+		fmt.Printf("paste: %s\n", conf.HTMLURL(pasteHTML.Key()).String())
 	}
 }

@@ -25,6 +25,13 @@ func WithStorageBackend(backend config.StorageBackend) ConfigOption {
 	}
 }
 
+func WithDevMode(devMode bool) ConfigOption {
+	return func(c *config.Config) error {
+		c.DevMode = devMode
+		return nil
+	}
+}
+
 func NewConfig(opt ...ConfigOption) *config.Config {
 	c, err := server.NewConfig()
 	if err != nil {

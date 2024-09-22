@@ -16,6 +16,7 @@ import (
 type PageConfig struct {
 	ID               string
 	ExtraHTMLClasses []string
+	IsStatic         bool
 }
 
 func (p PageConfig) HTMLClasses() string {
@@ -25,18 +26,29 @@ func (p PageConfig) HTMLClasses() string {
 type Meta struct {
 	Conf     *config.Config
 	PageConf PageConfig
-	Nonce    string
+	nonce    string
+}
+
+func (m Meta) Nonce() string {
+	if m.nonce == "" {
+		panic("no nonce set; this should only be called for dynamic pages")
+	}
+	return m.nonce
 }
 
 func NewMeta(ctx context.Context, conf *config.Config, pc PageConfig) (*Meta, error) {
-	nonce, err := security.CSPNonce(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("getting CSP nonce: %w", err)
+	nonce := ""
+	if !pc.IsStatic {
+		n, err := security.CSPNonce(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("getting CSP nonce: %w", err)
+		}
+		nonce = n
 	}
 	return &Meta{
 		Conf:     conf,
 		PageConf: pc,
-		Nonce:    nonce,
+		nonce:    nonce,
 	}, nil
 }
 

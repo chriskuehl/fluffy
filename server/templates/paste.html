@@ -1,0 +1,27 @@
+{{define "inlineJS"}}{{end}}
+
+{{define "highlightStart"}}
+    <script>
+        const preferredStyleVar = {{.PreferredStyleVar}};
+    </script>
+    {{.Meta.InlineJS "js/paste-inline-start.js"}}
+{{end}}
+
+{{define "extraToolbar"}}
+    TODO: extra toolbar
+{{end}}
+
+{{define "text"}}
+    TODO: text
+{{end}}
+
+{{define "info"}}
+{{/*
+    {% if texts|length == 1 %}
+        {{num_lines(texts[0].text)}} {{'line'|pluralize(num_lines(texts[0].text))}} of
+    {% endif %}
+    {{highlighter.name}}
+*/}}
+{{end}}
+
+{{template "text.html" .}}

@@ -6,8 +6,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/chriskuehl/fluffy/server/config"
+	"github.com/chriskuehl/fluffy/server/logging"
 )
 
 type cspNonceKey struct{}
@@ -20,23 +22,43 @@ func CSPNonce(ctx context.Context) (string, error) {
 	return nonce, nil
 }
 
-func NewCSPMiddleware(conf *config.Config, next http.Handler) http.Handler {
-	fileURLBase := *conf.FileURLPattern
-	fileURLBase.Path = ""
+// isDevStaticFileRequest returns true if the request is for a static HTML file.
+//
+// We need to relax the CSP rules for these files because they can contain inline scripts.
+//
+// This can only really happen in development mode when serving uploaded HTML objects from the app.
+// In prod, this isn't an issue because these files are not served by the app.
+func isDevStaticFileRequest(conf *config.Config, r *http.Request) bool {
+	return conf.DevMode && strings.HasPrefix(r.URL.Path, "/dev/storage/html/")
+}
+
+func NewCSPMiddleware(conf *config.Config, logger logging.Logger, next http.Handler) http.Handler {
+	u := *conf.FileURLPattern
+	u.Path = ""
+	fileURLBase := u.String()
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		nonceBytes := make([]byte, 16)
-		if _, err := rand.Read(nonceBytes); err != nil {
-			panic("failed to generate nonce: " + err.Error())
+		csp := strings.Builder{}
+		fmt.Fprintf(&csp, "default-src 'self' %s; script-src https://ajax.googleapis.com %[1]s ", fileURLBase)
+
+		if isDevStaticFileRequest(conf, r) {
+			fmt.Fprintf(&csp, "'unsafe-inline'")
+		} else {
+			nonceBytes := make([]byte, 16)
+			if _, err := rand.Read(nonceBytes); err != nil {
+				logger.Error(ctx, "generating nonce", "error", err)
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
+			nonce := hex.EncodeToString(nonceBytes)
+			ctx = context.WithValue(ctx, cspNonceKey{}, nonce)
+			fmt.Fprintf(&csp, "'nonce-%s'", nonce)
 		}
-		nonce := hex.EncodeToString(nonceBytes)
-		ctx = context.WithValue(ctx, cspNonceKey{}, nonce)
-		csp := fmt.Sprintf(
-			"default-src 'self' %s; script-src https://ajax.googleapis.com 'nonce-%s' %[1]s; style-src 'self' https://fonts.googleapis.com %[1]s; font-src https://fonts.gstatic.com %[1]s",
-			fileURLBase.String(),
-			nonce,
-		)
-		w.Header().Set("Content-Security-Policy", csp)
+
+		fmt.Fprintf(&csp, "; style-src 'self' https://fonts.googleapis.com %s; font-src https://fonts.gstatic.com %[1]s", fileURLBase)
+		w.Header().Set("Content-Security-Policy", csp.String())
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

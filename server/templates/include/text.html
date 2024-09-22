@@ -1,0 +1,31 @@
+{{define "extraHead"}}
+    <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500,700" rel="stylesheet" type="text/css" />
+{{end}}
+
+{{define "content"}}
+    <div id="highlightContainer" class="highlight-{{.DefaultStyle}}">
+        {{template "highlightStart" .}}
+        <div class="paste-toolbar">
+            <div class="info">
+                {{template "info" .}}
+            </div>
+            <a class="button" href="{{.RawURL}}">
+                Raw Text
+            </a>
+
+            <form method="POST" action="{{.Meta.Conf.HomeURL.String}}">
+                <input type="hidden" name="text" value="{{.CopyAndEditText}}" />
+                <input type="submit" class="button" value="Copy &amp; Edit" />
+            </form>
+
+            {{template "extraToolbar" .}}
+
+            <div style="clear: both;"></div>
+        </div>
+        <div id="paste">
+            {{template "text" .}}
+        </div>
+    </div>
+{{end}}
+
+{{template "base.html" .}}

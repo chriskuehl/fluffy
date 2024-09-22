@@ -1,3 +1,7 @@
+{{if .PageConf.IsStatic}}
+<script>
+{{else}}
 <script nonce="{{.Nonce}}">
+{{end}}
 	{{.Content}}
 </script>

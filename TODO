@@ -3,3 +3,8 @@
 	* Also some timing information to the upload view + UploadObjects function
 * Test that tries to upload an HTML file and ensures it's not served as HTML.
 * Consolidate StoredFile and StoredHTML somehow.
+* SanitizedKey should be required probably in storage Store*() interfaces, and have constructors for stuff like metadata key, paste raw file keys, etc
+* Logging middleware to provide request logging
+* Make file size accessible on StoredObject
+* Add a way to create sub-loggers to the Logger interface, update uploads/uploads.go to use it
+	* maybe works based on context instead of actual sub-logger?

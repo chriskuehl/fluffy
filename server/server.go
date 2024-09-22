@@ -85,7 +85,7 @@ func NewServer(
 		return nil, fmt.Errorf("adding routes: %w", err)
 	}
 	var handler http.Handler = mux
-	handler = security.NewCSPMiddleware(conf, handler)
+	handler = security.NewCSPMiddleware(conf, logger, handler)
 	handler = logging.NewMiddleware(logger, handler)
 	handler = http.TimeoutHandler(handler, conf.GlobalTimeout, "global timeout")
 	return handler, nil
