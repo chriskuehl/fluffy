@@ -141,6 +141,7 @@ Example usage:
 			return fmt.Errorf("creating request: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("User-Agent", "fpb/"+version)
 		if creds != nil {
 			req.SetBasicAuth(creds.Username, creds.Password)
 		}

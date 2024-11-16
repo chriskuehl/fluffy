@@ -59,6 +59,7 @@ var command = &cobra.Command{
 			return fmt.Errorf("creating request: %w", err)
 		}
 		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.Header.Set("User-Agent", "fput/"+version)
 		if creds != nil {
 			req.SetBasicAuth(creds.Username, creds.Password)
 		}
