@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/chriskuehl/fluffy/server/config"
+	"github.com/chriskuehl/fluffy/server/highlighting"
 	"github.com/chriskuehl/fluffy/server/logging"
 	"github.com/chriskuehl/fluffy/server/meta"
 	"github.com/chriskuehl/fluffy/server/storage"
@@ -262,19 +263,33 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 }
 
 func normalizeFormText(text string) string {
-	return strings.Replace(text, "\r\n", "\n", -1)
+	return strings.ReplaceAll(text, "\r\n", "\n")
 }
 
 func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 	pasteTmpl := conf.Templates.Must("paste.html")
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			logger.Error(r.Context(), "parsing multipart form", "error", err)
-			userError{http.StatusBadRequest, "Could not parse multipart form."}.output(w)
-			return
+		if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+			// cli versions 2.0.0 through 2.2.0 send multipart/form-data, so we need to support it forever.
+			err := r.ParseMultipartForm(conf.MaxMultipartMemoryBytes)
+			if err != nil {
+				logger.Error(r.Context(), "parsing multipart form", "error", err)
+				userError{http.StatusBadRequest, "Could not parse multipart form."}.output(w)
+				return
+			}
+		} else {
+			err := r.ParseForm()
+			if err != nil {
+				logger.Error(r.Context(), "parsing form", "error", err)
+				userError{http.StatusBadRequest, "Could not parse form."}.output(w)
+				return
+			}
 		}
+
+		fmt.Printf("r.Headers: %v\n", r.Header["Content-Type"])
+		fmt.Printf("r.Form: %v\n", r.Form)
+		fmt.Printf("r.PostForm: %v\n", r.PostForm)
 
 		_, jsonResponse := r.URL.Query()["json"]
 		if _, ok := r.Form["json"]; ok {
@@ -283,7 +298,6 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		fmt.Printf("jsonResponse: %v\n", jsonResponse)
 
 		text := normalizeFormText(r.Form.Get("text"))
-		fmt.Printf("text: %q\n", text)
 
 		// Raw paste
 		rawKey, err := uploads.GenUniqueObjectKey()
@@ -319,6 +333,12 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 
 		var paste bytes.Buffer
 
+		// TODO: calculate this properly
+		mapping := make([][]int, 0)
+		for i := 0; i < len(strings.Split(text, "\n")); i++ {
+			mapping = append(mapping, []int{i})
+		}
+
 		pasteData := struct {
 			Meta *meta.Meta
 			// localStorage variable name for preferred style (either "preferredStyle" or
@@ -328,6 +348,9 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			DefaultStyle    string
 			CopyAndEditText string
 			RawURL          string
+			Styles          []highlighting.StyleCategory
+			Highlighter     highlighting.Highlighter
+			Texts           []*highlighting.Text
 		}{
 			Meta:              pasteMeta,
 			PreferredStyleVar: "preferredStyle",
@@ -335,6 +358,14 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			// TODO: does this need any transformation?
 			CopyAndEditText: text,
 			RawURL:          conf.FileURL(rawFile.Key()).String(),
+			Styles:          highlighting.Styles,
+			Highlighter:     &highlighting.PlainTextHighlighter{},
+			Texts: []*highlighting.Text{
+				{
+					Text:              text,
+					LineNumberMapping: mapping,
+				},
+			},
 		}
 
 		// Terminal output gets its own preferred theme setting since many people

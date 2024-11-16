@@ -61,7 +61,18 @@ type Templates struct {
 }
 
 func (t *Templates) Must(name string) *template.Template {
-	return template.Must(template.New("").ParseFS(t.FS, "templates/include/*.html", "templates/"+name))
+	funcs := template.FuncMap{
+		"plusOne": func(i int) int {
+			return i + 1
+		},
+		"pluralize": func(singular string, count int) string {
+			if count == 1 {
+				return singular
+			}
+			return singular + "s"
+		},
+	}
+	return template.Must(template.New("").Funcs(funcs).ParseFS(t.FS, "templates/include/*.html", "templates/"+name))
 }
 
 type Config struct {

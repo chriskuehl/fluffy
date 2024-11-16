@@ -13,18 +13,13 @@
 
 {{define "extraToolbar"}}
     <select id="style">
-        {% for category, styles in styles.items()|sort %}
-            <optgroup label="{{category}}">
-                {% for style in styles %}
-                    <option
-                      value="{{style.name}}"
-                      {% if style.name == defaultStyle %}
-                          selected="selected"
-                      {% endif %}
-                    >{{style.name}}</option>
-                {% endfor %}
+        {{range $category := .Styles}}
+            <optgroup label="{{$category.Name}}">
+                {{range $style := $category.Styles}}
+                    <option value="{{$style.Name}}" {{if eq $style.Name $.DefaultStyle}}selected="selected"{{end}}>{{$style}}</option>
+                {{end}}
             </optgroup>
-        {% endfor %}
+        {{end}}
     </select>
 
     <script>
@@ -33,16 +28,17 @@
         }
     </script>
 
-    {% if highlighter.is_diff %}
+    {{if .Highlighter.IsDiff}}
         <div class="pill-buttons" id="diff-setting">
             <div class="option selected" data-value="side-by-side">Side-by-Side</div>
             <div class="option not-selected" data-value="unified">Unified</div>
         </div>
 
-        {#
+        {{/*
             This is an inline script so that it can apply the right CSS before
             rendering the diff and avoid flashing the wrong diff style on load.
-        #}
+        */}}
+
         <script>
             const PREFERRED_DIFF_SETTING = 'preferredDiffSetting';
 
@@ -77,38 +73,31 @@
                 child.onclick = () => updateDiffSetting(child.getAttribute('data-value'))
             }
         </script>
-    {% endif %}
+    {{end}}
 {{end}}
 
 {{define "text"}}
-	{{/*
-		{% for text in texts %}
-			<div class="text-container">
-				<div class="line-numbers">
-					{% for i in range(1, num_lines(text.text) + 1) %}
-						{% if text.line_number_mapping %}
-							{% set line_numbers = text.line_number_mapping[i] %}
-						{% else %}
-							{% set line_numbers = [i] %}
-						{% endif %}
-						<a class="LL{{line_numbers|join(' LL')}}">{{i}}</a>
-					{% endfor %}
-				</div>
-				<div class="text" contenteditable="true" spellcheck="false">
-					{{highlighter.highlight(text.text, text.line_number_mapping)|safe}}
-				</div>
-			</div>
-		{% endfor %}
-	*/}}
+    {{range $text := .Texts}}
+        <div class="text-container">
+            <div class="line-numbers">
+                {{range $i, $numbers := $text.LineNumberMapping}}
+                    <a class="{{range $numbers}}LL{{plusOne .}} {{end}}">{{plusOne $i}}</a>
+                {{end}}
+            </div>
+            <div class="text" contenteditable="true" spellcheck="false">
+                {{$.Highlighter.Highlight $text}}
+            </div>
+        </div>
+    {{end}}
 {{end}}
 
 {{define "info"}}
-	{{/*
-		{% if texts|length == 1 %}
-			{{num_lines(texts[0].text)}} {{'line'|pluralize(num_lines(texts[0].text))}} of
-		{% endif %}
-		{{highlighter.name}}
-	*/}}
+    {{if eq (len .Texts) 1}}
+        {{plusOne (len (index .Texts 0).LineNumberMapping)}}
+        {{pluralize "line" (len (index .Texts 0).LineNumberMapping)}}
+        of
+    {{end}}
+    {{.Highlighter.Name}}
 {{end}}
 
 {{template "text.html" .}}

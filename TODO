@@ -8,3 +8,8 @@
 * Make file size accessible on StoredObject
 * Add a way to create sub-loggers to the Logger interface, update uploads/uploads.go to use it
 	* maybe works based on context instead of actual sub-logger?
+* Go through and clean up messy tab/space indentation in templates
+* Pastes
+    * Missing CSS (comes from pygments bundle)
+    * Syntax highlighting
+    * Markdown
