@@ -31,5 +31,6 @@ require (
 	github.com/aws/smithy-go v1.20.4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/yuin/goldmark v1.7.8 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 )

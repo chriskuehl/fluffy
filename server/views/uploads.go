@@ -266,6 +266,18 @@ func normalizeFormText(text string) string {
 	return strings.ReplaceAll(text, "\r\n", "\n")
 }
 
+func unifiedDiff(text1, text2 string) string {
+	return "TODO: unifiedDiff"
+}
+
+func normalizeTextAndLanguage(text, diffText1, diffText2, language string) (string, string) {
+	if language == "diff-between-two-texts" {
+		return unifiedDiff(normalizeFormText(diffText1), normalizeFormText(diffText2)), "diff"
+	} else {
+		return normalizeFormText(text), language
+	}
+}
+
 func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 	pasteTmpl := conf.Templates.Must("paste.html")
 
@@ -287,17 +299,19 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			}
 		}
 
-		fmt.Printf("r.Headers: %v\n", r.Header["Content-Type"])
-		fmt.Printf("r.Form: %v\n", r.Form)
-		fmt.Printf("r.PostForm: %v\n", r.PostForm)
-
 		_, jsonResponse := r.URL.Query()["json"]
 		if _, ok := r.Form["json"]; ok {
 			jsonResponse = true
 		}
 		fmt.Printf("jsonResponse: %v\n", jsonResponse)
 
-		text := normalizeFormText(r.Form.Get("text"))
+		text, language := normalizeTextAndLanguage(
+			r.Form.Get("text"),
+			r.Form.Get("diff1"),
+			r.Form.Get("diff2"),
+			r.Form.Get("language"),
+		)
+		highlighter := highlighting.GuessHighlighterForPaste(text, language)
 
 		// Raw paste
 		rawKey, err := uploads.GenUniqueObjectKey()
@@ -322,8 +336,9 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		}
 
 		pasteMeta, err := meta.NewMeta(r.Context(), conf, meta.PageConfig{
-			ID:       "paste",
-			IsStatic: true,
+			ID:               "paste",
+			IsStatic:         true,
+			ExtraHTMLClasses: highlighter.ExtraHTMLClasses(),
 		})
 		if err != nil {
 			logger.Error(r.Context(), "creating meta", "error", err)
@@ -359,13 +374,8 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			CopyAndEditText: text,
 			RawURL:          conf.FileURL(rawFile.Key()).String(),
 			Styles:          highlighting.Styles,
-			Highlighter:     &highlighting.PlainTextHighlighter{},
-			Texts: []*highlighting.Text{
-				{
-					Text:              text,
-					LineNumberMapping: mapping,
-				},
-			},
+			Highlighter:     highlighter,
+			Texts:           highlighter.GenerateTexts(text),
 		}
 
 		// Terminal output gets its own preferred theme setting since many people

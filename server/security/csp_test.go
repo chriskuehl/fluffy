@@ -31,7 +31,7 @@ var (
 	cspDevStaticFileRegexp = regexp.MustCompile(
 		strings.Join(
 			[]string{
-				`default-src 'self' https://fancy-cdn.com`,
+				`default-src 'self' https://fancy-cdn.com \*`,
 				`script-src https://ajax.googleapis.com https://fancy-cdn.com 'unsafe-inline'`,
 				`style-src 'self' https://fonts.googleapis.com https://fancy-cdn.com`,
 				`font-src https://fonts.gstatic.com https://fancy-cdn.com`,

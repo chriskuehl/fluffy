@@ -1,7 +1,7 @@
 {{define "inlineJS"}}
     <!-- TODO: can we factor out jQuery? -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-	{{.Meta.InlineJS "js/paste-inline.js"}}
+    <script integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" crossorigin="anonymous"></script>
+    {{.Meta.InlineJS "js/paste-inline.js"}}
 {{end}}
 
 {{define "highlightStart"}}
@@ -28,7 +28,7 @@
         }
     </script>
 
-    {{if .Highlighter.IsDiff}}
+    {{if .Highlighter.RenderAsDiff}}
         <div class="pill-buttons" id="diff-setting">
             <div class="option selected" data-value="side-by-side">Side-by-Side</div>
             <div class="option not-selected" data-value="unified">Unified</div>
@@ -79,14 +79,20 @@
 {{define "text"}}
     {{range $text := .Texts}}
         <div class="text-container">
-            <div class="line-numbers">
-                {{range $i, $numbers := $text.LineNumberMapping}}
-                    <a class="{{range $numbers}}LL{{plusOne .}} {{end}}">{{plusOne $i}}</a>
-                {{end}}
-            </div>
-            <div class="text" contenteditable="true" spellcheck="false">
-                {{$.Highlighter.Highlight $text}}
-            </div>
+            {{if $.Highlighter.RenderAsRichText}}
+                <div class="text rich-text">
+                    {{$.Highlighter.Highlight $text}}
+                </div>
+            {{else}}
+                <div class="line-numbers">
+                    {{range $i, $numbers := $text.LineNumberMapping}}
+                        <a class="{{range $numbers}}LL{{plusOne .}} {{end}}">{{plusOne $i}}</a>
+                    {{end}}
+                </div>
+                <div class="text plain-text" contenteditable="true" spellcheck="false">
+                    {{$.Highlighter.Highlight $text}}
+                </div>
+            {{end}}
         </div>
     {{end}}
 {{end}}

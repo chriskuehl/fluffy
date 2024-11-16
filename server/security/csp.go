@@ -40,10 +40,18 @@ func NewCSPMiddleware(conf *config.Config, logger logging.Logger, next http.Hand
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		csp := strings.Builder{}
-		fmt.Fprintf(&csp, "default-src 'self' %s; script-src https://ajax.googleapis.com %[1]s ", fileURLBase)
 
+		// default-src
+		fmt.Fprintf(&csp, "default-src 'self' %s", fileURLBase)
 		if isDevStaticFileRequest(conf, r) {
-			fmt.Fprintf(&csp, "'unsafe-inline'")
+			// Needed for embedded images in rendered markdown dev pastes.
+			fmt.Fprintf(&csp, " *")
+		}
+
+		// script-src
+		fmt.Fprintf(&csp, "; script-src https://ajax.googleapis.com %s", fileURLBase)
+		if isDevStaticFileRequest(conf, r) {
+			fmt.Fprintf(&csp, " 'unsafe-inline'")
 		} else {
 			nonceBytes := make([]byte, 16)
 			if _, err := rand.Read(nonceBytes); err != nil {
@@ -53,10 +61,14 @@ func NewCSPMiddleware(conf *config.Config, logger logging.Logger, next http.Hand
 			}
 			nonce := hex.EncodeToString(nonceBytes)
 			ctx = context.WithValue(ctx, cspNonceKey{}, nonce)
-			fmt.Fprintf(&csp, "'nonce-%s'", nonce)
+			fmt.Fprintf(&csp, " 'nonce-%s'", nonce)
 		}
 
-		fmt.Fprintf(&csp, "; style-src 'self' https://fonts.googleapis.com %s; font-src https://fonts.gstatic.com %[1]s", fileURLBase)
+		// style-src
+		fmt.Fprintf(&csp, "; style-src 'self' https://fonts.googleapis.com %s", fileURLBase)
+
+		// font-src
+		fmt.Fprintf(&csp, "; font-src https://fonts.gstatic.com %s", fileURLBase)
 		w.Header().Set("Content-Security-Policy", csp.String())
 
 		next.ServeHTTP(w, r.WithContext(ctx))
