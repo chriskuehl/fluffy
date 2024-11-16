@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"runtime/debug"
@@ -105,9 +105,8 @@ Example usage:
 			path = args[0]
 		}
 
-		body := &bytes.Buffer{}
-		writer := multipart.NewWriter(body)
-		writer.WriteField("language", language)
+		form := url.Values{}
+		form.Set("language", language)
 
 		content := &bytes.Buffer{}
 		if path == "-" {
@@ -135,17 +134,13 @@ Example usage:
 				return fmt.Errorf("copying file: %w", err)
 			}
 		}
-		writer.WriteField("text", content.String())
+		form.Set("text", content.String())
 
-		if err := writer.Close(); err != nil {
-			return fmt.Errorf("closing writer: %w", err)
-		}
-
-		req, err := http.NewRequest("POST", server+"/paste?json", body)
+		req, err := http.NewRequest("POST", server+"/paste?json", strings.NewReader(form.Encode()))
 		if err != nil {
 			return fmt.Errorf("creating request: %w", err)
 		}
-		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		if creds != nil {
 			req.SetBasicAuth(creds.Username, creds.Password)
 		}
