@@ -3,6 +3,8 @@ package highlighting
 import (
 	"fmt"
 	"html/template"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/alecthomas/chroma/v2"
@@ -65,6 +67,8 @@ func (h *ChromaHighlighter) GenerateTexts(text string) []*Text {
 	return []*Text{simpleText(text)}
 }
 
+var chromaLine = regexp.MustCompile(`<span class="` + regexp.QuoteMeta(chroma.StandardTypes[chroma.Line]))
+
 func (h *ChromaHighlighter) Highlight(text *Text) (template.HTML, error) {
 	iterator, err := h.lexer.Tokenise(nil, text.Text)
 	if err != nil {
@@ -75,5 +79,16 @@ func (h *ChromaHighlighter) Highlight(text *Text) (template.HTML, error) {
 	if err := Formatter.Format(&html, DefaultStyle.ChromaStyle, iterator); err != nil {
 		return "", fmt.Errorf("formatting: %w", err)
 	}
-	return template.HTML(html.String()), nil
+
+	i := 0
+	return template.HTML(chromaLine.ReplaceAllStringFunc(html.String(), func(s string) string {
+		defer func() { i++ }()
+		lines := text.LineNumberMapping[i]
+		var sb strings.Builder
+		sb.WriteString(s)
+		for _, line := range lines {
+			sb.WriteString(" line-" + strconv.Itoa(line+1))
+		}
+		return sb.String()
+	})), nil
 }

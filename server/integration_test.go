@@ -8,18 +8,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/google/go-cmp/cmp"
-
-	"github.com/chriskuehl/fluffy/server/config"
-	"github.com/chriskuehl/fluffy/server/storage"
 	"github.com/chriskuehl/fluffy/testfunc"
 )
 
@@ -28,176 +19,16 @@ type objectType int
 const (
 	objectTypeFile objectType = iota
 	objectTypeHTML objectType = iota
-
-	doNotCompareContentSentinel = "DO_NOT_COMPARE_CONTENT"
 )
 
-type CanonicalizedLinks string
-
-func canonicalizeLinks(links []*url.URL) CanonicalizedLinks {
-	// Sort the links first to ensure a consistent order.
-	urls := make([]string, len(links))
-	for i, link := range links {
-		urls[i] = link.String()
-	}
-	sort.Strings(urls)
-	return CanonicalizedLinks(strings.Join(urls, " :: "))
-}
-
-type storedObject struct {
-	Content            string
-	MIMEType           string
-	ContentDisposition string
-	Links              CanonicalizedLinks
-	MetadataURL        string
-}
-
-func keyFromURL(u *url.URL) string {
-	s := u.String()
-	return s[strings.LastIndex(s, "/")+1:]
-}
-
 func TestIntegrationUpload(t *testing.T) {
-	tests := []struct {
-		name                   string
-		config                 func(t *testing.T) *config.Config
-		getObject              func(objType objectType, conf *config.Config, key string) (*storedObject, error)
-		stripUnsupportedFields func(obj *storedObject)
-	}{
-		{
-			name: "memory_storage_backend",
-			config: func(t *testing.T) *config.Config {
-				t.Helper()
-				return testfunc.NewConfig(
-					testfunc.WithStorageBackend(
-						testfunc.NewMemoryStorageBackend(),
-					),
-				)
-			},
-			getObject: func(objType objectType, conf *config.Config, key string) (*storedObject, error) {
-				storageBackend := conf.StorageBackend.(*testfunc.MemoryStorageBackend)
-				var obj config.BaseStoredObject
-				if objType == objectTypeFile {
-					if o, ok := storageBackend.Files[key]; ok {
-						obj = o
-					}
-				} else {
-					if o, ok := storageBackend.HTMLs[key]; ok {
-						obj = o
-					}
-				}
-				if obj == nil {
-					return nil, fmt.Errorf("object %q not found", key)
-				}
-				var content strings.Builder
-				if _, err := io.Copy(&content, obj); err != nil {
-					return nil, fmt.Errorf("copying object: %w", err)
-				}
-				return &storedObject{
-					Content:            content.String(),
-					MIMEType:           obj.MIMEType(),
-					ContentDisposition: obj.ContentDisposition(),
-					Links:              canonicalizeLinks(obj.Links()),
-					MetadataURL:        obj.MetadataURL().String(),
-				}, nil
-			},
-		},
-		{
-			name: "filesystem_storage_backend",
-			config: func(t *testing.T) *config.Config {
-				t.Helper()
-				htmlRoot := t.TempDir()
-				fileRoot := t.TempDir()
-				return testfunc.NewConfig(
-					testfunc.WithStorageBackend(&storage.FilesystemBackend{
-						FileRoot: fileRoot,
-						HTMLRoot: htmlRoot,
-					}),
-				)
-			},
-			getObject: func(objType objectType, conf *config.Config, key string) (*storedObject, error) {
-				storageBackend := conf.StorageBackend.(*storage.FilesystemBackend)
-				var path string
-				if objType == objectTypeFile {
-					path = filepath.Join(storageBackend.FileRoot, key)
-				} else {
-					path = filepath.Join(storageBackend.HTMLRoot, key)
-				}
-
-				contents, err := os.ReadFile(path)
-				if err != nil {
-					return nil, fmt.Errorf("opening file: %w", err)
-				}
-
-				return &storedObject{
-					Content: string(contents),
-				}, nil
-			},
-			stripUnsupportedFields: func(obj *storedObject) {
-				obj.MIMEType = ""
-				obj.ContentDisposition = ""
-				obj.Links = ""
-				obj.MetadataURL = ""
-			},
-		},
-		{
-			name: "s3_storage_backend",
-			config: func(t *testing.T) *config.Config {
-				t.Helper()
-				backend, err := storage.NewS3Backend(
-					"fake-region",
-					"fake-bucket",
-					"file/",
-					"html/",
-					func(awsCfg aws.Config, optFn func(*s3.Options)) storage.S3Client {
-						return testfunc.NewFakeS3Client()
-					},
-				)
-				if err != nil {
-					t.Fatalf("constructing backend: %v", err)
-				}
-				return testfunc.NewConfig(testfunc.WithStorageBackend(backend))
-			},
-			getObject: func(objType objectType, conf *config.Config, key string) (*storedObject, error) {
-				storageBackend := conf.StorageBackend.(*storage.S3Backend)
-				client := storageBackend.Client.(*testfunc.FakeS3Client)
-
-				var path string
-				if objType == objectTypeFile {
-					path = storageBackend.FileKeyPrefix + key
-				} else {
-					path = storageBackend.HTMLKeyPrefix + key
-				}
-
-				contents, ok := client.Objects[path]
-				if !ok {
-					return nil, fmt.Errorf("object %q not found", key)
-				}
-
-				links := strings.Split(contents.Metadata["fluffy-links"], "; ")
-				linkURLs := make([]*url.URL, len(links))
-				for i, link := range links {
-					u, err := url.ParseRequestURI(link)
-					if err != nil {
-						return nil, fmt.Errorf("parsing link %q: %w", link, err)
-					}
-					linkURLs[i] = u
-				}
-
-				return &storedObject{
-					Content:            string(contents.Contents),
-					MIMEType:           contents.ContentType,
-					ContentDisposition: contents.ContentDisposition,
-					Links:              canonicalizeLinks(linkURLs),
-					MetadataURL:        contents.Metadata["fluffy-metadata"],
-				}, nil
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tt := range testfunc.StorageBackends {
+		t.Run(tt.Name, func(t *testing.T) {
 			t.Parallel()
-			conf := tt.config(t)
+			storage := tt.StorageFactory(t)
+			conf := testfunc.NewConfig(
+				testfunc.WithStorageBackend(storage.Backend),
+			)
 			ts := testfunc.RunningServer(t, conf)
 			defer ts.Cleanup()
 
@@ -281,37 +112,19 @@ func TestIntegrationUpload(t *testing.T) {
 
 			links := []*url.URL{rawURL, metadataURL, uploadDetailsURL}
 
-			assertObject := func(objType objectType, key string, want *storedObject) *storedObject {
-				t.Helper()
-				obj, err := tt.getObject(objType, conf, key)
-				if err != nil {
-					t.Fatalf("getting object: %v", err)
-				}
-				if tt.stripUnsupportedFields != nil {
-					tt.stripUnsupportedFields(want)
-				}
-				if want.Content == doNotCompareContentSentinel {
-					want.Content = obj.Content
-				}
-				if diff := cmp.Diff(want, obj); diff != "" {
-					t.Fatalf("unexpected object (-want +got):\n%s", diff)
-				}
-				return obj
-			}
-
-			assertObject(objectTypeFile, keyFromURL(rawURL), &storedObject{
+			storage.AssertFile(t, testfunc.KeyFromURL(rawURL.String()), &testfunc.StoredObject{
 				Content:            "test",
 				MIMEType:           "text/plain",
 				ContentDisposition: `inline; filename="test.txt"; filename*=utf-8''test.txt`,
-				Links:              canonicalizeLinks(links),
+				Links:              testfunc.CanonicalizeLinks(links),
 				MetadataURL:        metadataURL.String(),
 			})
 
-			uploadDetails := assertObject(objectTypeHTML, keyFromURL(uploadDetailsURL), &storedObject{
-				Content:            doNotCompareContentSentinel,
+			uploadDetails := storage.AssertHTML(t, testfunc.KeyFromURL(uploadDetailsURL.String()), &testfunc.StoredObject{
+				Content:            testfunc.DoNotCompareContentSentinel,
 				MIMEType:           "text/html; charset=utf-8",
 				ContentDisposition: "inline",
-				Links:              canonicalizeLinks(links),
+				Links:              testfunc.CanonicalizeLinks(links),
 				MetadataURL:        metadataURL.String(),
 			})
 			if !strings.Contains(uploadDetails.Content, "<html") {

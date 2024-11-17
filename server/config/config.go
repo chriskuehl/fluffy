@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/chriskuehl/fluffy/server/utils"
 )
 
 type BaseStoredObject interface {
@@ -65,12 +67,7 @@ func (t *Templates) Must(name string) *template.Template {
 		"plusOne": func(i int) int {
 			return i + 1
 		},
-		"pluralize": func(singular string, count int) string {
-			if count == 1 {
-				return singular
-			}
-			return singular + "s"
-		},
+		"pluralize": utils.Pluralize[int],
 	}
 	return template.Must(template.New("").Funcs(funcs).ParseFS(t.FS, "templates/include/*.html", "templates/"+name))
 }

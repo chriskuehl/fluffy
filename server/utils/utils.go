@@ -41,7 +41,7 @@ func HumanFileExtension(filename string) string {
 	return fullExt
 }
 
-func Pluralize(s string, n int64) string {
+func Pluralize[I int | uint | int8 | uint8 | int16 | uint16 | int32 | uint32 | int64 | uint64](s string, n I) string {
 	if n == 1 {
 		return s
 	}
