@@ -36,14 +36,18 @@ release-server:
 	rm -v dist/*.txt dist/*.yaml dist/*.json
 
 server/static/app.css: $(wildcard scss/*.scss)
-	sass scss/app.scss $@
+	sass --style compressed scss/app.scss $@
+
+.PHONY: server/static/chroma.css
+server/static/chroma.css:
+	go run ./cmd/print-styles-css | sass --stdin --style compressed $@
 
 .PHONY: assets
-assets: server/static/app.css
+assets: server/static/app.css server/static/chroma.css
 
 .PHONY: watch-assets
 watch-assets:
-	sass --watch scss/app.scss:server/static/app.css
+	sass --style compressed --watch scss/app.scss:server/static/app.css
 
 .PHONY: test
 test:

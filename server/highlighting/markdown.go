@@ -12,27 +12,27 @@ import (
 
 type MarkdownHighlighter struct{}
 
-func (m *MarkdownHighlighter) Name() string {
+func (h *MarkdownHighlighter) Name() string {
 	return "Rendered Markdown"
 }
 
-func (m *MarkdownHighlighter) RenderAsDiff() bool {
+func (h *MarkdownHighlighter) RenderAsDiff() bool {
 	return false
 }
 
-func (m *MarkdownHighlighter) RenderAsRichText() bool {
+func (h *MarkdownHighlighter) RenderAsRichText() bool {
 	return true
 }
 
-func (p *MarkdownHighlighter) ExtraHTMLClasses() []string {
+func (h *MarkdownHighlighter) ExtraHTMLClasses() []string {
 	return []string{"markdown"}
 }
 
-func (p *MarkdownHighlighter) GenerateTexts(text string) []*Text {
+func (h *MarkdownHighlighter) GenerateTexts(text string) []*Text {
 	return []*Text{simpleText(text)}
 }
 
-func (m *MarkdownHighlighter) Highlight(text *Text) (template.HTML, error) {
+func (h *MarkdownHighlighter) Highlight(text *Text) (template.HTML, error) {
 	md := goldmark.New(
 		// TODO: add syntax highlighting
 		goldmark.WithExtensions(extension.GFM),

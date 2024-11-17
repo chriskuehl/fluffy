@@ -16,7 +16,7 @@
         {{range $category := .Styles}}
             <optgroup label="{{$category.Name}}">
                 {{range $style := $category.Styles}}
-                    <option value="{{$style.Name}}" {{if eq $style.Name $.DefaultStyle}}selected="selected"{{end}}>{{$style}}</option>
+                    <option value="{{$style.Name}}" {{if eq $style.Name $.DefaultStyle.Name}}selected="selected"{{end}}>{{$style.Name}}</option>
                 {{end}}
             </optgroup>
         {{end}}
@@ -78,7 +78,7 @@
 
 {{define "text"}}
     {{range $text := .Texts}}
-        <div class="text-container">
+        <div class="text-container style-{{$.DefaultStyle.ChromaStyle.Name}}">
             {{if $.Highlighter.RenderAsRichText}}
                 <div class="text rich-text">
                     {{$.Highlighter.Highlight $text}}

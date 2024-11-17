@@ -311,7 +311,7 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			r.Form.Get("diff2"),
 			r.Form.Get("language"),
 		)
-		highlighter := highlighting.GuessHighlighterForPaste(text, language)
+		highlighter := highlighting.GuessHighlighterForPaste(text, language, "TODO filename")
 
 		// Raw paste
 		rawKey, err := uploads.GenUniqueObjectKey()
@@ -360,7 +360,7 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			// "preferredStyleTerminal").
 			PreferredStyleVar string
 			// Default style to use if no preferred style is set in the user's localStorage.
-			DefaultStyle    string
+			DefaultStyle    highlighting.Style
 			CopyAndEditText string
 			RawURL          string
 			Styles          []highlighting.StyleCategory
@@ -369,7 +369,7 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		}{
 			Meta:              pasteMeta,
 			PreferredStyleVar: "preferredStyle",
-			DefaultStyle:      "default",
+			DefaultStyle:      highlighting.DefaultStyle,
 			// TODO: does this need any transformation?
 			CopyAndEditText: text,
 			RawURL:          conf.FileURL(rawFile.Key()).String(),
@@ -383,7 +383,7 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		// background for regular code.
 		if false { // TODO: if highlighter.is_terminal_output
 			pasteData.PreferredStyleVar = "preferredStyleTerminal"
-			pasteData.DefaultStyle = "monokai"
+			pasteData.DefaultStyle = highlighting.DefaultDarkStyle
 		}
 
 		if false { // TODO: if highlighter.is_diff

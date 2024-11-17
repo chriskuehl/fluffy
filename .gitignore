@@ -1,5 +1,7 @@
 /dist
 /server/static/app.css
 /server/static/app.css.map
+/server/static/chroma.css
+/server/static/chroma.css.map
 /cover.out
 /cover.html

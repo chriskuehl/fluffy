@@ -1,9 +1,10 @@
 {{define "extraHead"}}
-    <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500,700" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="{{.Meta.AssetURL "chroma.css"}}" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500,700" />
 {{end}}
 
 {{define "content"}}
-    <div id="highlightContainer" class="highlight-{{.DefaultStyle}}">
+    <div id="highlightContainer" class="style-{{.DefaultStyle}}">
         {{template "highlightStart" .}}
         <div class="paste-toolbar">
             <div class="info">

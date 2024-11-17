@@ -10,6 +10,14 @@
 	* maybe works based on context instead of actual sub-logger?
 * Go through and clean up messy tab/space indentation in templates
 * Pastes
-    * Missing CSS (comes from pygments bundle)
-    * Syntax highlighting
-    * Markdown
+    * Remove plain text highlighter (probably after ANSI text added)
+    * Syntax highlighting from Markdown
+    * Unified diffs
+    * Side-by-side diffs
+    * Integration tests: regular, markdown, unified diff, side-by-side diff
+    * ANSI colors
+    * Fix catppuccin-frappe theme colors (background color, line numbers)
+    * Line highlights not working, probably due to CSS changes
+    * Auto-detection of languages not working
+    * Return JSON
+    * Metadata object

@@ -1,4 +1,4 @@
-$source-code-font: 'Source Code Pro', monospace;
+$source-code-font: monospace;
 $paste-padding-top: 2px;
 
 .page-paste {
@@ -82,18 +82,18 @@ $paste-padding-top: 2px;
         padding: $paste-padding-top 0;
         overflow-x: auto;
 
-        .highlight {
+        pre, code {
+            font-family: $source-code-font;
+        }
+
+        .chroma {
             // Allow width to expand to match content so block element
             // children (e.g. lines) extend the full width.
             display: inline-block;
             min-width: 100%;
-        }
-
-        .highlight > pre {
             line-height: 125%;
 
-            // These are line spans (sadly, no class is output by pygments)
-            & > span {
+            span.line {
                 padding-left: 5px;
                 display: block;
             }

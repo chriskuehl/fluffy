@@ -3,6 +3,9 @@ package highlighting
 import (
 	"html/template"
 	"strings"
+
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/styles"
 )
 
 var UILanguagesMap = map[string]string{
@@ -31,28 +34,145 @@ var UILanguagesMap = map[string]string{
 	"yaml":        "YAML",
 }
 
+var diffLinePrefixes = []string{
+	"diff --git",
+	"--- ",
+	"+++ ",
+	"index ",
+	"@@ ",
+	"Author:",
+	"AuthorDate:",
+	"Commit:",
+	"CommitDate:",
+	"commit ",
+}
+
 type StyleCategory struct {
 	Name   string
 	Styles []Style
 }
 
+type Color string
+
+type FluffyColorSet struct {
+	ToolbarForeground                Color
+	ToolbarBackground                Color
+	Border                           Color
+	LineNumbersForeground            Color
+	LineNumbersBackground            Color
+	LineNumbersHoverBackground       Color
+	LineNumbersSelectedBackground    Color
+	SelectedLineBackground           Color
+	DiffAddLineBackground            Color
+	DiffAddSelectedLineBackground    Color
+	DiffRemoveLineBackground         Color
+	DiffRemoveSelectedLineBackground Color
+}
+
+var lightFluffyColors = &FluffyColorSet{
+	ToolbarForeground:                "#333",
+	ToolbarBackground:                "#e0e0e0",
+	Border:                           "#eee",
+	LineNumbersForeground:            "#222",
+	LineNumbersBackground:            "#fafafa",
+	LineNumbersHoverBackground:       "#ffeaaf",
+	LineNumbersSelectedBackground:    "#ffe18e",
+	SelectedLineBackground:           "#fff3d3",
+	DiffAddLineBackground:            "#e2ffe2",
+	DiffAddSelectedLineBackground:    "#e8ffbc",
+	DiffRemoveLineBackground:         "#ffe5e5",
+	DiffRemoveSelectedLineBackground: "#ffdfbf",
+}
+
 type Style struct {
-	Name string
+	Name         string
+	ChromaStyle  *chroma.Style
+	ANSIColors   *ansiColorSet
+	FluffyColors *FluffyColorSet
+}
+
+var DefaultStyle = Style{
+	Name:         "default",
+	ChromaStyle:  styles.Get("xcode"),
+	ANSIColors:   ansiColorsLight,
+	FluffyColors: lightFluffyColors,
+}
+
+var DefaultDarkStyle = Style{
+	Name:        "monokai",
+	ChromaStyle: styles.Get("monokai"),
+	ANSIColors:  ansiColorsDark,
+	FluffyColors: &FluffyColorSet{
+		ToolbarForeground:                "#333",
+		ToolbarBackground:                "#e0e0e0",
+		Border:                           "#454545",
+		LineNumbersForeground:            "#999",
+		LineNumbersBackground:            "#272822",
+		LineNumbersHoverBackground:       "#8D8D8D",
+		LineNumbersSelectedBackground:    "#5F5F5F",
+		SelectedLineBackground:           "#545454",
+		DiffAddLineBackground:            "#3d523d",
+		DiffAddSelectedLineBackground:    "#607b60",
+		DiffRemoveLineBackground:         "#632727",
+		DiffRemoveSelectedLineBackground: "#9e4848",
+	},
 }
 
 var Styles = []StyleCategory{
 	{
 		Name: "Light",
 		Styles: []Style{
-			{Name: "default"},
-			{Name: "pastie"},
+			DefaultStyle,
+			{
+				Name:         "pastie",
+				ChromaStyle:  styles.Get("pastie"),
+				ANSIColors:   ansiColorsLight,
+				FluffyColors: lightFluffyColors,
+			},
 		},
 	},
 	{
 		Name: "Dark",
 		Styles: []Style{
-			{Name: "monokai"},
-			{Name: "solarized-dark"},
+			DefaultDarkStyle,
+			{
+				Name:        "catppuccin-frappe",
+				ChromaStyle: styles.Get("catppuccin-frappe"),
+				ANSIColors:  ansiColorsDark,
+				FluffyColors: &FluffyColorSet{
+					ToolbarForeground:                "#333",
+					ToolbarBackground:                "#e0e0e0",
+					Border:                           "#454545",
+					LineNumbersForeground:            "#656565",
+					LineNumbersBackground:            "#002b36",
+					LineNumbersHoverBackground:       "#00596f",
+					LineNumbersSelectedBackground:    "#004252",
+					SelectedLineBackground:           "#004252",
+					DiffAddLineBackground:            "#0e400e",
+					DiffAddSelectedLineBackground:    "#176117",
+					DiffRemoveLineBackground:         "#632727",
+					DiffRemoveSelectedLineBackground: "#9e4848",
+				},
+			},
+			{
+				Name:        "solarized-dark",
+				ChromaStyle: styles.Get("solarized-dark"),
+				ANSIColors:  ansiColorsDark,
+				FluffyColors: &FluffyColorSet{
+					ToolbarForeground:                "#333",
+					ToolbarBackground:                "#e0e0e0",
+					Border:                           "#454545",
+					LineNumbersForeground:            "#656565",
+					LineNumbersBackground:            "#002b36",
+					LineNumbersHoverBackground:       "#00596f",
+					LineNumbersSelectedBackground:    "#004252",
+					SelectedLineBackground:           "#004252",
+					DiffAddLineBackground:            "#0e400e",
+					DiffAddSelectedLineBackground:    "#176117",
+					DiffRemoveLineBackground:         "#632727",
+					DiffRemoveSelectedLineBackground: "#9e4848",
+				},
+			},
 		},
 	},
 }
@@ -113,38 +233,99 @@ type Highlighter interface {
 	Highlight(text *Text) (template.HTML, error)
 }
 
-func GuessHighlighterForPaste(text string, language string) Highlighter {
+func looksLikeDiff(text string) bool {
+	// TODO: improve this
+	return strings.HasPrefix(text, "diff --git") || strings.Contains(text, "\ndiff --git")
+}
+
+func looksLikeAnsiColor(text string) bool {
+	return strings.Contains(text, "\x1b[")
+}
+
+// stripDiffThings removes things from text that make it look like a diff.
+//
+// The purpose of this is so we can run guessLexer over the source text. If
+// we have a diff of Python, Chroma might tell us the language is "Diff".
+// Really, we want it to highlight it like it's Python, and then we'll apply
+// the diff formatting on top.
+func stripDiffThings(text string) string {
+	var s strings.Builder
+
+outer:
+	for _, line := range strings.Split(text, "\n") {
+		for _, prefix := range diffLinePrefixes {
+			if strings.HasPrefix(line, prefix) {
+				continue outer
+			}
+		}
+
+		if strings.HasPrefix(line, "+") || strings.HasPrefix(line, "-") {
+			line = line[1:]
+		}
+
+		s.WriteString(line + "\n")
+	}
+
+	return s.String()
+}
+
+func GuessHighlighterForPaste(text, language, filename string) Highlighter {
 	if language == "rendered-markdown" {
 		return &MarkdownHighlighter{}
 	}
 
-	// TODO: implement
-	return &PlainTextHighlighter{}
+	if (language == "" || language == "autodetect") && looksLikeAnsiColor(text) {
+		// TODO: implement
+		return &PlainTextHighlighter{}
+	}
+
+	diffRequested := (language == "diff" ||
+		strings.HasSuffix(filename, ".diff") ||
+		strings.HasSuffix(filename, ".patch"))
+	diffRequestedLanguage := ""
+
+	if strings.HasPrefix(language, "diff-") {
+		diffRequested = true
+		diffRequestedLanguage = strings.TrimPrefix(language, "diff-")
+	}
+
+	lexer := guessLexer(text, language, filename)
+	lexerName := strings.ToLower(lexer.Config().Name)
+	if lexerName != strings.ToLower(language) && (diffRequested || lexerName == "diff" || looksLikeDiff(text)) {
+		// It wasn't a perfect match and it looks like a diff, so apply diff formatting rather than
+		// regular Chroma formatting.
+		lexer = guessLexer(stripDiffThings(text), diffRequestedLanguage, filename)
+		// TODO: implement
+		return &PlainTextHighlighter{}
+	}
+
+	return &ChromaHighlighter{lexer: lexer}
 }
 
+// TODO: probably get rid of this
 type PlainTextHighlighter struct{}
 
-func (p *PlainTextHighlighter) Name() string {
+func (h *PlainTextHighlighter) Name() string {
 	return "Plain Text"
 }
 
-func (p *PlainTextHighlighter) RenderAsDiff() bool {
+func (h *PlainTextHighlighter) RenderAsDiff() bool {
 	return false
 }
 
-func (p *PlainTextHighlighter) RenderAsRichText() bool {
+func (h *PlainTextHighlighter) RenderAsRichText() bool {
 	return false
 }
 
-func (p *PlainTextHighlighter) ExtraHTMLClasses() []string {
+func (h *PlainTextHighlighter) ExtraHTMLClasses() []string {
 	return nil
 }
 
-func (p *PlainTextHighlighter) GenerateTexts(text string) []*Text {
+func (h *PlainTextHighlighter) GenerateTexts(text string) []*Text {
 	return []*Text{simpleText(text)}
 }
 
-func (p *PlainTextHighlighter) Highlight(text *Text) (template.HTML, error) {
+func (h *PlainTextHighlighter) Highlight(text *Text) (template.HTML, error) {
 	var html strings.Builder
 	for _, line := range strings.Split(text.Text, "\n") {
 		html.WriteString(template.HTMLEscapeString(line))

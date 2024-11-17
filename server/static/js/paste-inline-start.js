@@ -1,5 +1,5 @@
 function changeStyleTo(style) {
-    document.getElementById('highlightContainer').className = 'highlight-' + style;
+    document.getElementById('highlightContainer').className = 'style-' + style;
     if (hasLocalStorage) {
         localStorage.setItem(preferredStyleVar, style);
     }
