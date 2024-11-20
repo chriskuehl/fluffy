@@ -8,11 +8,11 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/chriskuehl/fluffy/server/uploads"
 	"github.com/chriskuehl/fluffy/testfunc"
 )
 
@@ -38,154 +38,237 @@ func addFile(t *testing.T, writer *multipart.Writer, filename, content string) {
 }
 
 func TestUpload(t *testing.T) {
-	t.Parallel()
-	storage := testfunc.NewMemoryStorageBackend()
-	conf := testfunc.NewConfig(testfunc.WithStorageBackend(storage))
-	ts := testfunc.RunningServer(t, conf)
-	defer ts.Cleanup()
+	for _, tt := range testfunc.StorageBackends {
+		t.Run(tt.Name, func(t *testing.T) {
+			t.Parallel()
+			storage := tt.StorageFactory(t)
+			conf := testfunc.NewConfig(
+				testfunc.WithStorageBackend(storage.Backend),
+			)
+			ts := testfunc.RunningServer(t, conf)
+			defer ts.Cleanup()
 
-	postBody := new(bytes.Buffer)
-	writer := multipart.NewWriter(postBody)
-	addFile(t, writer, "test.txt", "test\n")
-	if err := writer.Close(); err != nil {
-		t.Fatalf("closing writer: %v", err)
+			postBody := new(bytes.Buffer)
+			writer := multipart.NewWriter(postBody)
+			addFile(t, writer, "test.txt", "test\n")
+			if err := writer.Close(); err != nil {
+				t.Fatalf("closing writer: %v", err)
+			}
+
+			resp, err := http.Post(
+				fmt.Sprintf("http://localhost:%d/upload?json", ts.Port),
+				writer.FormDataContentType(),
+				postBody,
+			)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			defer resp.Body.Close()
+
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			body := string(bodyBytes)
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("unexpected status code: got %d, want %d\nBody:\n%s", resp.StatusCode, http.StatusOK, body)
+			}
+
+			if resp.Header.Get("Content-Type") != "application/json" {
+				t.Fatalf("unexpected content type: got %s, want application/json", resp.Header.Get("Content-Type"))
+			}
+
+			var result struct {
+				Success       bool   `json:"success"`
+				Metadata      string `json:"metadata"`
+				Redirect      string `json:"redirect"`
+				UploadedFiles map[string]struct {
+					// TODO: verify the paste by reading the "paste" key here once paste support is
+					// added.
+					Raw string `json:"raw"`
+				} `json:"uploaded_files"`
+			}
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
+				t.Fatalf("unmarshaling error response: %v", err)
+			}
+
+			if !result.Success {
+				t.Fatalf("unexpected success: got %v, want true", result.Success)
+			}
+
+			wantLenUploadedFiles := 1
+			if len(result.UploadedFiles) != wantLenUploadedFiles {
+				t.Fatalf(
+					"unexpected number of uploaded files: got %d, want %d",
+					len(result.UploadedFiles),
+					wantLenUploadedFiles,
+				)
+			}
+
+			rawURL, err := url.ParseRequestURI(result.UploadedFiles["test.txt"].Raw)
+			if err != nil {
+				t.Fatalf("parsing raw URL: %v", err)
+			}
+			uploadDetailsURL, err := url.ParseRequestURI(result.Redirect)
+			if err != nil {
+				t.Fatalf("parsing redirect URL: %v", err)
+			}
+			metadataURL, err := url.ParseRequestURI(result.Metadata)
+			if err != nil {
+				t.Fatalf("parsing metadata URL: %v", err)
+			}
+
+			links := []*url.URL{rawURL, uploadDetailsURL, metadataURL}
+
+			// Raw file
+			storage.AssertFile(t, testfunc.KeyFromURL(rawURL.String()), &testfunc.StoredObject{
+				Content:            "test\n",
+				MIMEType:           "text/plain",
+				ContentDisposition: `inline; filename="test.txt"; filename*=utf-8''test.txt`,
+				Links:              testfunc.CanonicalizeLinks(links),
+				MetadataURL:        metadataURL.String(),
+			})
+
+			// Upload details
+			uploadDetails := storage.AssertHTML(t, testfunc.KeyFromURL(uploadDetailsURL.String()), &testfunc.StoredObject{
+				Content:            testfunc.DoNotCompareContentSentinel,
+				MIMEType:           "text/html; charset=utf-8",
+				ContentDisposition: "inline",
+				Links:              testfunc.CanonicalizeLinks(links),
+				MetadataURL:        metadataURL.String(),
+			})
+
+			parsed, err := testfunc.ParseUploadDetails(uploadDetails.Content)
+			if err != nil {
+				t.Fatalf("parsing upload details: %v", err)
+			}
+
+			pf := parsed.Files["test.txt"]
+
+			want := &testfunc.ParsedUploadDetailsFile{
+				Name:              "test.txt",
+				Icon:              "txt.png",
+				Size:              "5 bytes",
+				DirectLinkFileKey: testfunc.KeyFromURL(rawURL.String()),
+				PasteLinkHTMLKey:  "TODO_PASTE_URL",
+			}
+			if diff := cmp.Diff(want, pf); diff != "" {
+				t.Fatalf("unexpected upload details entry (-want +got):\n%s", diff)
+			}
+
+			// Metadata
+			metadata := storage.AssertFile(t, testfunc.KeyFromURL(metadataURL.String()), &testfunc.StoredObject{
+				Content:            testfunc.DoNotCompareContentSentinel,
+				MIMEType:           "application/json",
+				ContentDisposition: "",
+				Links:              testfunc.CanonicalizeLinks(links),
+				MetadataURL:        metadataURL.String(),
+			})
+
+			var gotMetadata uploads.UploadMetadataFile
+			if err := json.Unmarshal([]byte(metadata.Content), &gotMetadata); err != nil {
+				t.Fatalf("unmarshaling metadata: %v", err)
+			}
+
+			wantMetadata := uploads.UploadMetadataFile{
+				ServerVersion: conf.Version,
+				Timestamp:     gotMetadata.Timestamp,
+				UploadType:    "file",
+				UploadedFiles: []uploads.UploadedFile{
+					{
+						Name:  "test.txt",
+						Bytes: 5,
+						Raw:   rawURL.String(),
+					},
+				},
+			}
+			if diff := cmp.Diff(wantMetadata, gotMetadata); diff != "" {
+				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
+			}
+		})
 	}
-
-	resp, err := httpClientNoRedirects.Post(
-		fmt.Sprintf("http://localhost:%d/upload", ts.Port),
-		writer.FormDataContentType(),
-		postBody,
-	)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	body := string(bodyBytes)
-
-	if resp.StatusCode != http.StatusSeeOther {
-		t.Fatalf("unexpected status code: got %d, want %d\nBody:\n%s", resp.StatusCode, http.StatusSeeOther, body)
-	}
-
-	redirect := resp.Header.Get("Location")
-	uploadDetailsKey := testfunc.KeyFromURL(redirect)
-	uploadDetails := storage.HTMLs[uploadDetailsKey]
-	var uploadDetailsHTML strings.Builder
-	if _, err := io.Copy(&uploadDetailsHTML, uploadDetails); err != nil {
-		t.Errorf("copying upload details HTML: %v", err)
-	}
-
-	parsed, err := testfunc.ParseUploadDetails(uploadDetailsHTML.String())
-	if err != nil {
-		t.Fatalf("parsing upload details: %v", err)
-	}
-
-	pf, ok := parsed.Files["test.txt"]
-	if !ok {
-		t.Fatalf("file not found in upload details")
-	}
-
-	wantName := "test.txt"
-	if pf.Name != wantName {
-		t.Fatalf("unexpected name: got %q, want %q", pf.Name, wantName)
-	}
-
-	wantIcon := "txt.png"
-	if pf.Icon != wantIcon {
-		t.Fatalf("unexpected icon: got %q, want %q", pf.Icon, wantIcon)
-	}
-
-	wantSize := "5 bytes"
-	if pf.Size != wantSize {
-		t.Fatalf("unexpected size: got %q, want %q", pf.Size, wantSize)
-	}
-
-	storedFile := storage.Files[pf.DirectLinkFileKey]
-
-	if storedFile.Name() != wantName {
-		t.Fatalf("unexpected stored file name: got %q, want %q", storedFile.Name(), wantName)
-	}
-
-	if storedFile.Key() != pf.DirectLinkFileKey {
-		t.Fatalf("unexpected stored file key: got %q, want %q", storedFile.Key(), pf.DirectLinkFileKey)
-	}
-
-	rawURL := conf.FileURL(pf.DirectLinkFileKey)
-	uploadDetailsURL := conf.HTMLURL(testfunc.KeyFromURL(redirect))
-	metadataURL := conf.FileURL( // TODO: where do we get this? need to validate the contents, too.
-
-	links := []*url.URL{rawURL, metadataURL, uploadDetailsURL}
-
-	// TODO: links
-	// TODO: metadata URL
-
-	wantContentDisposition := `inline; filename="test.txt"; filename*=utf-8''test.txt`
-	if storedFile.ContentDisposition() != wantContentDisposition {
-		t.Fatalf("unexpected content disposition: got %q, want %q", storedFile.ContentDisposition(), wantContentDisposition)
-	}
-
-	wantMIMEType := "text/plain"
-	if storedFile.MIMEType() != wantMIMEType {
-		t.Fatalf("unexpected MIME type: got %q, want %q", storedFile.MIMEType(), wantMIMEType)
-	}
-
-	// TODO: add assertion about auto-paste once implemented
-	// TODO: assert metadata was uploaded
 }
 
-func TestUploadJSON(t *testing.T) {
-	t.Parallel()
-	ts := testfunc.RunningServer(t, testfunc.NewConfig())
-	defer ts.Cleanup()
+func TestUploadNoJSON(t *testing.T) {
+	for _, tt := range testfunc.StorageBackends {
+		t.Run(tt.Name, func(t *testing.T) {
+			t.Parallel()
+			storage := tt.StorageFactory(t)
+			conf := testfunc.NewConfig(
+				testfunc.WithStorageBackend(storage.Backend),
+			)
+			ts := testfunc.RunningServer(t, conf)
+			defer ts.Cleanup()
 
-	postBody := new(bytes.Buffer)
-	writer := multipart.NewWriter(postBody)
-	addFile(t, writer, "test.txt", "test\n")
-	if err := writer.Close(); err != nil {
-		t.Fatalf("closing writer: %v", err)
-	}
+			postBody := new(bytes.Buffer)
+			writer := multipart.NewWriter(postBody)
+			addFile(t, writer, "test.txt", "test\n")
+			if err := writer.Close(); err != nil {
+				t.Fatalf("closing writer: %v", err)
+			}
 
-	resp, err := http.Post(
-		fmt.Sprintf("http://localhost:%d/upload?json", ts.Port),
-		writer.FormDataContentType(),
-		postBody,
-	)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer resp.Body.Close()
+			resp, err := httpClientNoRedirects.Post(
+				fmt.Sprintf("http://localhost:%d/upload", ts.Port),
+				writer.FormDataContentType(),
+				postBody,
+			)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			defer resp.Body.Close()
 
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	body := string(bodyBytes)
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			body := string(bodyBytes)
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("unexpected status code: got %d, want %d\nBody:\n%s", resp.StatusCode, http.StatusOK, body)
-	}
+			if resp.StatusCode != http.StatusSeeOther {
+				t.Fatalf("unexpected status code: got %d, want %d\nBody:\n%s", resp.StatusCode, http.StatusSeeOther, body)
+			}
 
-	if resp.Header.Get("Content-Type") != "application/json" {
-		t.Fatalf("unexpected content type: got %s, want application/json", resp.Header.Get("Content-Type"))
-	}
+			redirect := resp.Header.Get("Location")
+			uploadDetailsKey := testfunc.KeyFromURL(redirect)
 
-	var errorResp errorResponse
-	if err := json.Unmarshal(bodyBytes, &errorResp); err != nil {
-		t.Fatalf("unmarshaling error response: %v", err)
-	}
+			// Upload details
+			uploadDetails, err := storage.GetHTML(uploadDetailsKey)
+			if err != nil {
+				t.Fatalf("getting upload details: %v", err)
+			}
 
-	want := errorResponse{
-		Success: true,
-	}
-	if diff := cmp.Diff(want, errorResp); diff != "" {
-		t.Fatalf("unexpected response (-want +got):\n%s", diff)
-	}
+			parsed, err := testfunc.ParseUploadDetails(uploadDetails.Content)
+			if err != nil {
+				t.Fatalf("parsing upload details: %v", err)
+			}
 
-	// TODO: add assertions based on the redirect location to ensure files were actually uploaded
+			pf := parsed.Files["test.txt"]
+
+			want := &testfunc.ParsedUploadDetailsFile{
+				Name:              "test.txt",
+				Icon:              "txt.png",
+				Size:              "5 bytes",
+				DirectLinkFileKey: testfunc.KeyFromURL(parsed.Files["test.txt"].DirectLinkFileKey),
+				PasteLinkHTMLKey:  "TODO_PASTE_URL",
+			}
+			if diff := cmp.Diff(want, pf); diff != "" {
+				t.Fatalf("unexpected upload details entry (-want +got):\n%s", diff)
+			}
+
+			// Raw file
+			storage.AssertFile(t, testfunc.KeyFromURL(parsed.Files["test.txt"].DirectLinkFileKey), &testfunc.StoredObject{
+				Content:            "test\n",
+				MIMEType:           "text/plain",
+				ContentDisposition: `inline; filename="test.txt"; filename*=utf-8''test.txt`,
+				Links:              uploadDetails.Links,
+				MetadataURL:        uploadDetails.MetadataURL,
+			})
+
+			// Note: not asserting metadata because it's not easy to get without JSON.
+			// The filesystem backend in particular doesn't provide it from the StoredObject.
+			// TODO: add metadata URL to the HTML upload details page.
+		})
+	}
 }
 
 func TestUploadNoMultipart(t *testing.T) {

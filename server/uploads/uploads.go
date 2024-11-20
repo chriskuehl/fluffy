@@ -363,7 +363,7 @@ func (m *uploadMetadata) URL(conf *config.Config) *url.URL {
 
 func (m *uploadMetadata) StoredFile() (config.StoredFile, error) {
 	var metadataJSON bytes.Buffer
-	if err := json.NewEncoder(&metadataJSON).Encode(m); err != nil {
+	if err := json.NewEncoder(&metadataJSON).Encode(m.File); err != nil {
 		return nil, fmt.Errorf("encoding metadata JSON: %w", err)
 	}
 	return storage.NewStoredFile(
