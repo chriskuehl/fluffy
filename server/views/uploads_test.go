@@ -264,9 +264,35 @@ func TestUploadNoJSON(t *testing.T) {
 				MetadataURL:        uploadDetails.MetadataURL,
 			})
 
-			// Note: not asserting metadata because it's not easy to get without JSON.
-			// The filesystem backend in particular doesn't provide it from the StoredObject.
-			// TODO: add metadata URL to the HTML upload details page.
+			// Metadata
+			metadata := storage.AssertFile(t, testfunc.KeyFromURL(parsed.MetadataURL), &testfunc.StoredObject{
+				Content:            testfunc.DoNotCompareContentSentinel,
+				MIMEType:           "application/json",
+				ContentDisposition: "",
+				Links:              uploadDetails.Links,
+				MetadataURL:        uploadDetails.MetadataURL,
+			})
+
+			var gotMetadata uploads.UploadMetadataFile
+			if err := json.Unmarshal([]byte(metadata.Content), &gotMetadata); err != nil {
+				t.Fatalf("unmarshaling metadata: %v", err)
+			}
+
+			wantMetadata := uploads.UploadMetadataFile{
+				ServerVersion: conf.Version,
+				Timestamp:     gotMetadata.Timestamp,
+				UploadType:    "file",
+				UploadedFiles: []uploads.UploadedFile{
+					{
+						Name:  "test.txt",
+						Bytes: 5,
+						Raw:   conf.FileURL(parsed.Files["test.txt"].DirectLinkFileKey).String(),
+					},
+				},
+			}
+			if diff := cmp.Diff(wantMetadata, gotMetadata); diff != "" {
+				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

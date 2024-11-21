@@ -191,9 +191,11 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		uploadDetailsData := struct {
 			Meta          *meta.Meta
 			UploadedFiles []uploadedFileData
+			MetadataURL   string
 		}{
 			Meta:          uploadDetailsMeta,
 			UploadedFiles: make([]uploadedFileData, 0, len(files)),
+			MetadataURL:   metadata.URL(conf).String(),
 		}
 		for _, file := range files {
 			// TODO: this is ridiculous, we've done this a bajillion times now
@@ -355,7 +357,8 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		}
 
 		pasteData := struct {
-			Meta *meta.Meta
+			Meta        *meta.Meta
+			MetadataURL string
 			// localStorage variable name for preferred style (either "preferredStyle" or
 			// "preferredStyleTerminal").
 			PreferredStyleVar string
@@ -368,6 +371,7 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			Texts           []*highlighting.Text
 		}{
 			Meta:              pasteMeta,
+			MetadataURL:       "TODO_METADATA_URL",
 			PreferredStyleVar: "preferredStyle",
 			DefaultStyle:      highlighting.DefaultStyle,
 			// TODO: does this need any transformation?

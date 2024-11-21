@@ -34,7 +34,8 @@ type ParsedUploadDetailsFile struct {
 }
 
 type ParsedUploadDetails struct {
-	Files map[string]*ParsedUploadDetailsFile
+	MetadataURL string
+	Files       map[string]*ParsedUploadDetailsFile
 }
 
 func ParseUploadDetails(html string) (*ParsedUploadDetails, error) {
@@ -44,14 +45,15 @@ func ParseUploadDetails(html string) (*ParsedUploadDetails, error) {
 	}
 
 	ret := &ParsedUploadDetails{
-		Files: make(map[string]*ParsedUploadDetailsFile),
+		MetadataURL: gq.Find("meta[name='fluffy:metadata-url']").AttrOr("content", ""),
+		Files:       make(map[string]*ParsedUploadDetailsFile),
 	}
 	gq.Find(".file-holder .file").Each(func(_ int, s *goquery.Selection) {
 		name := strings.TrimSpace(s.Find(".filename").Text())
-		icon, _ := s.Find(".filename img").Attr("src")
+		icon := s.Find(".filename img").AttrOr("src", "")
 		size := strings.TrimSpace(s.Find(".filesize").Text())
-		directLink, _ := s.Find(".download").Attr("href")
-		pasteLink, _ := s.Find(".view-paste").Attr("href")
+		directLink := s.Find(".download").AttrOr("href", "")
+		pasteLink := s.Find(".view-paste").AttrOr("href", "")
 		ret.Files[name] = &ParsedUploadDetailsFile{
 			Name:              name,
 			Icon:              KeyFromURL(icon),

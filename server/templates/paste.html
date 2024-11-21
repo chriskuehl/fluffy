@@ -1,4 +1,59 @@
+{{define "extraHead"}}
+    <meta name="fluffy:metadata-url" content="{{.MetadataURL}}" />
+    <link rel="stylesheet" href="{{.Meta.AssetURL "chroma.css"}}" />
+{{end}}
+
+{{define "content"}}
+    <div id="highlightContainer" class="style-{{.DefaultStyle}}">
+        {{template "highlightStart" .}}
+        <div class="paste-toolbar">
+            <div class="info">
+                {{if eq (len .Texts) 1}}
+                    {{plusOne (len (index .Texts 0).LineNumberMapping)}}
+                    {{pluralize "line" (len (index .Texts 0).LineNumberMapping)}}
+                    of
+                {{end}}
+                {{.Highlighter.Name}}
+            </div>
+            <a class="button" href="{{.RawURL}}">
+                Raw Text
+            </a>
+
+            <form method="POST" action="{{.Meta.Conf.HomeURL.String}}">
+                <input type="hidden" name="text" value="{{.CopyAndEditText}}" />
+                <input type="submit" class="button" value="Copy &amp; Edit" />
+            </form>
+
+            {{template "extraToolbar" .}}
+
+			<div class="clearfix"></div>
+        </div>
+        <div id="paste">
+            {{range $text := .Texts}}
+                <div class="text-container style-{{$.DefaultStyle.ChromaStyle.Name}}">
+                    {{if $.Highlighter.RenderAsRichText}}
+                        <div class="text rich-text">
+                            {{$.Highlighter.Highlight $text}}
+                        </div>
+                    {{else}}
+                        <div class="line-numbers">
+                            {{range $i, $numbers := $text.LineNumberMapping}}
+                                <a class="{{range $numbers}}LL{{plusOne .}} {{end}}">{{plusOne $i}}</a>
+                            {{end}}
+                        </div>
+                        <div class="text plain-text" contenteditable="true" spellcheck="false">
+                            {{$.Highlighter.Highlight $text}}
+                        </div>
+                    {{end}}
+                </div>
+            {{end}}
+        </div>
+    </div>
+{{end}}
+
 {{define "inlineJS"}}
+    <meta name="fluffy:metadata-url" content="{{$.MetadataURL}}" />
+
     <!-- TODO: can we factor out jQuery? -->
     <script integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" crossorigin="anonymous"></script>
     {{.Meta.InlineJS "js/paste-inline.js"}}
@@ -76,34 +131,4 @@
     {{end}}
 {{end}}
 
-{{define "text"}}
-    {{range $text := .Texts}}
-        <div class="text-container style-{{$.DefaultStyle.ChromaStyle.Name}}">
-            {{if $.Highlighter.RenderAsRichText}}
-                <div class="text rich-text">
-                    {{$.Highlighter.Highlight $text}}
-                </div>
-            {{else}}
-                <div class="line-numbers">
-                    {{range $i, $numbers := $text.LineNumberMapping}}
-                        <a class="{{range $numbers}}LL{{plusOne .}} {{end}}">{{plusOne $i}}</a>
-                    {{end}}
-                </div>
-                <div class="text plain-text" contenteditable="true" spellcheck="false">
-                    {{$.Highlighter.Highlight $text}}
-                </div>
-            {{end}}
-        </div>
-    {{end}}
-{{end}}
-
-{{define "info"}}
-    {{if eq (len .Texts) 1}}
-        {{plusOne (len (index .Texts 0).LineNumberMapping)}}
-        {{pluralize "line" (len (index .Texts 0).LineNumberMapping)}}
-        of
-    {{end}}
-    {{.Highlighter.Name}}
-{{end}}
-
-{{template "text.html" .}}
+{{template "base.html" .}}
