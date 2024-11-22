@@ -8,6 +8,8 @@
 * SanitizedKey should be required probably in storage Store*() interfaces, and have constructors for stuff like metadata key, paste raw file keys, etc
 * Logging middleware to provide request logging
 * Make file size accessible on StoredObject
+* Add dev-only example pages for upload details, paste, markdown, diff, ansi colors
+    * Might be a good opportunity to refactor some of the HTML generation, which we need to do anyway to support auto-generating pastes
 * Add a way to create sub-loggers to the Logger interface, update uploads/uploads.go to use it
 	* maybe works based on context instead of actual sub-logger?
 * Go through and clean up messy tab/space indentation in templates
@@ -29,3 +31,5 @@
 * Eliminate jQuery
 * Eliminate all third-party resources (e.g. fonts)
 * TODO assertions in views/uploads_test.go
+* Consolidate fpb and fput into just fpb and have it automatically deal with making pastes or not
+* Language is set both in query string and POST body of fpb cli

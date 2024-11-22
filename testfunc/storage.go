@@ -70,11 +70,13 @@ func (b *StorageBackend) AssertHTML(t *testing.T, key string, want *StoredObject
 	return b.assertObject(t, got, want)
 }
 
+type StorageFactory func(*testing.T) StorageBackend
+
 // StorageBackends is a list of storage backends available for testing. This is intended to be used
 // in a table test.
 var StorageBackends = []struct {
 	Name           string
-	StorageFactory func(*testing.T) StorageBackend
+	StorageFactory StorageFactory
 }{
 	{
 		Name:           "memory_backend",
@@ -88,6 +90,34 @@ var StorageBackends = []struct {
 		Name:           "s3_backend",
 		StorageFactory: s3Backend,
 	},
+}
+
+func AddStorageBackends[T any](tests map[string]T) []struct {
+	Name           string
+	StorageFactory StorageFactory
+	T              T
+} {
+	ret := make([]struct {
+		Name           string
+		StorageFactory StorageFactory
+		T              T
+	}, len(tests)*len(StorageBackends))
+	i := 0
+	for testName, test := range tests {
+		for _, tt := range StorageBackends {
+			ret[i] = struct {
+				Name           string
+				StorageFactory StorageFactory
+				T              T
+			}{
+				Name:           fmt.Sprintf("%s/%s", testName, tt.Name),
+				StorageFactory: tt.StorageFactory,
+				T:              test,
+			}
+			i++
+		}
+	}
+	return ret
 }
 
 func memoryBackend(t *testing.T) StorageBackend {

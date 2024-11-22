@@ -224,10 +224,15 @@ type Highlighter interface {
 	// RenderAsRichText returns true if the paste should be rendered as rich text, without line
 	// numbers or other plaintext formatting. Useful for e.g. Markdown.
 	RenderAsRichText() bool
+	// RenderAsTerminal returns true if the paste should be rendered as terminal output.
+	RenderAsTerminal() bool
 	// ExtraHTMLClasses returns a extra CSS classes that should be added.
 	ExtraHTMLClasses() []string
 	// GenerateTexts takes a piece of text and returns a slice of Texts.
-	// Generally this will return a single Text, but in the case of a diff, it may return multiple.
+	//   * Generally this will return a single Text, but in the case of a diff, it may return multiple.
+	//	 * It will always return at least one Text.
+	//   * The first returned Text is the primary Text.
+	//   * Line mappings in the returned Texts are in reference to the primary Text.
 	GenerateTexts(text string) []*Text
 	// Highlight takes a piece of text and returns an HTML representation.
 	Highlight(text *Text) (template.HTML, error)
@@ -314,6 +319,10 @@ func (h *PlainTextHighlighter) RenderAsDiff() bool {
 }
 
 func (h *PlainTextHighlighter) RenderAsRichText() bool {
+	return false
+}
+
+func (h *PlainTextHighlighter) RenderAsTerminal() bool {
 	return false
 }
 

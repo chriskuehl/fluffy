@@ -24,6 +24,10 @@ func (h *MarkdownHighlighter) RenderAsRichText() bool {
 	return true
 }
 
+func (h *MarkdownHighlighter) RenderAsTerminal() bool {
+	return false
+}
+
 func (h *MarkdownHighlighter) ExtraHTMLClasses() []string {
 	return []string{"markdown"}
 }

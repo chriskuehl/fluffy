@@ -4,23 +4,27 @@
 {{end}}
 
 {{define "content"}}
-    <div id="highlightContainer" class="style-{{.DefaultStyle}}">
+        <div
+            id="highlightContainer"
+            {{/* XXX: The JS requires this div to *only* contain the style-X class. */}}
+            class="style-{{.DefaultStyle.ChromaStyle.Name}}"
+        >
         {{template "highlightStart" .}}
         <div class="paste-toolbar">
             <div class="info">
                 {{if eq (len .Texts) 1}}
-                    {{plusOne (len (index .Texts 0).LineNumberMapping)}}
+                    {{len (index .Texts 0).LineNumberMapping}}
                     {{pluralize "line" (len (index .Texts 0).LineNumberMapping)}}
                     of
                 {{end}}
                 {{.Highlighter.Name}}
             </div>
-            <a class="button" href="{{.RawURL}}">
+            <a class="button" id="raw-text" href="{{.RawURL}}">
                 Raw Text
             </a>
 
             <form method="POST" action="{{.Meta.Conf.HomeURL.String}}">
-                <input type="hidden" name="text" value="{{.CopyAndEditText}}" />
+                <input type="hidden" id="copy-and-edit" name="text" value="{{.CopyAndEditText}}" />
                 <input type="submit" class="button" value="Copy &amp; Edit" />
             </form>
 
@@ -30,7 +34,7 @@
         </div>
         <div id="paste">
             {{range $text := .Texts}}
-                <div class="text-container style-{{$.DefaultStyle.ChromaStyle.Name}}">
+                <div class="text-container">
                     {{if $.Highlighter.RenderAsRichText}}
                         <div class="text rich-text">
                             {{$.Highlighter.Highlight $text}}

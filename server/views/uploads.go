@@ -24,6 +24,25 @@ type errorResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
+type uploadResponse struct {
+	errorResponse
+	Redirect      string                  `json:"redirect"`
+	Metadata      string                  `json:"metadata"`
+	UploadedFiles map[string]uploadedFile `json:"uploaded_files"`
+}
+
+type uploadedFile struct {
+	Bytes    int64                `json:"bytes"`
+	Raw      string               `json:"raw"`
+	Paste    string               `json:"paste,omitempty"`
+	Language uploadedFileLanguage `json:"language,omitempty"`
+	NumLines int                  `json:"num_lines,omitempty"`
+}
+
+type uploadedFileLanguage struct {
+	Title string `json:"title"`
+}
+
 type userError struct {
 	code    int
 	message string
@@ -40,19 +59,6 @@ func (e userError) output(w http.ResponseWriter) {
 		Success: false,
 		Error:   e.message,
 	})
-}
-
-type uploadedFile struct {
-	Bytes int64  `json:"bytes"`
-	Raw   string `json:"raw"`
-	Paste string `json:"paste,omitempty"`
-}
-
-type uploadResponse struct {
-	errorResponse
-	Redirect      string                  `json:"redirect"`
-	Metadata      string                  `json:"metadata"`
-	UploadedFiles map[string]uploadedFile `json:"uploaded_files"`
 }
 
 // storedFileFromFileHeader creates a StoredFile from a multipart.FileHeader.
@@ -329,6 +335,17 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			storage.WithMIMEType("text/plain"),
 		)
 
+		// Metadata
+		// TODO: update for pastes
+		metadata, err := uploads.NewUploadMetadata(conf, []config.StoredFile{rawFile})
+		if err != nil {
+			logger.Error(r.Context(), "creating metadata", "error", err)
+			userError{http.StatusInternalServerError, "Failed to create metadata."}.output(w)
+			return
+		}
+
+		metadata.URL(conf).String()
+
 		// Paste HTML page
 		pasteKey, err := uploads.GenUniqueObjectKey()
 		if err != nil {
@@ -356,6 +373,9 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			mapping = append(mapping, []int{i})
 		}
 
+		texts := highlighter.GenerateTexts(text)
+		primaryText := texts[0]
+
 		pasteData := struct {
 			Meta        *meta.Meta
 			MetadataURL string
@@ -371,26 +391,27 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			Texts           []*highlighting.Text
 		}{
 			Meta:              pasteMeta,
-			MetadataURL:       "TODO_METADATA_URL",
+			MetadataURL:       metadata.URL(conf).String(),
 			PreferredStyleVar: "preferredStyle",
 			DefaultStyle:      highlighting.DefaultStyle,
 			// TODO: does this need any transformation?
+			// TODO: this is not used in the template yet
 			CopyAndEditText: text,
 			RawURL:          conf.FileURL(rawFile.Key()).String(),
 			Styles:          highlighting.Styles,
 			Highlighter:     highlighter,
-			Texts:           highlighter.GenerateTexts(text),
+			Texts:           texts,
 		}
 
 		// Terminal output gets its own preferred theme setting since many people
 		// seem to prefer a dark background for terminal output, but a light
 		// background for regular code.
-		if false { // TODO: if highlighter.is_terminal_output
+		if highlighter.RenderAsTerminal() {
 			pasteData.PreferredStyleVar = "preferredStyleTerminal"
 			pasteData.DefaultStyle = highlighting.DefaultDarkStyle
 		}
 
-		if false { // TODO: if highlighter.is_diff
+		if highlighter.RenderAsDiff() {
 			pasteMeta.PageConf.ExtraHTMLClasses = append(pasteMeta.PageConf.ExtraHTMLClasses, "diff-side-by-side")
 		}
 
@@ -404,15 +425,6 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			storage.WithKey(pasteKey+".html"),
 		)
 
-		// Metadata
-		// TODO: update for pastes
-		metadata, err := uploads.NewUploadMetadata(conf, []config.StoredFile{rawFile})
-		if err != nil {
-			logger.Error(r.Context(), "creating metadata", "error", err)
-			userError{http.StatusInternalServerError, "Failed to create metadata."}.output(w)
-			return
-		}
-
 		// Upload
 		errs := uploads.UploadObjects(r.Context(), logger, conf, []config.StoredFile{rawFile}, []config.StoredHTML{pasteHTML}, metadata)
 		if len(errs) > 0 {
@@ -421,7 +433,45 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("raw: %s\n", conf.FileURL(rawFile.Key()).String())
-		fmt.Printf("paste: %s\n", conf.HTMLURL(pasteHTML.Key()).String())
+		redirect := conf.HTMLURL(pasteHTML.Key()).String()
+
+		if jsonResponse {
+			bytes, err := utils.FileSizeBytes(rawFile)
+			if err != nil {
+				logger.Error(r.Context(), "getting file size", "error", err)
+				userError{http.StatusInternalServerError, "Failed to get file size."}.output(w)
+				return
+			}
+
+			resp := uploadResponse{
+				errorResponse: errorResponse{
+					Success: true,
+				},
+				Redirect: redirect,
+				Metadata: metadata.URL(conf).String(),
+				UploadedFiles: map[string]uploadedFile{
+					"paste": {
+						// To be least confusing, we return size of the raw file. This may not
+						// match the rendered text if the highlighter applied any transformations.
+						Bytes: bytes,
+						Raw:   conf.FileURL(rawFile.Key()).String(),
+						Paste: conf.HTMLURL(pasteHTML.Key()).String(),
+						Language: uploadedFileLanguage{
+							Title: highlighter.Name(),
+						},
+						// This may not match the number of lines in the raw text but since this
+						// field is generally used for display purposes (e.g. link previews), it's
+						// probably better to provide the number of lines in the rendered text
+						// here.
+						NumLines: len(primaryText.LineNumberMapping),
+					},
+				},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(resp)
+		} else {
+			http.Redirect(w, r, redirect, http.StatusSeeOther)
+		}
 	}
 }

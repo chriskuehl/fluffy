@@ -59,6 +59,10 @@ func (h *ChromaHighlighter) RenderAsRichText() bool {
 	return false
 }
 
+func (h *ChromaHighlighter) RenderAsTerminal() bool {
+	return false
+}
+
 func (h *ChromaHighlighter) ExtraHTMLClasses() []string {
 	return nil
 }

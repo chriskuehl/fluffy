@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -147,7 +148,6 @@ func TestUpload(t *testing.T) {
 			pf := parsed.Files["test.txt"]
 
 			want := &testfunc.ParsedUploadDetailsFile{
-				Name:              "test.txt",
 				Icon:              "txt.png",
 				Size:              "5 bytes",
 				DirectLinkFileKey: testfunc.KeyFromURL(rawURL.String()),
@@ -245,7 +245,6 @@ func TestUploadNoJSON(t *testing.T) {
 			pf := parsed.Files["test.txt"]
 
 			want := &testfunc.ParsedUploadDetailsFile{
-				Name:              "test.txt",
 				Icon:              "txt.png",
 				Size:              "5 bytes",
 				DirectLinkFileKey: testfunc.KeyFromURL(parsed.Files["test.txt"].DirectLinkFileKey),
@@ -359,4 +358,194 @@ func TestUploadTooLarge(t *testing.T) {
 	if diff := cmp.Diff(want, errorResp); diff != "" {
 		t.Fatalf("unexpected response (-want +got):\n%s", diff)
 	}
+}
+
+func TestPaste(t *testing.T) {
+	tests := map[string]struct {
+		language     string
+		text         string
+		wantLanguage string
+		wantNumLines int
+		wantPaste    testfunc.ParsedPaste
+	}{
+		"simple": {
+			language:     "python",
+			text:         "test\n",
+			wantLanguage: "Python",
+			wantNumLines: 1,
+			wantPaste: testfunc.ParsedPaste{
+				DefaultStyleName: "xcode",
+				ToolbarInfoLine:  "1 line of Python",
+				HasDiffButtons:   false,
+				Texts:            1,
+			},
+		},
+	}
+
+	for _, tt := range testfunc.AddStorageBackends(tests) {
+		t.Run(tt.Name, func(t *testing.T) {
+			t.Parallel()
+			storage := tt.StorageFactory(t)
+			conf := testfunc.NewConfig(
+				testfunc.WithStorageBackend(storage.Backend),
+			)
+			ts := testfunc.RunningServer(t, conf)
+			defer ts.Cleanup()
+
+			form := url.Values{}
+			form.Set("language", tt.T.language)
+			form.Set("text", tt.T.text)
+
+			resp, err := http.Post(
+				fmt.Sprintf("http://localhost:%d/paste?json", ts.Port),
+				"application/x-www-form-urlencoded",
+				strings.NewReader(form.Encode()),
+			)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			defer resp.Body.Close()
+
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			body := string(bodyBytes)
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("unexpected status code: got %d, want %d\nBody:\n%s", resp.StatusCode, http.StatusOK, body)
+			}
+
+			if resp.Header.Get("Content-Type") != "application/json" {
+				t.Fatalf("unexpected content type: got %s, want application/json", resp.Header.Get("Content-Type"))
+			}
+
+			var result struct {
+				Success       bool   `json:"success"`
+				Metadata      string `json:"metadata"`
+				Redirect      string `json:"redirect"`
+				UploadedFiles map[string]struct {
+					Raw      string `json:"raw"`
+					Paste    string `json:"paste"`
+					Language struct {
+						Title string `json:"title"`
+					} `json:"language"`
+					NumLines int `json:"num_lines"`
+				} `json:"uploaded_files"`
+			}
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
+				t.Fatalf("unmarshaling error response: %v", err)
+			}
+
+			if !result.Success {
+				t.Fatalf("unexpected success: got %v, want true", result.Success)
+			}
+
+			wantLenUploadedFiles := 1
+			if len(result.UploadedFiles) != wantLenUploadedFiles {
+				t.Fatalf(
+					"unexpected number of uploaded files: got %d, want %d",
+					len(result.UploadedFiles),
+					wantLenUploadedFiles,
+				)
+			}
+
+			if result.UploadedFiles["paste"].Paste != result.Redirect {
+				t.Fatalf(
+					"expected paste URL to be the same as the redirect URL but it was not; paste %q, redirect %q",
+					result.UploadedFiles["paste"].Paste,
+					result.Redirect,
+				)
+			}
+
+			if result.UploadedFiles["paste"].Language.Title != tt.T.wantLanguage {
+				t.Fatalf("unexpected language: got %q, want %q", result.UploadedFiles["paste"].Language.Title, tt.T.wantLanguage)
+			}
+
+			if result.UploadedFiles["paste"].NumLines != tt.T.wantNumLines {
+				t.Fatalf("unexpected number of lines: got %d, want %d", result.UploadedFiles["paste"].NumLines, tt.T.wantNumLines)
+			}
+
+			rawURL, err := url.ParseRequestURI(result.UploadedFiles["paste"].Raw)
+			if err != nil {
+				t.Fatalf("parsing raw URL: %v", err)
+			}
+			pasteURL, err := url.ParseRequestURI(result.UploadedFiles["paste"].Paste)
+			if err != nil {
+				t.Fatalf("parsing paste URL: %v", err)
+			}
+			metadataURL, err := url.ParseRequestURI(result.Metadata)
+			if err != nil {
+				t.Fatalf("parsing metadata URL: %v", err)
+			}
+
+			links := []*url.URL{rawURL, pasteURL, metadataURL}
+
+			// Raw file
+			storage.AssertFile(t, testfunc.KeyFromURL(rawURL.String()), &testfunc.StoredObject{
+				Content:            tt.T.text,
+				MIMEType:           "text/plain",
+				ContentDisposition: "",
+				Links:              testfunc.CanonicalizeLinks(links),
+				MetadataURL:        metadataURL.String(),
+			})
+
+			// Paste
+			paste := storage.AssertHTML(t, testfunc.KeyFromURL(pasteURL.String()), &testfunc.StoredObject{
+				Content:            testfunc.DoNotCompareContentSentinel,
+				MIMEType:           "text/html; charset=utf-8",
+				ContentDisposition: "inline",
+				Links:              testfunc.CanonicalizeLinks(links),
+				MetadataURL:        metadataURL.String(),
+			})
+
+			parsed, err := testfunc.ParsePaste(paste.Content)
+			if err != nil {
+				t.Fatalf("parsing paste: %v", err)
+			}
+
+			wantPaste := tt.T.wantPaste
+			wantPaste.MetadataURL = metadataURL.String()
+			wantPaste.RawURL = rawURL.String()
+			wantPaste.CopyAndEditText = tt.T.text
+			if diff := cmp.Diff(&wantPaste, parsed); diff != "" {
+				t.Fatalf("unexpected paste (-want +got):\n%s", diff)
+			}
+
+			// Metadata
+			metadata := storage.AssertFile(t, testfunc.KeyFromURL(metadataURL.String()), &testfunc.StoredObject{
+				Content:            testfunc.DoNotCompareContentSentinel,
+				MIMEType:           "application/json",
+				ContentDisposition: "",
+				Links:              testfunc.CanonicalizeLinks(links),
+				MetadataURL:        metadataURL.String(),
+			})
+
+			var gotMetadata uploads.UploadMetadataFile
+			if err := json.Unmarshal([]byte(metadata.Content), &gotMetadata); err != nil {
+				t.Fatalf("unmarshaling metadata: %v", err)
+			}
+
+			// TODO: update once paste support is added to the metadata.
+			wantMetadata := uploads.UploadMetadataFile{
+				ServerVersion: conf.Version,
+				Timestamp:     gotMetadata.Timestamp,
+				UploadType:    "file",
+				UploadedFiles: []uploads.UploadedFile{
+					{
+						Name:  "",
+						Bytes: 5,
+						Raw:   rawURL.String(),
+					},
+				},
+			}
+			if diff := cmp.Diff(wantMetadata, gotMetadata); diff != "" {
+				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestPasteMultipart(t *testing.T) {
+	// TODO
 }
