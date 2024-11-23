@@ -59,17 +59,34 @@ type Assets struct {
 }
 
 type Templates struct {
-	FS *embed.FS
+	// Pages
+	Index         *template.Template
+	Paste         *template.Template
+	UploadDetails *template.Template
+	UploadHistory *template.Template
+
+	// Includes
+	InlineJS *template.Template
 }
 
-func (t *Templates) Must(name string) *template.Template {
+func NewTemplates(fs *embed.FS) *Templates {
 	funcs := template.FuncMap{
 		"plusOne": func(i int) int {
 			return i + 1
 		},
 		"pluralize": utils.Pluralize[int],
 	}
-	return template.Must(template.New("").Funcs(funcs).ParseFS(t.FS, "templates/include/*.html", "templates/"+name))
+	mustTemplate := func(name string) *template.Template {
+		return template.Must(template.New("").Funcs(funcs).ParseFS(fs, "templates/include/*.html", "templates/"+name))
+	}
+	return &Templates{
+		Index:         mustTemplate("index.html"),
+		Paste:         mustTemplate("paste.html"),
+		UploadDetails: mustTemplate("upload-details.html"),
+		UploadHistory: mustTemplate("upload-history.html"),
+
+		InlineJS: mustTemplate("include/inline-js.html"),
+	}
 }
 
 type Config struct {

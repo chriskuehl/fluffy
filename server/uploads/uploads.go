@@ -354,7 +354,7 @@ type UploadMetadataFile struct {
 type uploadMetadata struct {
 	key  string
 	File UploadMetadataFile
-	// TODO: add PasteDetails once paste support is added.
+	// TODO: add paste details once paste support is added.
 }
 
 func (m *uploadMetadata) URL(conf *config.Config) *url.URL {

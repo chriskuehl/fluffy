@@ -65,8 +65,7 @@ func (m Meta) InlineJS(path string) template.HTML {
 		Meta:    m,
 		Content: template.JS(src),
 	}
-	tmpl := m.Conf.Templates.Must("include/inline-js.html")
-	if err := tmpl.ExecuteTemplate(&buf, "inline-js.html", data); err != nil {
+	if err := m.Conf.Templates.InlineJS.ExecuteTemplate(&buf, "inline-js.html", data); err != nil {
 		panic("executing template: " + err.Error())
 	} else {
 		return template.HTML(buf.String())

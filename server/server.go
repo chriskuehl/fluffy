@@ -46,7 +46,7 @@ func NewConfig() (*config.Config, error) {
 		Port:                    8080,
 		GlobalTimeout:           60 * time.Second,
 		Assets:                  a,
-		Templates:               &config.Templates{FS: &templatesFS},
+		Templates:               config.NewTemplates(&templatesFS),
 	}, nil
 }
 

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/chriskuehl/fluffy/server/config"
@@ -123,8 +124,6 @@ func storedFileFromFileHeader(
 }
 
 func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
-	uploadDetailsTmpl := conf.Templates.Must("upload-details.html")
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(conf.MaxMultipartMemoryBytes)
 		if err != nil {
@@ -217,7 +216,7 @@ func HandleUpload(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 				Bytes:      bytes,
 			})
 		}
-		if err := uploadDetailsTmpl.ExecuteTemplate(&uploadDetails, "upload-details.html", uploadDetailsData); err != nil {
+		if err := conf.Templates.UploadDetails.ExecuteTemplate(&uploadDetails, "upload-details.html", uploadDetailsData); err != nil {
 			logger.Error(r.Context(), "executing template", "error", err)
 			userError{http.StatusInternalServerError, "Failed to create response."}.output(w)
 			return
@@ -286,9 +285,79 @@ func normalizeTextAndLanguage(text, diffText1, diffText2, language string) (stri
 	}
 }
 
-func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
-	pasteTmpl := conf.Templates.Must("paste.html")
+func generatePaste(
+	ctx context.Context,
+	conf *config.Config,
+	highlighter highlighting.Highlighter,
+	texts []*highlighting.Text,
+	metadataURL *url.URL,
+	rawURL *url.URL,
+	text string,
+) (config.StoredHTML, error) {
+	pasteKey, err := uploads.GenUniqueObjectKey()
+	if err != nil {
+		return nil, fmt.Errorf("generating unique object key: %w", err)
+	}
 
+	pasteMeta, err := meta.NewMeta(ctx, conf, meta.PageConfig{
+		ID:               "paste",
+		IsStatic:         true,
+		ExtraHTMLClasses: highlighter.ExtraHTMLClasses(),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating meta: %w", err)
+	}
+
+	pasteData := struct {
+		Meta        *meta.Meta
+		MetadataURL string
+		RawURL      string
+		// localStorage variable name for preferred style (either "preferredStyle" or
+		// "preferredStyleTerminal").
+		PreferredStyleVar string
+		// Default style to use if no preferred style is set in the user's localStorage.
+		DefaultStyle    highlighting.Style
+		CopyAndEditText string
+		Styles          []highlighting.StyleCategory
+		Highlighter     highlighting.Highlighter
+		Texts           []*highlighting.Text
+	}{
+		Meta:              pasteMeta,
+		MetadataURL:       metadataURL.String(),
+		RawURL:            rawURL.String(),
+		PreferredStyleVar: "preferredStyle",
+		DefaultStyle:      highlighting.DefaultStyle,
+		// TODO: does this need any transformation?
+		// TODO: this is not used in the template yet
+		CopyAndEditText: text,
+		Styles:          highlighting.Styles,
+		Highlighter:     highlighter,
+		Texts:           texts,
+	}
+
+	// Terminal output gets its own preferred theme setting since many people
+	// seem to prefer a dark background for terminal output, but a light
+	// background for regular code.
+	if highlighter.RenderAsTerminal() {
+		pasteData.PreferredStyleVar = "preferredStyleTerminal"
+		pasteData.DefaultStyle = highlighting.DefaultDarkStyle
+	}
+
+	if highlighter.RenderAsDiff() {
+		pasteMeta.PageConf.ExtraHTMLClasses = append(pasteMeta.PageConf.ExtraHTMLClasses, "diff-side-by-side")
+	}
+
+	var paste bytes.Buffer
+	if err := conf.Templates.Paste.ExecuteTemplate(&paste, "paste.html", pasteData); err != nil {
+		return nil, fmt.Errorf("executing template: %w", err)
+	}
+	return storage.NewStoredHTML(
+		utils.NopReadSeekCloser(bytes.NewReader(paste.Bytes())),
+		storage.WithKey(pasteKey+".html"),
+	), nil
+}
+
+func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 			// cli versions 2.0.0 through 2.2.0 send multipart/form-data, so we need to support it forever.
@@ -344,85 +413,17 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			return
 		}
 
-		metadata.URL(conf).String()
-
 		// Paste HTML page
-		pasteKey, err := uploads.GenUniqueObjectKey()
-		if err != nil {
-			logger.Error(r.Context(), "generating unique object key", "error", err)
-			userError{http.StatusInternalServerError, "Failed to generate unique object key."}.output(w)
-			return
-		}
-
-		pasteMeta, err := meta.NewMeta(r.Context(), conf, meta.PageConfig{
-			ID:               "paste",
-			IsStatic:         true,
-			ExtraHTMLClasses: highlighter.ExtraHTMLClasses(),
-		})
-		if err != nil {
-			logger.Error(r.Context(), "creating meta", "error", err)
-			userError{http.StatusInternalServerError, "Failed to create response."}.output(w)
-			return
-		}
-
-		var paste bytes.Buffer
-
-		// TODO: calculate this properly
-		mapping := make([][]int, 0)
-		for i := 0; i < len(strings.Split(text, "\n")); i++ {
-			mapping = append(mapping, []int{i})
-		}
-
 		texts := highlighter.GenerateTexts(text)
 		primaryText := texts[0]
-
-		pasteData := struct {
-			Meta        *meta.Meta
-			MetadataURL string
-			// localStorage variable name for preferred style (either "preferredStyle" or
-			// "preferredStyleTerminal").
-			PreferredStyleVar string
-			// Default style to use if no preferred style is set in the user's localStorage.
-			DefaultStyle    highlighting.Style
-			CopyAndEditText string
-			RawURL          string
-			Styles          []highlighting.StyleCategory
-			Highlighter     highlighting.Highlighter
-			Texts           []*highlighting.Text
-		}{
-			Meta:              pasteMeta,
-			MetadataURL:       metadata.URL(conf).String(),
-			PreferredStyleVar: "preferredStyle",
-			DefaultStyle:      highlighting.DefaultStyle,
-			// TODO: does this need any transformation?
-			// TODO: this is not used in the template yet
-			CopyAndEditText: text,
-			RawURL:          conf.FileURL(rawFile.Key()).String(),
-			Styles:          highlighting.Styles,
-			Highlighter:     highlighter,
-			Texts:           texts,
-		}
-
-		// Terminal output gets its own preferred theme setting since many people
-		// seem to prefer a dark background for terminal output, but a light
-		// background for regular code.
-		if highlighter.RenderAsTerminal() {
-			pasteData.PreferredStyleVar = "preferredStyleTerminal"
-			pasteData.DefaultStyle = highlighting.DefaultDarkStyle
-		}
-
-		if highlighter.RenderAsDiff() {
-			pasteMeta.PageConf.ExtraHTMLClasses = append(pasteMeta.PageConf.ExtraHTMLClasses, "diff-side-by-side")
-		}
-
-		if err := pasteTmpl.ExecuteTemplate(&paste, "paste.html", pasteData); err != nil {
-			logger.Error(r.Context(), "executing template", "error", err)
-			userError{http.StatusInternalServerError, "Failed to create response."}.output(w)
-			return
-		}
-		pasteHTML := storage.NewStoredHTML(
-			utils.NopReadSeekCloser(bytes.NewReader(paste.Bytes())),
-			storage.WithKey(pasteKey+".html"),
+		pasteHTML, err := generatePaste(
+			r.Context(),
+			conf,
+			highlighter,
+			texts,
+			metadata.URL(conf),
+			conf.FileURL(rawKey+".txt"),
+			text,
 		)
 
 		// Upload

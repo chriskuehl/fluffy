@@ -18,7 +18,6 @@ func HandleIndex(conf *config.Config, logger logging.Logger) (http.HandlerFunc, 
 	if err != nil {
 		return nil, fmt.Errorf("iconExtensions: %w", err)
 	}
-	tmpl := conf.Templates.Must("index.html")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		extraHTMLClasses := []string{}
@@ -49,7 +48,7 @@ func HandleIndex(conf *config.Config, logger logging.Logger) (http.HandlerFunc, 
 			Text:           strings.Join(text, ""),
 		}
 		buf := bytes.Buffer{}
-		if err := tmpl.ExecuteTemplate(&buf, "index.html", data); err != nil {
+		if err := conf.Templates.Index.ExecuteTemplate(&buf, "index.html", data); err != nil {
 			logger.Error(r.Context(), "executing template", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return

@@ -16,7 +16,6 @@ func HandleUploadHistory(conf *config.Config, logger logging.Logger) (http.Handl
 	if err != nil {
 		return nil, fmt.Errorf("iconExtensions: %w", err)
 	}
-	tmpl := conf.Templates.Must("upload-history.html")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		m, err := meta.NewMeta(r.Context(), conf, meta.PageConfig{
@@ -35,7 +34,7 @@ func HandleUploadHistory(conf *config.Config, logger logging.Logger) (http.Handl
 			IconExtensions: extensions,
 		}
 		buf := bytes.Buffer{}
-		if err := tmpl.ExecuteTemplate(&buf, "upload-history.html", data); err != nil {
+		if err := conf.Templates.UploadHistory.ExecuteTemplate(&buf, "upload-history.html", data); err != nil {
 			logger.Error(r.Context(), "executing template", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return

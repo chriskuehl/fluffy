@@ -361,9 +361,21 @@ func TestUploadTooLarge(t *testing.T) {
 }
 
 func TestPaste(t *testing.T) {
+	defaultMakeRequest := func(port int, language string, text string) (*http.Response, error) {
+		form := url.Values{}
+		form.Set("language", language)
+		form.Set("text", text)
+		return http.Post(
+			fmt.Sprintf("http://localhost:%d/paste?json", port),
+			"application/x-www-form-urlencoded",
+			strings.NewReader(form.Encode()),
+		)
+	}
+
 	tests := map[string]struct {
 		language     string
 		text         string
+		makeRequest  func(port int, language string, text string) (*http.Response, error)
 		wantLanguage string
 		wantNumLines int
 		wantPaste    testfunc.ParsedPaste
@@ -371,6 +383,7 @@ func TestPaste(t *testing.T) {
 		"simple": {
 			language:     "python",
 			text:         "test\n",
+			makeRequest:  defaultMakeRequest,
 			wantLanguage: "Python",
 			wantNumLines: 1,
 			wantPaste: testfunc.ParsedPaste{
@@ -380,6 +393,60 @@ func TestPaste(t *testing.T) {
 				Texts:            1,
 			},
 		},
+		"simple_multipart": {
+			language: "python",
+			text:     "test\n",
+			makeRequest: func(port int, language string, text string) (*http.Response, error) {
+				postBody := new(bytes.Buffer)
+				writer := multipart.NewWriter(postBody)
+				writer.WriteField("language", language)
+				writer.WriteField("text", text)
+				if err := writer.Close(); err != nil {
+					return nil, fmt.Errorf("closing writer: %w", err)
+				}
+				return http.Post(
+					fmt.Sprintf("http://localhost:%d/paste?json", port),
+					writer.FormDataContentType(),
+					postBody,
+				)
+			},
+			wantLanguage: "Python",
+			wantNumLines: 1,
+			wantPaste: testfunc.ParsedPaste{
+				DefaultStyleName: "xcode",
+				ToolbarInfoLine:  "1 line of Python",
+				HasDiffButtons:   false,
+				Texts:            1,
+			},
+		},
+		"markdown": {
+			language: "rendered-markdown",
+			text: `# Title
+
+This is a paragraph.
+
+This is some code:
+
+` + "```" + `python
+print("Hello, world!")
+` + "```" + `
+
+* List item 1
+* List item 2`,
+			makeRequest:  defaultMakeRequest,
+			wantLanguage: "Rendered Markdown",
+			wantNumLines: 12,
+			wantPaste: testfunc.ParsedPaste{
+				DefaultStyleName: "xcode",
+				ToolbarInfoLine:  "12 lines of Rendered Markdown",
+				HasDiffButtons:   false,
+				Texts:            1,
+			},
+			// TODO assertions about markdown
+			// TODO chroma-highlighted text within markdown
+		},
+		// TODO diffs
+		// TODO ansi color
 	}
 
 	for _, tt := range testfunc.AddStorageBackends(tests) {
@@ -392,15 +459,7 @@ func TestPaste(t *testing.T) {
 			ts := testfunc.RunningServer(t, conf)
 			defer ts.Cleanup()
 
-			form := url.Values{}
-			form.Set("language", tt.T.language)
-			form.Set("text", tt.T.text)
-
-			resp, err := http.Post(
-				fmt.Sprintf("http://localhost:%d/paste?json", ts.Port),
-				"application/x-www-form-urlencoded",
-				strings.NewReader(form.Encode()),
-			)
+			resp, err := tt.T.makeRequest(ts.Port, tt.T.language, tt.T.text)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -534,7 +593,7 @@ func TestPaste(t *testing.T) {
 				UploadedFiles: []uploads.UploadedFile{
 					{
 						Name:  "",
-						Bytes: 5,
+						Bytes: int64(len(tt.T.text)),
 						Raw:   rawURL.String(),
 					},
 				},
@@ -544,8 +603,4 @@ func TestPaste(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestPasteMultipart(t *testing.T) {
-	// TODO
 }
