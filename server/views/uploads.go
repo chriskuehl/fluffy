@@ -3,13 +3,17 @@ package views
 import (
 	"bytes"
 	"context"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/alecthomas/chroma/v2/lexers"
 
 	"github.com/chriskuehl/fluffy/server/config"
 	"github.com/chriskuehl/fluffy/server/highlighting"
@@ -292,7 +296,6 @@ func generatePaste(
 	texts []*highlighting.Text,
 	metadataURL *url.URL,
 	rawURL *url.URL,
-	text string,
 ) (config.StoredHTML, error) {
 	pasteKey, err := uploads.GenUniqueObjectKey()
 	if err != nil {
@@ -329,7 +332,7 @@ func generatePaste(
 		DefaultStyle:      highlighting.DefaultStyle,
 		// TODO: does this need any transformation?
 		// TODO: this is not used in the template yet
-		CopyAndEditText: text,
+		CopyAndEditText: texts[0].Text,
 		Styles:          highlighting.Styles,
 		Highlighter:     highlighter,
 		Texts:           texts,
@@ -423,7 +426,6 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 			texts,
 			metadata.URL(conf),
 			conf.FileURL(rawKey+".txt"),
-			text,
 		)
 
 		// Upload
@@ -476,3 +478,68 @@ func HandlePaste(conf *config.Config, logger logging.Logger) http.HandlerFunc {
 		}
 	}
 }
+
+//go:embed dev-pastes/*
+var devPastes embed.FS
+
+func makeDevPaste(filename string, highlighter highlighting.Highlighter) func(conf *config.Config, logger logging.Logger) http.HandlerFunc {
+	return func(conf *config.Config, logger logging.Logger) http.HandlerFunc {
+		if !conf.DevMode {
+			return func(w http.ResponseWriter, r *http.Request) {
+				logger.Warn(r.Context(), "dev template previews are only available in dev mode")
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("Dev template previews are only available in dev mode.\n"))
+			}
+		}
+
+		return func(w http.ResponseWriter, r *http.Request) {
+			buf, err := devPastes.ReadFile("dev-pastes/" + filename)
+			if err != nil {
+				logger.Error(r.Context(), "reading dev paste", "error", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			paste, err := generatePaste(
+				r.Context(),
+				conf,
+				highlighter,
+				highlighter.GenerateTexts(string(buf)),
+				&url.URL{Scheme: "https", Host: "not-implemented"},
+				&url.URL{Scheme: "https", Host: "not-implemented"},
+			)
+			if err != nil {
+				logger.Error(r.Context(), "generating paste", "error", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			defer paste.Close()
+
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			io.Copy(w, paste)
+		}
+	}
+}
+
+var HandleDevPasteSimple = makeDevPaste(
+	"code.py",
+	highlighting.NewChromaHighlighter(lexers.Get("python")),
+)
+
+var HandleDevPasteMarkdown = makeDevPaste(
+	"markdown.md",
+	&highlighting.MarkdownHighlighter{},
+)
+
+var HandleDevPasteANSIColor = makeDevPaste(
+	"ansi-color",
+	// TODO
+	highlighting.NewChromaHighlighter(lexers.Get("go")),
+)
+
+var HandleDevPasteDiff = makeDevPaste(
+	"python.diff",
+	// TODO
+	highlighting.NewChromaHighlighter(lexers.Get("python")),
+)

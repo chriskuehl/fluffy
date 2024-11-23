@@ -70,6 +70,10 @@ func addRoutes(
 	mux.Handle("POST /paste", views.HandlePaste(conf, logger))
 	mux.Handle("GET /dev/static/", assets.HandleDevStatic(conf, logger))
 	mux.Handle("GET /dev/storage/{type}/", storage.HandleDevStorage(conf, logger))
+	mux.Handle("GET /dev/paste/simple", views.HandleDevPasteSimple(conf, logger))
+	mux.Handle("GET /dev/paste/markdown", views.HandleDevPasteMarkdown(conf, logger))
+	mux.Handle("GET /dev/paste/ansi-color", views.HandleDevPasteANSIColor(conf, logger))
+	mux.Handle("GET /dev/paste/diff", views.HandleDevPasteDiff(conf, logger))
 	return nil
 }
 
