@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"strings"
 
 	"github.com/chriskuehl/fluffy/server/highlighting"
 )
@@ -10,44 +10,134 @@ import (
 func main() {
 	for _, cat := range highlighting.Styles {
 		for _, style := range cat.Styles {
-			fmt.Printf(".style-%s {\n", style.ChromaStyle.Name)
-			highlighting.Formatter.WriteCSS(os.Stdout, style.ChromaStyle)
-			fmt.Printf(".line-numbers {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.LineNumbersBackground)
-			fmt.Printf("  border-color: %s;\n", style.FluffyColors.Border)
-			fmt.Printf("}\n")
-			fmt.Printf(".text {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.Border)
-			fmt.Printf("}\n")
-			fmt.Printf(".line-numbers a {\n")
-			fmt.Printf("  color: %s;\n", style.FluffyColors.LineNumbersForeground)
-			fmt.Printf("}\n")
-			fmt.Printf(".line-numbers a:hover {\n")
-			fmt.Printf("  background-color: %s !important;\n", style.FluffyColors.LineNumbersHoverBackground)
-			fmt.Printf("}\n")
-			fmt.Printf(".line-numbers a.selected {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.LineNumbersSelectedBackground)
-			fmt.Printf("}\n")
-			fmt.Printf(".paste-toolbar {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.ToolbarBackground)
-			fmt.Printf("  color: %s;\n", style.FluffyColors.ToolbarForeground)
-			fmt.Printf("}\n")
-			fmt.Printf(".text .chroma .line.selected {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.SelectedLineBackground)
-			fmt.Printf("}\n")
-			fmt.Printf(".text .chroma .line.diff-add {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.DiffAddLineBackground)
-			fmt.Printf("}\n")
-			fmt.Printf(".text .chroma .line.diff-add.selected {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.DiffAddSelectedLineBackground)
-			fmt.Printf("}\n")
-			fmt.Printf(".text .chroma .line.diff-remove {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.DiffRemoveLineBackground)
-			fmt.Printf("}\n")
-			fmt.Printf(".text .chroma .line.diff-remove.selected {\n")
-			fmt.Printf("  background-color: %s;\n", style.FluffyColors.DiffRemoveSelectedLineBackground)
-			fmt.Printf("}\n")
-			fmt.Printf("}\n")
+			var chromaCSS strings.Builder
+			highlighting.Formatter.WriteCSS(&chromaCSS, style.ChromaStyle)
+
+			fmt.Printf(`
+				.style-%s {
+					/* Chroma */
+					%s
+
+					/* Fluffy UI colors */
+					.line-numbers {
+						background-color: %s;
+						border-color: %s;
+					}
+					.text {
+						background-color: %s;
+					}
+					.line-numbers a {
+						color: %s;
+					}
+					.line-numbers a:hover {
+						background-color: %s !important;
+					}
+					.line-numbers a.selected {
+						background-color: %s;
+					}
+					.paste-toolbar {
+						background-color: %s;
+						color: %s;
+					}
+					.text .chroma .line.selected {
+						background-color: %s;
+					}
+					.text .chroma .line.diff-add {
+						background-color: %s;
+					}
+					.text .chroma .line.diff-add.selected {
+						background-color: %s;
+					}
+					.text .chroma .line.diff-remove {
+						background-color: %s;
+					}
+					.text .chroma .line.diff-remove.selected {
+						background-color: %s;
+					}
+
+					/* ANSI colors */
+					.text .chroma .fg-0 {
+						color: %s;
+					}
+					.text .chroma .fg-0-faint {
+						color: %s;
+					}
+					.text .chroma .fg-1 {
+						color: %s;
+					}
+					.text .chroma .fg-1-faint {
+						color: %s;
+					}
+					.text .chroma .fg-2 {
+						color: %s;
+					}
+					.text .chroma .fg-2-faint {
+						color: %s;
+					}
+					.text .chroma .fg-3 {
+						color: %s;
+					}
+					.text .chroma .fg-3-faint {
+						color: %s;
+					}
+					.text .chroma .fg-4 {
+						color: %s;
+					}
+					.text .chroma .fg-4-faint {
+						color: %s;
+					}
+					.text .chroma .fg-5 {
+						color: %s;
+					}
+					.text .chroma .fg-5-faint {
+						color: %s;
+					}
+					.text .chroma .fg-6 {
+						color: %s;
+					}
+					.text .chroma .fg-6-faint {
+						color: %s;
+					}
+					.text .chroma .fg-7 {
+						color: %s;
+					}
+					.text .chroma .fg-7-faint {
+						color: %s;
+					}
+				}
+				`,
+				style.Name,
+				chromaCSS.String(),
+				style.FluffyColors.LineNumbersBackground,
+				style.FluffyColors.Border,
+				style.FluffyColors.Border,
+				style.FluffyColors.LineNumbersForeground,
+				style.FluffyColors.LineNumbersHoverBackground,
+				style.FluffyColors.LineNumbersSelectedBackground,
+				style.FluffyColors.ToolbarBackground,
+				style.FluffyColors.ToolbarForeground,
+				style.FluffyColors.SelectedLineBackground,
+				style.FluffyColors.DiffAddLineBackground,
+				style.FluffyColors.DiffAddSelectedLineBackground,
+				style.FluffyColors.DiffRemoveLineBackground,
+				style.FluffyColors.DiffRemoveSelectedLineBackground,
+				style.ANSIColors.Foreground.Black,
+				style.ANSIColors.ForegroundFaint.Black,
+				style.ANSIColors.Foreground.Red,
+				style.ANSIColors.ForegroundFaint.Red,
+				style.ANSIColors.Foreground.Green,
+				style.ANSIColors.ForegroundFaint.Green,
+				style.ANSIColors.Foreground.Yellow,
+				style.ANSIColors.ForegroundFaint.Yellow,
+				style.ANSIColors.Foreground.Blue,
+				style.ANSIColors.ForegroundFaint.Blue,
+				style.ANSIColors.Foreground.Magenta,
+				style.ANSIColors.ForegroundFaint.Magenta,
+				style.ANSIColors.Foreground.Cyan,
+				style.ANSIColors.ForegroundFaint.Cyan,
+				style.ANSIColors.Foreground.White,
+				style.ANSIColors.ForegroundFaint.White,
+			)
 		}
 	}
 }

@@ -29,7 +29,8 @@ func CSPNonce(ctx context.Context) (string, error) {
 // This can only really happen in development mode when serving uploaded HTML objects from the app.
 // In prod, this isn't an issue because these files are not served by the app.
 func isDevStaticFileRequest(conf *config.Config, r *http.Request) bool {
-	return conf.DevMode && strings.HasPrefix(r.URL.Path, "/dev/storage/html/")
+	return conf.DevMode && (strings.HasPrefix(r.URL.Path, "/dev/storage/html/") ||
+		strings.HasPrefix(r.URL.Path, "/dev/paste/"))
 }
 
 func NewCSPMiddleware(conf *config.Config, logger logging.Logger, next http.Handler) http.Handler {

@@ -33,3 +33,4 @@
 * TODO assertions in views/uploads_test.go
 * Consolidate fpb and fput into just fpb and have it automatically deal with making pastes or not
 * Language is set both in query string and POST body of fpb cli
+* Verify behavior around final end-of-lines matches across highlighters

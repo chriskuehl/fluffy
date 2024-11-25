@@ -535,7 +535,7 @@ var HandleDevPasteMarkdown = makeDevPaste(
 var HandleDevPasteANSIColor = makeDevPaste(
 	"ansi-color",
 	// TODO
-	highlighting.NewChromaHighlighter(lexers.Get("go")),
+	&highlighting.ANSIHighlighter{},
 )
 
 var HandleDevPasteDiff = makeDevPaste(

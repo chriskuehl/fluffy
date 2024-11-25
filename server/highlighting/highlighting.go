@@ -87,7 +87,7 @@ var lightFluffyColors = &FluffyColorSet{
 type Style struct {
 	Name         string
 	ChromaStyle  *chroma.Style
-	ANSIColors   *ansiColorSet
+	ANSIColors   *ANSIColorSet
 	FluffyColors *FluffyColorSet
 }
 
@@ -235,6 +235,13 @@ type Highlighter interface {
 	//   * Line mappings in the returned Texts are in reference to the primary Text.
 	GenerateTexts(text string) []*Text
 	// Highlight takes a piece of text and returns an HTML representation.
+	//
+	// For rich-text highlighters, the returned HTML may be anything.
+	//
+	// For plain-text highlighters, the returned HTML should contain:
+	//   * A <pre> with class "chroma" wrapping the highlighted text.
+	//   * Each line should be its own element (e.g. <span> or <div>) with classes "line" and
+	//     "line-NUMBER" where NUMBER is the 1-indexed line number.
 	Highlight(text *Text) (template.HTML, error)
 }
 
