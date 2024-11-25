@@ -8,87 +8,104 @@ import (
 )
 
 type ANSIColors struct {
-	Black   Color
-	Red     Color
-	Green   Color
-	Yellow  Color
-	Blue    Color
-	Magenta Color
-	Cyan    Color
-	White   Color
+	Black         Color
+	Red           Color
+	Green         Color
+	Yellow        Color
+	Blue          Color
+	Magenta       Color
+	Cyan          Color
+	White         Color
+	BrightBlack   Color
+	BrightRed     Color
+	BrightGreen   Color
+	BrightYellow  Color
+	BrightBlue    Color
+	BrightMagenta Color
+	BrightCyan    Color
+	BrightWhite   Color
 }
 
 type ANSIColorSet struct {
-	Foreground      ANSIColors
-	ForegroundFaint ANSIColors
-	Background      ANSIColors
+	Foreground ANSIColors
+	Background ANSIColors
 }
 
 var ansiColorsLight = &ANSIColorSet{
 	Foreground: ANSIColors{
-		Black:   "#000000",
-		Red:     "#EF2929",
-		Green:   "#62CA00",
-		Yellow:  "#DAC200",
-		Blue:    "#3465A4",
-		Magenta: "#CE42BE",
-		Cyan:    "#34E2E2",
-		White:   "#FFFFFF",
-	},
-	// TODO: double-check these colors
-	ForegroundFaint: ANSIColors{
-		Black:   "#676767",
-		Red:     "#ff6d67",
-		Green:   "#5ff967",
-		Yellow:  "#fefb67",
-		Blue:    "#6871ff",
-		Magenta: "#ff76ff",
-		Cyan:    "#5ffdff",
-		White:   "#feffff",
+		Black:         "#000000",
+		Red:           "#EF2929",
+		Green:         "#62CA00",
+		Yellow:        "#DAC200",
+		Blue:          "#3465A4",
+		Magenta:       "#CE42BE",
+		Cyan:          "#34E2E2",
+		White:         "#FFFFFF",
+		BrightBlack:   "#676767",
+		BrightRed:     "#ff6d67",
+		BrightGreen:   "#5ff967",
+		BrightYellow:  "#fefb67",
+		BrightBlue:    "#6871ff",
+		BrightMagenta: "#ff76ff",
+		BrightCyan:    "#5ffdff",
+		BrightWhite:   "#feffff",
 	},
 	Background: ANSIColors{
-		Black:   "#000000",
-		Red:     "#EF2929",
-		Green:   "#8AE234",
-		Yellow:  "#FCE94F",
-		Blue:    "#3465A4",
-		Magenta: "#C509C5",
-		Cyan:    "#34E2E2",
-		White:   "#FFFFFF",
+		Black:         "#000000",
+		Red:           "#EF2929",
+		Green:         "#8AE234",
+		Yellow:        "#FCE94F",
+		Blue:          "#3465A4",
+		Magenta:       "#C509C5",
+		Cyan:          "#34E2E2",
+		White:         "#FFFFFF",
+		BrightBlack:   "#676767",
+		BrightRed:     "#ff6d67",
+		BrightGreen:   "#5ff967",
+		BrightYellow:  "#fefb67",
+		BrightBlue:    "#6871ff",
+		BrightMagenta: "#ff76ff",
+		BrightCyan:    "#5ffdff",
+		BrightWhite:   "#feffff",
 	},
 }
 
 var ansiColorsDark = &ANSIColorSet{
 	Foreground: ANSIColors{
-		Black:   "#555753",
-		Red:     "#FF5C5C",
-		Green:   "#8AE234",
-		Yellow:  "#FCE94F",
-		Blue:    "#8FB6E1",
-		Magenta: "#FF80F1",
-		Cyan:    "#34E2E2",
-		White:   "#EEEEEC",
-	},
-	// TODO: double-check these colors
-	ForegroundFaint: ANSIColors{
-		Black:   "#676767",
-		Red:     "#ff6d67",
-		Green:   "#5ff967",
-		Yellow:  "#fefb67",
-		Blue:    "#6871ff",
-		Magenta: "#ff76ff",
-		Cyan:    "#5ffdff",
-		White:   "#feffff",
+		Black:         "#555753",
+		Red:           "#FF5C5C",
+		Green:         "#8AE234",
+		Yellow:        "#FCE94F",
+		Blue:          "#8FB6E1",
+		Magenta:       "#FF80F1",
+		Cyan:          "#34E2E2",
+		White:         "#EEEEEC",
+		BrightBlack:   "#676767",
+		BrightRed:     "#ff6d67",
+		BrightGreen:   "#5ff967",
+		BrightYellow:  "#fefb67",
+		BrightBlue:    "#6871ff",
+		BrightMagenta: "#ff76ff",
+		BrightCyan:    "#5ffdff",
+		BrightWhite:   "#feffff",
 	},
 	Background: ANSIColors{
-		Black:   "#555753",
-		Red:     "#F03D3D",
-		Green:   "#6ABC1B",
-		Yellow:  "#CEB917",
-		Blue:    "#6392C6",
-		Magenta: "#FF80F1",
-		Cyan:    "#2FC0C0",
-		White:   "#BFBFBF",
+		Black:         "#555753",
+		Red:           "#F03D3D",
+		Green:         "#6ABC1B",
+		Yellow:        "#CEB917",
+		Blue:          "#6392C6",
+		Magenta:       "#FF80F1",
+		Cyan:          "#2FC0C0",
+		White:         "#BFBFBF",
+		BrightBlack:   "#676767",
+		BrightRed:     "#ff6d67",
+		BrightGreen:   "#5ff967",
+		BrightYellow:  "#fefb67",
+		BrightBlue:    "#6871ff",
+		BrightMagenta: "#ff76ff",
+		BrightCyan:    "#5ffdff",
+		BrightWhite:   "#feffff",
 	},
 }
 
@@ -199,6 +216,9 @@ func (s ansiState) cssStyles() map[string]string {
 	if s.bold {
 		ret["font-weight"] = "bold"
 	}
+	if s.faint {
+		ret["opacity"] = "0.5"
+	}
 	if s.italic {
 		ret["font-style"] = "italic"
 	}
@@ -209,19 +229,20 @@ func (s ansiState) cssStyles() map[string]string {
 		ret["text-decoration"] = "line-through"
 	}
 	if s.foreground != nil && s.foreground.rgb != nil {
-		r := s.foreground.rgb.r
-		g := s.foreground.rgb.g
-		b := s.foreground.rgb.b
-		if s.faint {
-			// TODO: no idea if this is correct
-			r = r / 2
-			g = g / 2
-			b = b / 2
-		}
-		ret["color"] = fmt.Sprintf("rgb(%d, %d, %d)", r, g, b)
+		ret["color"] = fmt.Sprintf(
+			"rgb(%d, %d, %d)",
+			s.foreground.rgb.r,
+			s.foreground.rgb.g,
+			s.foreground.rgb.b,
+		)
 	}
 	if s.background != nil && s.background.rgb != nil {
-		ret["background-color"] = fmt.Sprintf("rgb(%d, %d, %d)", s.background.rgb.r, s.background.rgb.g, s.background.rgb.b)
+		ret["background-color"] = fmt.Sprintf(
+			"rgb(%d, %d, %d)",
+			s.background.rgb.r,
+			s.background.rgb.g,
+			s.background.rgb.b,
+		)
 	}
 	return ret
 }
@@ -242,66 +263,104 @@ func (s ansiState) cssClasses() []string {
 	return ret
 }
 
-func (s ansiState) update(command string) ansiState {
-	switch command {
-	case "0":
-		return ansiState{}
-	case "1":
-		s.bold = true
-	case "2":
-		s.faint = true
-	case "3":
-		s.italic = true
-	case "4":
-		s.underline = true
-	case "9":
-		s.strikethrough = true
-	case "22":
-		s.bold = false
-		s.faint = false
-	case "23":
-		s.italic = false
-	case "24":
-		s.underline = false
-	case "29":
-		s.strikethrough = false
-	case "30":
-		s.foreground = &ansiColor{index: 0}
-	case "31":
-		s.foreground = &ansiColor{index: 1}
-	case "32":
-		s.foreground = &ansiColor{index: 2}
-	case "33":
-		s.foreground = &ansiColor{index: 3}
-	case "34":
-		s.foreground = &ansiColor{index: 4}
-	case "35":
-		s.foreground = &ansiColor{index: 5}
-	case "36":
-		s.foreground = &ansiColor{index: 6}
-	case "37":
-		s.foreground = &ansiColor{index: 7}
-	case "39":
-		s.foreground = nil
-	case "40":
-		s.background = &ansiColor{index: 0}
-	case "41":
-		s.background = &ansiColor{index: 1}
-	case "42":
-		s.background = &ansiColor{index: 2}
-	case "43":
-		s.background = &ansiColor{index: 3}
-	case "44":
-		s.background = &ansiColor{index: 4}
-	case "45":
-		s.background = &ansiColor{index: 5}
-	case "46":
-		s.background = &ansiColor{index: 6}
-	case "47":
-		s.background = &ansiColor{index: 7}
-	case "49":
-		s.background = nil
+func ansi256Color(index uint8) *ansiColor {
+	switch {
+	case index < 16: // Standard colors
+		return &ansiColor{index: index}
+	case index >= 16 && index < 232: // 6x6x6 cube (216 colors)
+		index -= 16
+		r := index / 36
+		g := (index % 36) / 6
+		b := index % 6
+		return &ansiColor{rgb: &rgb{
+			r: uint8(r*40 + 55),
+			g: uint8(g*40 + 55),
+			b: uint8(b*40 + 55),
+		}}
+	case index >= 232 && index <= 255: // Grayscale ramp (24 colors)
+		value := uint8((index-232)*10 + 8)
+		return &ansiColor{rgb: &rgb{r: value, g: value, b: value}}
+	}
+	panic("unreachable")
+}
 
+func (s ansiState) update(commands []string) ansiState {
+outer:
+	for len(commands) > 0 {
+		command := commands[0]
+		commands = commands[1:]
+		switch command {
+		case "0":
+			s = ansiState{}
+		case "1":
+			s.bold = true
+		case "2":
+			s.faint = true
+		case "3":
+			s.italic = true
+		case "4":
+			s.underline = true
+		case "9":
+			s.strikethrough = true
+		case "22":
+			s.bold = false
+			s.faint = false
+		case "23":
+			s.italic = false
+		case "24":
+			s.underline = false
+		case "29":
+			s.strikethrough = false
+		case "30", "31", "32", "33", "34", "35", "36", "37":
+			s.foreground = &ansiColor{index: uint8(command[1] - '0')}
+		case "39":
+			s.foreground = nil
+		case "40", "41", "42", "43", "44", "45", "46", "47":
+			s.background = &ansiColor{index: uint8(command[1] - '0')}
+		case "49":
+			s.background = nil
+		case "90", "91", "92", "93", "94", "95", "96", "97":
+			s.foreground = &ansiColor{index: uint8(command[1] - '0' + 8)}
+		case "100", "101", "102", "103", "104", "105", "106", "107":
+			s.background = &ansiColor{index: uint8(command[2] - '0' + 8)}
+		case "38", "48":
+			if len(commands) < 1 {
+				break outer
+			}
+			typeCode := commands[0]
+			commands = commands[1:]
+
+			if typeCode == "5" {
+				if len(commands) < 1 {
+					break outer
+				}
+				var index uint8
+				fmt.Sscanf(commands[0], "%d", &index)
+				commands = commands[1:]
+				if command == "38" {
+					s.foreground = ansi256Color(index)
+				} else {
+					s.background = ansi256Color(index)
+				}
+			} else if typeCode == "2" {
+				if len(commands) < 3 {
+					break outer
+				}
+				r := commands[0]
+				g := commands[1]
+				b := commands[2]
+				commands = commands[3:]
+				rgb := rgb{}
+				fmt.Sscanf(r, "%d", &rgb.r)
+				fmt.Sscanf(g, "%d", &rgb.g)
+				fmt.Sscanf(b, "%d", &rgb.b)
+				if command == "38" {
+					s.foreground = &ansiColor{rgb: &rgb}
+				} else {
+					s.background = &ansiColor{rgb: &rgb}
+				}
+			}
+		}
 	}
 	return s
 }
@@ -342,9 +401,7 @@ func parseANSI(text string, state ansiState) []parsedANSI {
 				commands := cur.String()
 				cur.Reset()
 				if text[i] == 'm' {
-					for _, command := range strings.Split(commands, ";") {
-						state = state.update(command)
-					}
+					state = state.update(strings.Split(commands, ";"))
 				}
 				continue
 			}

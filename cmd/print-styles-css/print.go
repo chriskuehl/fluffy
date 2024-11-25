@@ -56,54 +56,39 @@ func main() {
 					}
 
 					/* ANSI colors */
-					.text .chroma .fg-0 {
-						color: %s;
-					}
-					.text .chroma .fg-0-faint {
-						color: %s;
-					}
-					.text .chroma .fg-1 {
-						color: %s;
-					}
-					.text .chroma .fg-1-faint {
-						color: %s;
-					}
-					.text .chroma .fg-2 {
-						color: %s;
-					}
-					.text .chroma .fg-2-faint {
-						color: %s;
-					}
-					.text .chroma .fg-3 {
-						color: %s;
-					}
-					.text .chroma .fg-3-faint {
-						color: %s;
-					}
-					.text .chroma .fg-4 {
-						color: %s;
-					}
-					.text .chroma .fg-4-faint {
-						color: %s;
-					}
-					.text .chroma .fg-5 {
-						color: %s;
-					}
-					.text .chroma .fg-5-faint {
-						color: %s;
-					}
-					.text .chroma .fg-6 {
-						color: %s;
-					}
-					.text .chroma .fg-6-faint {
-						color: %s;
-					}
-					.text .chroma .fg-7 {
-						color: %s;
-					}
-					.text .chroma .fg-7-faint {
-						color: %s;
-					}
+					.text .chroma .fg-0 { color: %s; }
+					.text .chroma .fg-1 { color: %s; }
+					.text .chroma .fg-2 { color: %s; }
+					.text .chroma .fg-3 { color: %s; }
+					.text .chroma .fg-4 { color: %s; }
+					.text .chroma .fg-5 { color: %s; }
+					.text .chroma .fg-6 { color: %s; }
+					.text .chroma .fg-7 { color: %s; }
+					.text .chroma .fg-8 { color: %s; }
+					.text .chroma .fg-9 { color: %s; }
+					.text .chroma .fg-10 { color: %s; }
+					.text .chroma .fg-11 { color: %s; }
+					.text .chroma .fg-12 { color: %s; }
+					.text .chroma .fg-13 { color: %s; }
+					.text .chroma .fg-14 { color: %s; }
+					.text .chroma .fg-15 { color: %s; }
+					.text .chroma .bg-0 { background-color: %s; }
+					.text .chroma .bg-1 { background-color: %s; }
+					.text .chroma .bg-2 { background-color: %s; }
+					.text .chroma .bg-3 { background-color: %s; }
+					.text .chroma .bg-4 { background-color: %s; }
+					.text .chroma .bg-5 { background-color: %s; }
+					.text .chroma .bg-6 { background-color: %s; }
+					.text .chroma .bg-7 { background-color: %s; }
+					.text .chroma .bg-8 { background-color: %s; }
+					.text .chroma .bg-9 { background-color: %s; }
+					.text .chroma .bg-10 { background-color: %s; }
+					.text .chroma .bg-11 { background-color: %s; }
+					.text .chroma .bg-12 { background-color: %s; }
+					.text .chroma .bg-13 { background-color: %s; }
+					.text .chroma .bg-14 { background-color: %s; }
+					.text .chroma .bg-15 { background-color: %s; }
+
 				}
 				`,
 				style.Name,
@@ -122,21 +107,37 @@ func main() {
 				style.FluffyColors.DiffRemoveLineBackground,
 				style.FluffyColors.DiffRemoveSelectedLineBackground,
 				style.ANSIColors.Foreground.Black,
-				style.ANSIColors.ForegroundFaint.Black,
 				style.ANSIColors.Foreground.Red,
-				style.ANSIColors.ForegroundFaint.Red,
 				style.ANSIColors.Foreground.Green,
-				style.ANSIColors.ForegroundFaint.Green,
 				style.ANSIColors.Foreground.Yellow,
-				style.ANSIColors.ForegroundFaint.Yellow,
 				style.ANSIColors.Foreground.Blue,
-				style.ANSIColors.ForegroundFaint.Blue,
 				style.ANSIColors.Foreground.Magenta,
-				style.ANSIColors.ForegroundFaint.Magenta,
 				style.ANSIColors.Foreground.Cyan,
-				style.ANSIColors.ForegroundFaint.Cyan,
 				style.ANSIColors.Foreground.White,
-				style.ANSIColors.ForegroundFaint.White,
+				style.ANSIColors.Background.BrightBlack,
+				style.ANSIColors.Background.BrightRed,
+				style.ANSIColors.Background.BrightGreen,
+				style.ANSIColors.Background.BrightYellow,
+				style.ANSIColors.Background.BrightBlue,
+				style.ANSIColors.Background.BrightMagenta,
+				style.ANSIColors.Background.BrightCyan,
+				style.ANSIColors.Background.BrightWhite,
+				style.ANSIColors.Background.Black,
+				style.ANSIColors.Background.Red,
+				style.ANSIColors.Background.Green,
+				style.ANSIColors.Background.Yellow,
+				style.ANSIColors.Background.Blue,
+				style.ANSIColors.Background.Magenta,
+				style.ANSIColors.Background.Cyan,
+				style.ANSIColors.Background.White,
+				style.ANSIColors.Background.BrightBlack,
+				style.ANSIColors.Background.BrightRed,
+				style.ANSIColors.Background.BrightGreen,
+				style.ANSIColors.Background.BrightYellow,
+				style.ANSIColors.Background.BrightBlue,
+				style.ANSIColors.Background.BrightMagenta,
+				style.ANSIColors.Background.BrightCyan,
+				style.ANSIColors.Background.BrightWhite,
 			)
 		}
 	}

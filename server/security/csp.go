@@ -67,6 +67,9 @@ func NewCSPMiddleware(conf *config.Config, logger logging.Logger, next http.Hand
 
 		// style-src
 		fmt.Fprintf(&csp, "; style-src 'self' https://fonts.googleapis.com %s", fileURLBase)
+		if isDevStaticFileRequest(conf, r) {
+			fmt.Fprintf(&csp, " 'unsafe-inline'")
+		}
 
 		// font-src
 		fmt.Fprintf(&csp, "; font-src https://fonts.gstatic.com %s", fileURLBase)

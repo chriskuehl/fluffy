@@ -33,7 +33,7 @@ var (
 			[]string{
 				`default-src 'self' https://fancy-cdn.com \*`,
 				`script-src https://ajax.googleapis.com https://fancy-cdn.com 'unsafe-inline'`,
-				`style-src 'self' https://fonts.googleapis.com https://fancy-cdn.com`,
+				`style-src 'self' https://fonts.googleapis.com https://fancy-cdn.com 'unsafe-inline'`,
 				`font-src https://fonts.gstatic.com https://fancy-cdn.com`,
 			},
 			"; ",

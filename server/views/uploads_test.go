@@ -387,7 +387,7 @@ func TestPaste(t *testing.T) {
 			wantLanguage: "Python",
 			wantNumLines: 1,
 			wantPaste: testfunc.ParsedPaste{
-				DefaultStyleName: "xcode",
+				DefaultStyleName: "default",
 				ToolbarInfoLine:  "1 line of Python",
 				HasDiffButtons:   false,
 				Texts:            1,
@@ -413,7 +413,7 @@ func TestPaste(t *testing.T) {
 			wantLanguage: "Python",
 			wantNumLines: 1,
 			wantPaste: testfunc.ParsedPaste{
-				DefaultStyleName: "xcode",
+				DefaultStyleName: "default",
 				ToolbarInfoLine:  "1 line of Python",
 				HasDiffButtons:   false,
 				Texts:            1,
@@ -437,7 +437,7 @@ print("Hello, world!")
 			wantLanguage: "Rendered Markdown",
 			wantNumLines: 12,
 			wantPaste: testfunc.ParsedPaste{
-				DefaultStyleName: "xcode",
+				DefaultStyleName: "default",
 				ToolbarInfoLine:  "12 lines of Rendered Markdown",
 				HasDiffButtons:   false,
 				Texts:            1,

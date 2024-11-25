@@ -287,8 +287,7 @@ func GuessHighlighterForPaste(text, language, filename string) Highlighter {
 	}
 
 	if (language == "" || language == "autodetect") && looksLikeAnsiColor(text) {
-		// TODO: implement
-		return &PlainTextHighlighter{}
+		return &ANSIHighlighter{}
 	}
 
 	diffRequested := (language == "diff" ||
