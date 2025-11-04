@@ -1,0 +1,49 @@
+[project]
+name = "fluffy-server"
+authors = [
+    {name = "Chris Kuehl", email = "ckuehl@ckuehl.me"},
+]
+
+version = "1.40.1b1"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+dependencies = [
+    "boto3",
+    "cached_property",
+    "csscompressor",
+    "flask",
+    "identify",
+    # https://github.com/chriskuehl/fluffy/issues/126
+    "mistune<0.999",
+    "pygments",
+    "pygments-ansi-color>=0.0.3",
+    "pygments-solarized-style",
+    "pyquery",
+]
+
+[dependency-groups]
+dev = [
+    'coverage',
+    'coverage-enable-subprocess',
+    'ephemeral-port-reserve',
+    'gunicorn',
+    'libsass',
+    'pre-commit',
+    'pytest',
+    'requests',
+    'twine',
+]
+gunicorn = ['gunicorn']
+
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+ignore-vcs = true
+include = ["fluffy"]
+
+[tool.hatch.build.targets.wheel]
+ignore-vcs = true
+include = ["fluffy"]

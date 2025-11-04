@@ -1,4 +1,4 @@
-VENV := venv
+VENV := .venv
 BIN := $(VENV)/bin
 export FLUFFY_SETTINGS := $(CURDIR)/settings.py
 
@@ -18,10 +18,8 @@ release-cli:
 	go run github.com/goreleaser/goreleaser/v2@latest release --clean --snapshot --verbose
 	rm -v dist/*.txt dist/*.yaml dist/*.json
 
-$(VENV): setup.py requirements.txt requirements-dev.txt
-	rm -rf $@
-	virtualenv -ppython3.11 $@
-	$@/bin/pip install -r requirements.txt -r requirements-dev.txt -e .
+$(VENV): pyproject.toml uv.lock Makefile
+	uv sync --all-groups
 	ln -fs ../../fput $@/bin/fput
 	ln -fs ../../fpb $@/bin/fpb
 
@@ -63,8 +61,8 @@ dev: $(VENV) fluffy/static/app.css
 test: $(VENV)
 	cd cli && go test -v ./...
 	$(BIN)/coverage erase
-	COVERAGE_PROCESS_START=$(CURDIR)/.coveragerc \
-		$(BIN)/py.test --tb=native -vv tests/
+	. $(VENV)/bin/activate && \
+		COVERAGE_PROCESS_START=$(CURDIR)/.coveragerc $(BIN)/py.test --tb=native -vv tests/
 	$(BIN)/coverage combine
 	$(BIN)/coverage report
 
@@ -79,7 +77,3 @@ pre-commit: $(VENV)
 .PHONY: clean
 clean:
 	rm -rf $(VENV)
-
-.PHONY: upgrade-requirements
-upgrade-requirements: venv
-	upgrade-requirements
