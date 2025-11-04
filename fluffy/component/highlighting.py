@@ -253,7 +253,11 @@ def guess_lexer(text, language, filename, opts=None):
         # Newer versions of Pygments will virtually always fall back to
         # TextLexer due to its 0.01 priority (which is what it returns on
         # analyzing any text).
-        if not isinstance(lexer, pygments.lexers.TextLexer):
+        if not (
+            isinstance(lexer, pygments.lexers.TextLexer) or
+            # Seems to flag for everything in recent Pygments...
+            isinstance(lexer, pygments.lexers.ScdocLexer)
+        ):
             return lexer
     except pygments.util.ClassNotFound:
         pass
