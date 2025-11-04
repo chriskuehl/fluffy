@@ -1,1 +1,2 @@
-version = '1.40.1b1'
+import importlib.metadata
+version = importlib.metadata.version('fluffy-server')
