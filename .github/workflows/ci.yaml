@@ -17,7 +17,6 @@ jobs:
         uses: astral-sh/setup-uv@v6
       - name: Install dependencies
         run: |
-          uv sync
           make minimal
       - name: Run tests
         run: make test
