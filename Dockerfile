@@ -10,7 +10,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.9.6 /uv /uvx /usr/local/bin/
 
 COPY . /opt/fluffy
 
-RUN cd /opt/fluffy && uv sync --group gunicorn
+RUN cd /opt/fluffy && make assets && uv sync --group gunicorn
 
 USER nobody
 EXPOSE 8000
