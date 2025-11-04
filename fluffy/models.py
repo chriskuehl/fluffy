@@ -178,7 +178,7 @@ class UploadedFile(
             render_type = 'attachment'
         return '{}; filename="{}"; filename*=utf-8\'\'{}'.format(
             render_type,
-            self.human_name.replace('"', ''),
+            self.human_name.encode('ascii', errors='replace').decode('ascii'),
             urllib.parse.quote(self.human_name, encoding='utf-8'),
         )
 
