@@ -480,7 +480,7 @@ wheels = [
 
 [[package]]
 name = "fluffy-server"
-version = "1.40.1b2"
+version = "1.40.1"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },
