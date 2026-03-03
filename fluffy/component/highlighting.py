@@ -1,13 +1,17 @@
 import collections
 import dataclasses
-import functools
 import logging
 import re
 from collections import namedtuple
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
+try:
     from magika import Magika
+    _MAGIKA = Magika()
+except Exception:
+    # We can't use `log` yet because it's not defined, but we can't define it
+    # before imports are done. So we'll just set it to None and log later if needed,
+    # or just rely on the fact that _MAGIKA is None.
+    _MAGIKA = None
 
 import pygments.lexers.teraterm
 import pygments.styles.xcode
@@ -95,28 +99,17 @@ MAGIKA_LABEL_TO_PYGMENTS_LEXER: dict[str, str] = {
 }
 
 
-@functools.lru_cache(maxsize=1)
-def _get_magika() -> 'Magika | None':
-    try:
-        from magika import Magika
-        return Magika()
-    except Exception:
-        log.warning('Failed to initialize Magika, falling back to Pygments', exc_info=True)
-        return None
-
-
 def _guess_language_with_magika(text: str) -> str | None:
     """Use Google's Magika to detect the language of the given text.
 
     Returns a Pygments lexer name, or None if detection failed or was
     inconclusive.
     """
-    m = _get_magika()
-    if m is None:
+    if _MAGIKA is None:
         return None
 
     try:
-        result = m.identify_bytes(text.encode('utf-8', errors='replace'))
+        result = _MAGIKA.identify_bytes(text.encode('utf-8', errors='replace'))
     except Exception:
         log.warning('Magika identification failed', exc_info=True)
         return None
