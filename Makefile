@@ -54,8 +54,14 @@ watch-assets:
 	done
 
 .PHONY: dev
-dev: $(VENV) fluffy/static/app.css
+dev: $(VENV) fluffy/static/app.css settings.py
+	mkdir -p tmp/object tmp/html
 	$(BIN)/python -m fluffy.run
+
+.PHONY: dev-files
+dev-files:
+	mkdir -p tmp/object tmp/html
+	python -m http.server 4999 --directory tmp
 
 .PHONY: test
 test: $(VENV)

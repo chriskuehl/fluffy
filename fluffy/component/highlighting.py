@@ -1,5 +1,7 @@
 import collections
 import dataclasses
+import functools
+import logging
 import re
 from collections import namedtuple
 
@@ -10,8 +12,116 @@ from pygments_ansi_color import ExtendedColorHtmlFormatterMixin
 from pyquery import PyQuery as pq
 
 from fluffy.component.styles import DEFAULT_STYLE
+
+log = logging.getLogger(__name__)
+
 # Work around https://github.com/chriskuehl/fluffy/issues/88.
 pygments.lexers.teraterm.TeraTermLexer.analyse_text = lambda _: -100
+
+MAGIKA_LABEL_TO_PYGMENTS_LEXER: dict[str, str] = {
+    'asm': 'nasm',
+    'autohotkey': 'autohotkey',
+    'awk': 'awk',
+    'batch': 'bat',
+    'bazel': 'python',
+    'c': 'c',
+    'clojure': 'clojure',
+    'cmake': 'cmake',
+    'cobol': 'cobol',
+    'coffeescript': 'coffeescript',
+    'cpp': 'c++',
+    'cs': 'csharp',
+    'css': 'css',
+    'csv': 'text',
+    'dart': 'dart',
+    'dockerfile': 'docker',
+    'elixir': 'elixir',
+    'erb': 'erb',
+    'erlang': 'erlang',
+    'fortran': 'fortran',
+    'go': 'go',
+    'gradle': 'groovy',
+    'groovy': 'groovy',
+    'handlebars': 'html',
+    'haskell': 'haskell',
+    'hcl': 'terraform',
+    'html': 'html',
+    'ini': 'ini',
+    'java': 'java',
+    'javascript': 'javascript',
+    'jinja': 'jinja',
+    'json': 'json',
+    'jsonl': 'json',
+    'julia': 'julia',
+    'kotlin': 'kotlin',
+    'latex': 'latex',
+    'lisp': 'common-lisp',
+    'lua': 'lua',
+    'makefile': 'makefile',
+    'markdown': 'markdown',
+    'matlab': 'matlab',
+    'objectivec': 'objective-c',
+    'ocaml': 'ocaml',
+    'pascal': 'pascal',
+    'perl': 'perl',
+    'php': 'php',
+    'powershell': 'powershell',
+    'prolog': 'prolog',
+    'proto': 'protobuf',
+    'python': 'python3',
+    'r': 'r',
+    'rst': 'rst',
+    'ruby': 'ruby',
+    'rust': 'rust',
+    'scala': 'scala',
+    'scss': 'scss',
+    'shell': 'bash',
+    'sql': 'sql',
+    'swift': 'swift',
+    'tcl': 'tcl',
+    'toml': 'toml',
+    'typescript': 'typescript',
+    'vba': 'vb.net',
+    'verilog': 'verilog',
+    'vhdl': 'vhdl',
+    'vue': 'vue',
+    'xml': 'xml',
+    'yaml': 'yaml',
+    'zig': 'zig',
+}
+
+
+@functools.lru_cache(maxsize=1)
+def _get_magika() -> 'Magika | None':
+    try:
+        from magika import Magika
+        return Magika()
+    except Exception:
+        log.warning('Failed to initialize Magika, falling back to Pygments', exc_info=True)
+        return None
+
+
+def _guess_language_with_magika(text: str) -> str | None:
+    """Use Google's Magika to detect the language of the given text.
+
+    Returns a Pygments lexer name, or None if detection failed or was
+    inconclusive.
+    """
+    m = _get_magika()
+    if m is None:
+        return None
+
+    try:
+        result = m.identify_bytes(text.encode('utf-8', errors='replace'))
+    except Exception:
+        log.warning('Magika identification failed', exc_info=True)
+        return None
+
+    if not result.ok:
+        return None
+
+    label = str(result.output.label)
+    return MAGIKA_LABEL_TO_PYGMENTS_LEXER.get(label)
 
 
 # We purposefully don't list all possible languages, and instead just the ones
@@ -246,16 +356,21 @@ def guess_lexer(text, language, filename, opts=None):
         except pygments.util.ClassNotFound:
             pass
 
-    # Finally, try to guess by looking at the file content.
+    # Use Magika (ML-based) for content detection before Pygments' guess_lexer,
+    # which is unreliable in recent versions.
+    magika_name = _guess_language_with_magika(text)
+    if magika_name is not None:
+        try:
+            return pygments.lexers.get_lexer_by_name(magika_name, **lexer_opts)
+        except pygments.util.ClassNotFound:
+            pass
+
+    # Fall back to Pygments' built-in guess_lexer.
     try:
         lexer = pygments.lexers.guess_lexer(text, **lexer_opts)
 
-        # Newer versions of Pygments will virtually always fall back to
-        # TextLexer due to its 0.01 priority (which is what it returns on
-        # analyzing any text).
         if not (
             isinstance(lexer, pygments.lexers.TextLexer) or
-            # Seems to flag for everything in recent Pygments...
             isinstance(lexer, pygments.lexers.ScdocLexer)
         ):
             return lexer

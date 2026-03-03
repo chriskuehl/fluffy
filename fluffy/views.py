@@ -14,6 +14,7 @@ from fluffy import version as FLUFFY_VERSION
 from fluffy.app import app
 from fluffy.component.backends import get_backend
 from fluffy.component.highlighting import get_highlighter
+from fluffy.component.highlighting import guess_lexer
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
 from fluffy.component.styles import STYLES_BY_CATEGORY
 from fluffy.models import ExtensionForbiddenError
@@ -284,6 +285,21 @@ def paste():
         })
     else:
         return redirect(paste_obj.url)
+
+
+MAX_DETECT_BYTES = 8192
+
+
+@app.route('/detect-language', methods={'POST'})
+def detect_language() -> tuple[object, int] | object:
+    text = request.get_json(silent=True) or {}
+    content = text.get('text', '')
+    if not content or not content.strip():
+        return jsonify({'language': None})
+
+    content = content[:MAX_DETECT_BYTES]
+    lexer = guess_lexer(content, None, None)
+    return jsonify({'language': lexer.name})
 
 
 @app.route('/upload-history')

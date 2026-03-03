@@ -1,10 +1,12 @@
 import pygments.lexers
 import pytest
 
+from fluffy.component.highlighting import _guess_language_with_magika
 from fluffy.component.highlighting import DiffHighlighter
 from fluffy.component.highlighting import get_highlighter
 from fluffy.component.highlighting import guess_lexer
 from fluffy.component.highlighting import looks_like_diff
+from fluffy.component.highlighting import MAGIKA_LABEL_TO_PYGMENTS_LEXER
 from fluffy.component.highlighting import PasteText
 from fluffy.component.highlighting import PygmentsHighlighter
 from fluffy.component.highlighting import strip_diff_things
@@ -219,3 +221,228 @@ def test_diff_highlighter_prepare_text():
         },
     )
     assert text3 == PasteText(orig_text)
+
+
+# --- Magika integration tests ---
+
+EXAMPLE_PYTHON = '''\
+import os
+from pathlib import Path
+
+
+def main() -> None:
+    for p in Path(".").iterdir():
+        if p.is_file():
+            print(f"Found file: {p}")
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+EXAMPLE_JAVASCRIPT = '''\
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+    res.json({ message: "Hello, world!" });
+});
+
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
+});
+'''
+
+EXAMPLE_JAVA = '''\
+import java.util.List;
+import java.util.ArrayList;
+
+public class Main {
+    public static void main(String[] args) {
+        List<String> items = new ArrayList<>();
+        items.add("hello");
+        for (String item : items) {
+            System.out.println(item);
+        }
+    }
+}
+'''
+
+EXAMPLE_GO = '''\
+package main
+
+import (
+    "fmt"
+    "os"
+)
+
+func main() {
+    args := os.Args[1:]
+    for _, arg := range args {
+        fmt.Printf("arg: %s\\n", arg)
+    }
+}
+'''
+
+EXAMPLE_RUST = '''\
+use std::collections::HashMap;
+
+fn main() {
+    let mut scores: HashMap<&str, i32> = HashMap::new();
+    scores.insert("Alice", 10);
+    scores.insert("Bob", 20);
+
+    for (name, score) in &scores {
+        println!("{}: {}", name, score);
+    }
+}
+'''
+
+EXAMPLE_SQL = '''\
+SELECT u.id, u.name, COUNT(o.id) AS order_count
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE u.created_at > '2024-01-01'
+GROUP BY u.id, u.name
+HAVING COUNT(o.id) > 5
+ORDER BY order_count DESC;
+'''
+
+EXAMPLE_YAML = '''\
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  labels:
+    app: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+'''
+
+EXAMPLE_HTML = '''\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>Hello, world!</h1>
+    <p>This is a test.</p>
+</body>
+</html>
+'''
+
+EXAMPLE_BASH = '''\
+#!/bin/bash
+set -euo pipefail
+
+for file in *.log; do
+    if [ -f "$file" ]; then
+        echo "Processing $file"
+        gzip "$file"
+    fi
+done
+'''
+
+EXAMPLE_JSON = '''\
+{
+    "name": "fluffy",
+    "version": "1.0.0",
+    "dependencies": {
+        "flask": ">=2.0",
+        "pygments": "*"
+    },
+    "scripts": {
+        "start": "python -m fluffy"
+    }
+}
+'''
+
+EXAMPLE_RUBY = '''\
+class Greeter
+  attr_reader :name
+
+  def initialize(name)
+    @name = name
+  end
+
+  def greet
+    puts "Hello, #{@name}!"
+  end
+end
+
+greeter = Greeter.new("World")
+greeter.greet
+'''
+
+
+@pytest.mark.parametrize(
+    ('text', 'expected_lexer_name'), (
+        (EXAMPLE_PYTHON, 'Python'),
+        (EXAMPLE_JAVASCRIPT, 'JavaScript'),
+        (EXAMPLE_JAVA, 'Java'),
+        (EXAMPLE_GO, 'Go'),
+        (EXAMPLE_RUST, 'Rust'),
+        (EXAMPLE_SQL, 'SQL'),
+        (EXAMPLE_YAML, 'YAML'),
+        (EXAMPLE_BASH, 'Bash'),
+        (EXAMPLE_JSON, 'JSON'),
+        (EXAMPLE_RUBY, 'Ruby'),
+        (EXAMPLE_C, 'C'),
+    ),
+)
+def test_magika_detects_common_languages(text, expected_lexer_name):
+    """Magika should correctly identify common programming languages."""
+    detected = _guess_language_with_magika(text)
+    assert detected is not None, f'Magika returned None, expected a lexer mapping to {expected_lexer_name}'
+    lexer = pygments.lexers.get_lexer_by_name(detected)
+    assert lexer.name == expected_lexer_name, (
+        f'Expected {expected_lexer_name}, got {lexer.name} (magika returned {detected!r})'
+    )
+
+
+def test_magika_returns_none_for_plain_text():
+    """Magika should return None for ambiguous/plain text so we fall back."""
+    result = _guess_language_with_magika('what language even is this')
+    assert result is None
+
+
+def test_magika_label_map_entries_are_valid_pygments_lexers():
+    """Every value in the magika-to-pygments mapping should resolve to a real lexer."""
+    for magika_label, pygments_name in MAGIKA_LABEL_TO_PYGMENTS_LEXER.items():
+        try:
+            pygments.lexers.get_lexer_by_name(pygments_name)
+        except pygments.util.ClassNotFound:
+            pytest.fail(
+                f'MAGIKA_LABEL_TO_PYGMENTS_LEXER[{magika_label!r}] = {pygments_name!r} '
+                f'is not a valid Pygments lexer name',
+            )
+
+
+def test_guess_lexer_uses_magika_for_autodetect():
+    """When language is None/autodetect, guess_lexer should use Magika and
+    produce better results than the old Pygments-only fallback."""
+    lexer = guess_lexer(EXAMPLE_GO, None, None)
+    assert lexer.name == 'Go'
+
+    lexer = guess_lexer(EXAMPLE_RUST, None, None)
+    assert lexer.name == 'Rust'
+
+    lexer = guess_lexer(EXAMPLE_JAVA, None, None)
+    assert lexer.name == 'Java'
+
+
+def test_guess_lexer_explicit_language_still_takes_precedence():
+    """An explicit language choice should override Magika detection."""
+    lexer = guess_lexer(EXAMPLE_PYTHON, 'ruby', None)
+    assert lexer.name == 'Ruby'
+
+
+def test_guess_lexer_filename_still_takes_precedence_over_magika():
+    """Filename-based detection should still take precedence over Magika."""
+    lexer = guess_lexer(EXAMPLE_PYTHON, 'not-a-lexer', 'script.rb')
+    assert lexer.name == 'Ruby'
