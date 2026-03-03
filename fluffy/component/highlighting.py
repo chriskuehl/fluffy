@@ -4,6 +4,10 @@ import functools
 import logging
 import re
 from collections import namedtuple
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from magika import Magika
 
 import pygments.lexers.teraterm
 import pygments.styles.xcode
