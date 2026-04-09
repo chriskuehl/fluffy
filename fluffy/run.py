@@ -148,7 +148,7 @@ def debug():  # pragma: no cover
             ],
         )
 
-    app.run(debug=True, port=int(os.environ.get('FLUFFY_PORT', 5000)))
+    app.run(debug=True, port=int(os.environ.get('FLUFFY_PORT') or '5000'))
 
 
 if __name__ == '__main__':

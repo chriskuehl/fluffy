@@ -2,7 +2,6 @@ import concurrent.futures
 import contextlib
 import difflib
 import json
-import os
 import time
 import typing
 
@@ -10,7 +9,6 @@ from flask import jsonify
 from flask import redirect
 from flask import render_template
 from flask import request
-from flask import send_from_directory
 
 from fluffy import version as FLUFFY_VERSION
 from fluffy.app import app
@@ -310,9 +308,3 @@ def upload_history():
         'upload-history.html',
         icon_extensions=ICON_EXTENSIONS,
     )
-
-
-if app.debug:
-    @app.route('/i/<path:name>')
-    def serve_uploaded_file(name: str):
-        return send_from_directory(os.path.abspath('tmp/i'), name)

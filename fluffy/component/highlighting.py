@@ -1,27 +1,19 @@
 import collections
 import dataclasses
-import logging
 import re
 from collections import namedtuple
 
-try:
-    from magika import Magika
-    _MAGIKA = Magika()
-except Exception:
-    # We can't use `log` yet because it's not defined, but we can't define it
-    # before imports are done. So we'll just set it to None and log later if needed,
-    # or just rely on the fact that _MAGIKA is None.
-    _MAGIKA = None
-
 import pygments.lexers.teraterm
 import pygments.styles.xcode
+from magika import Magika
 from pygments.formatters import HtmlFormatter
 from pygments_ansi_color import ExtendedColorHtmlFormatterMixin
 from pyquery import PyQuery as pq
 
 from fluffy.component.styles import DEFAULT_STYLE
 
-log = logging.getLogger(__name__)
+_MAGIKA = Magika()
+
 
 # Work around https://github.com/chriskuehl/fluffy/issues/88.
 pygments.lexers.teraterm.TeraTermLexer.analyse_text = lambda _: -100
@@ -105,19 +97,12 @@ def _guess_language_with_magika(text: str) -> str | None:
     Returns a Pygments lexer name, or None if detection failed or was
     inconclusive.
     """
-    if _MAGIKA is None:
-        return None
-
-    try:
-        result = _MAGIKA.identify_bytes(text.encode('utf-8', errors='replace'))
-    except Exception:
-        log.warning('Magika identification failed', exc_info=True)
-        return None
+    result = _MAGIKA.identify_bytes(text.encode('utf-8', errors='replace'))
 
     if not result.ok:
         return None
 
-    label = str(result.output.label)
+    label = result.output.label.value
     return MAGIKA_LABEL_TO_PYGMENTS_LEXER.get(label)
 
 
