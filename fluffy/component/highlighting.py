@@ -145,6 +145,42 @@ _pygments_formatter = FluffyFormatter(
     style=DEFAULT_STYLE,
 )
 
+_CONTENT_HEURISTICS = [
+    (
+        [
+            re.compile(
+                r'\b(?:SELECT\s+.+?\s+FROM|INSERT\s+INTO|CREATE\s+TABLE|UPDATE\s+.+?\s+SET|DELETE\s+FROM)\b',
+                re.IGNORECASE | re.DOTALL,
+            ),
+        ],
+        'sql',
+    ),
+    (
+        [re.compile(r'^\s*[\[{].*?"[^"]+"\s*:', re.DOTALL)],
+        'json',
+    ),
+    (
+        [
+            re.compile(
+                r'^\s*(?:<\?xml\b|<!DOCTYPE\b|<html[\s>]|<[a-z][a-z0-9]*[\s>])',
+                re.IGNORECASE,
+            ),
+        ],
+        'html',
+    ),
+    (
+        [
+            re.compile(r'(?m)^\s*\[[^\]\n]+\]\s*$'),
+            re.compile(r'(?m)^\s*[A-Za-z0-9_.-]+\s*=\s*.+$'),
+        ],
+        'ini',
+    ),
+    (
+        [re.compile(r'(?m)^---\s*$')],
+        'yaml',
+    ),
+]
+
 
 @dataclasses.dataclass(frozen=True)
 class PasteText:
@@ -320,6 +356,37 @@ def get_highlighter(text, language, filename):
     return PygmentsHighlighter(lexer)
 
 
+_HEURISTIC_HEAD_BYTES = 8192
+
+_MARKDOWN_SIGNALS = [
+    re.compile(r'(?m)^#{1,6}\s+\S'),
+    re.compile(r'(?m)^```'),
+    re.compile(r'\[.+?\]\(.+?\)'),
+    re.compile(r'\*\*.+?\*\*'),
+]
+_MARKDOWN_FRONTMATTER = re.compile(r'^---\s*\n')
+_MARKDOWN_SIGNAL_THRESHOLD = 2
+
+
+def looks_like_markdown(text):
+    head = text[:_HEURISTIC_HEAD_BYTES]
+    score = 0
+    if _MARKDOWN_FRONTMATTER.match(head):
+        score += 2
+    for pattern in _MARKDOWN_SIGNALS:
+        if pattern.search(head):
+            score += 1
+    return score >= _MARKDOWN_SIGNAL_THRESHOLD
+
+
+def _guess_from_text_heuristics(text, lexer_opts):
+    head = text[:_HEURISTIC_HEAD_BYTES]
+    for regexes, lexer_name in _CONTENT_HEURISTICS:
+        if all(r.search(head) for r in regexes):
+            return pygments.lexers.get_lexer_by_name(lexer_name, **lexer_opts)
+    return None
+
+
 def guess_lexer(text, language, filename, opts=None):
     lexer_opts = {'stripnl': False}
     if opts:
@@ -351,10 +418,15 @@ def guess_lexer(text, language, filename, opts=None):
     try:
         lexer = pygments.lexers.guess_lexer(text, **lexer_opts)
 
-        if not (
-            isinstance(lexer, pygments.lexers.TextLexer) or
-            isinstance(lexer, pygments.lexers.ScdocLexer)
-        ):
+        # Newer versions of Pygments will virtually always fall back to
+        # TextLexer due to its 0.01 priority (which is what it returns on
+        # analyzing any text).
+        # Seems to flag for everything in recent Pygments...
+        if isinstance(lexer, (pygments.lexers.TextLexer, pygments.lexers.ScdocLexer)):
+            heuristic_lexer = _guess_from_text_heuristics(text, lexer_opts)
+            if heuristic_lexer is not None:
+                return heuristic_lexer
+        else:
             return lexer
     except pygments.util.ClassNotFound:
         pass

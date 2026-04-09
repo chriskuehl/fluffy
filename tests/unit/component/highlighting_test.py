@@ -80,6 +80,24 @@ def test_guess_lexer_autodetects_with_invalid_lang(invalid_lang):
     assert guess_lexer(EXAMPLE_C, invalid_lang, None).name == 'C'
 
 
+def test_guess_lexer_heuristic_detects_sql(monkeypatch):
+    monkeypatch.setattr(
+        pygments.lexers,
+        'guess_lexer',
+        lambda *_args, **kwargs: pygments.lexers.TextLexer(**kwargs),
+    )
+    assert guess_lexer('SELECT id FROM users WHERE active = 1;', None, None).name == 'SQL'
+
+
+def test_guess_lexer_heuristic_detects_json(monkeypatch):
+    monkeypatch.setattr(
+        pygments.lexers,
+        'guess_lexer',
+        lambda *_args, **kwargs: pygments.lexers.TextLexer(**kwargs),
+    )
+    assert guess_lexer('{"name": "fluffy", "enabled": true}', None, None).name == 'JSON'
+
+
 def test_guess_lexer_falls_back_to_python():
     assert guess_lexer('what language even is this', None, None).name == 'Python'
 

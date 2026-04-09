@@ -15,6 +15,7 @@ from fluffy.app import app
 from fluffy.component.backends import get_backend
 from fluffy.component.highlighting import get_highlighter
 from fluffy.component.highlighting import guess_lexer
+from fluffy.component.highlighting import looks_like_markdown
 from fluffy.component.highlighting import UI_LANGUAGES_MAP
 from fluffy.component.styles import STYLES_BY_CATEGORY
 from fluffy.models import ExtensionForbiddenError
@@ -84,20 +85,33 @@ def upload():
                     except UnicodeDecodeError:
                         pass
                     else:
-                        highlighter = get_highlighter(text, None, uf.human_name)
-                        pb = ctx.enter_context(
-                            HtmlToStore.from_html(
-                                render_template(
-                                    'paste.html',
-                                    texts=highlighter.prepare_text(text),
-                                    copy_and_edit_text=text,
-                                    highlighter=highlighter,
-                                    raw_url=app.config['FILE_URL'].format(name=uf.name),
-                                    styles=STYLES_BY_CATEGORY,
+                        if uf.human_name and uf.human_name.lower().endswith('.md'):
+                            pb = ctx.enter_context(
+                                HtmlToStore.from_html(
+                                    render_template(
+                                        'markdown.html',
+                                        text=text,
+                                        copy_and_edit_text=text,
+                                        raw_url=app.config['FILE_URL'].format(name=uf.name),
+                                    ),
+                                    unique_id=uf.unique_id,
                                 ),
-                                unique_id=uf.unique_id,
-                            ),
-                        )
+                            )
+                        else:
+                            highlighter = get_highlighter(text, None, uf.human_name)
+                            pb = ctx.enter_context(
+                                HtmlToStore.from_html(
+                                    render_template(
+                                        'paste.html',
+                                        texts=highlighter.prepare_text(text),
+                                        copy_and_edit_text=text,
+                                        highlighter=highlighter,
+                                        raw_url=app.config['FILE_URL'].format(name=uf.name),
+                                        styles=STYLES_BY_CATEGORY,
+                                    ),
+                                    unique_id=uf.unique_id,
+                                ),
+                            )
                         objects.append(pb)
 
                 uploaded_files.append((uf, pb))
@@ -208,6 +222,8 @@ def paste():
 
         # HTML view (Markdown or paste)
         lang = request.form['language']
+        if lang in ('', 'autodetect') and looks_like_markdown(transformed_text):
+            lang = 'rendered-markdown'
         if lang != 'rendered-markdown':
             highlighter = get_highlighter(transformed_text, lang, None)
             lang_title = highlighter.name
