@@ -16,6 +16,7 @@ dependencies = [
     "identify",
     # https://github.com/chriskuehl/fluffy/issues/126
     "mistune<0.999",
+    "magika",
     "pygments",
     "pygments-ansi-color>=0.0.3",
     "pygments-solarized-style",

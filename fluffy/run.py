@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from flask import render_template
@@ -173,7 +174,7 @@ def debug():  # pragma: no cover
             ],
         )
 
-    app.run(debug=True)
+    app.run(debug=True, port=int(os.environ.get('FLUFFY_PORT') or '5000'))
 
 
 if __name__ == '__main__':

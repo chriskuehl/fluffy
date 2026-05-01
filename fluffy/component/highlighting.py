@@ -5,13 +5,105 @@ from collections import namedtuple
 
 import pygments.lexers.teraterm
 import pygments.styles.xcode
+from magika import Magika
 from pygments.formatters import HtmlFormatter
 from pygments_ansi_color import ExtendedColorHtmlFormatterMixin
 from pyquery import PyQuery as pq
 
 from fluffy.component.styles import DEFAULT_STYLE
+
+_MAGIKA = Magika()
+
+
 # Work around https://github.com/chriskuehl/fluffy/issues/88.
 pygments.lexers.teraterm.TeraTermLexer.analyse_text = lambda _: -100
+
+MAGIKA_LABEL_TO_PYGMENTS_LEXER: dict[str, str] = {
+    'asm': 'nasm',
+    'autohotkey': 'autohotkey',
+    'awk': 'awk',
+    'batch': 'bat',
+    'bazel': 'python',
+    'c': 'c',
+    'clojure': 'clojure',
+    'cmake': 'cmake',
+    'cobol': 'cobol',
+    'coffeescript': 'coffeescript',
+    'cpp': 'c++',
+    'cs': 'csharp',
+    'css': 'css',
+    'csv': 'text',
+    'dart': 'dart',
+    'dockerfile': 'docker',
+    'elixir': 'elixir',
+    'erb': 'erb',
+    'erlang': 'erlang',
+    'fortran': 'fortran',
+    'go': 'go',
+    'gradle': 'groovy',
+    'groovy': 'groovy',
+    'handlebars': 'html',
+    'haskell': 'haskell',
+    'hcl': 'terraform',
+    'html': 'html',
+    'ini': 'ini',
+    'java': 'java',
+    'javascript': 'javascript',
+    'jinja': 'jinja',
+    'json': 'json',
+    'jsonl': 'json',
+    'julia': 'julia',
+    'kotlin': 'kotlin',
+    'latex': 'latex',
+    'lisp': 'common-lisp',
+    'lua': 'lua',
+    'makefile': 'makefile',
+    'markdown': 'markdown',
+    'matlab': 'matlab',
+    'objectivec': 'objective-c',
+    'ocaml': 'ocaml',
+    'pascal': 'pascal',
+    'perl': 'perl',
+    'php': 'php',
+    'powershell': 'powershell',
+    'prolog': 'prolog',
+    'proto': 'protobuf',
+    'python': 'python3',
+    'r': 'r',
+    'rst': 'rst',
+    'ruby': 'ruby',
+    'rust': 'rust',
+    'scala': 'scala',
+    'scss': 'scss',
+    'shell': 'bash',
+    'sql': 'sql',
+    'swift': 'swift',
+    'tcl': 'tcl',
+    'toml': 'toml',
+    'typescript': 'typescript',
+    'vba': 'vb.net',
+    'verilog': 'verilog',
+    'vhdl': 'vhdl',
+    'vue': 'vue',
+    'xml': 'xml',
+    'yaml': 'yaml',
+    'zig': 'zig',
+}
+
+
+def _guess_language_with_magika(text: str) -> str | None:
+    """Use Google's Magika to detect the language of the given text.
+
+    Returns a Pygments lexer name, or None if detection failed or was
+    inconclusive.
+    """
+    result = _MAGIKA.identify_bytes(text.encode('utf-8', errors='replace'))
+
+    if not result.ok:
+        return None
+
+    label = result.output.label.value
+    return MAGIKA_LABEL_TO_PYGMENTS_LEXER.get(label)
 
 
 # We purposefully don't list all possible languages, and instead just the ones
@@ -313,7 +405,16 @@ def guess_lexer(text, language, filename, opts=None):
         except pygments.util.ClassNotFound:
             pass
 
-    # Finally, try to guess by looking at the file content.
+    # Use Magika (ML-based) for content detection before Pygments' guess_lexer,
+    # which is unreliable in recent versions.
+    magika_name = _guess_language_with_magika(text)
+    if magika_name is not None:
+        try:
+            return pygments.lexers.get_lexer_by_name(magika_name, **lexer_opts)
+        except pygments.util.ClassNotFound:
+            pass
+
+    # Fall back to Pygments' built-in guess_lexer.
     try:
         lexer = pygments.lexers.guess_lexer(text, **lexer_opts)
 

@@ -2,8 +2,8 @@
 # storage backend (how are the files stored after being uploaded?)
 STORAGE_BACKEND = {
     'name': 'file',
-    'object_path': 'tmp/object/{name}',
-    'html_path': 'tmp/html/{name}',
+    'object_path': 'tmp/i/{name}',
+    'html_path': 'tmp/i/{name}',
 }
 
 # branding
@@ -12,8 +12,8 @@ CUSTOM_FOOTER_HTML = None
 
 # URL patterns
 HOME_URL = 'http://localhost:5000/'
-FILE_URL = 'http://localhost:4999/object/{name}'
-HTML_URL = 'http://localhost:4999/html/{name}'
+FILE_URL = 'http://localhost:5000/i/{name}'
+HTML_URL = 'http://localhost:5000/i/{name}'
 
 STATIC_ASSETS_URL = 'http://localhost:5000/{name}'
 

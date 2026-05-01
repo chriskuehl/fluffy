@@ -9,6 +9,10 @@ var uploadSamples = [];
 var transitioningModes = false;
 var TRANSITION_DURATION = 200;
 
+var detectTimer = null;
+var DETECT_DEBOUNCE_MS = 500;
+var MAX_DETECT_BYTES = 8192;
+
 var IMAGE_EXTENSIONS = ["png", "jpeg", "gif"];
 
 var fh, pb, container;
@@ -19,6 +23,7 @@ function transitionToText(callback) {
     fh.slideUp(TRANSITION_DURATION);
     pb.slideDown(TRANSITION_DURATION, function() {
         transitioningModes = false;
+        detectLanguage();
         if (callback) {
             callback();
         }
@@ -34,6 +39,37 @@ function transitionToUpload(callback) {
         if (callback) {
             callback();
         }
+    });
+}
+
+
+function detectLanguage() {
+    var hint = $('#detected-language');
+
+    if ($('#language').val() !== '') {
+        hint.removeClass('visible');
+        return;
+    }
+
+    var text = $('#text').val();
+    if (!text || !text.trim()) {
+        hint.removeClass('visible');
+        return;
+    }
+
+    $.ajax({
+        url: '/detect-language',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ text: text.substring(0, MAX_DETECT_BYTES) }),
+        success: function(data) {
+            if (data.language) {
+                hint.text('Detected: ' + data.language).addClass('visible');
+            } else {
+                hint.removeClass('visible');
+            }
+        },
+        error: function() {},
     });
 }
 
@@ -98,6 +134,17 @@ $(document).ready(function() {
         } else if (! uploadCompleted) {
             cancelUpload();
         }
+    });
+
+    // language auto-detection
+    $('#text').on('input paste', function() {
+        clearTimeout(detectTimer);
+        detectTimer = setTimeout(detectLanguage, DETECT_DEBOUNCE_MS);
+    });
+
+    $('#language').on('change', function() {
+        clearTimeout(detectTimer);
+        detectLanguage();
     });
 
     // show two text boxes for diff-between-two-texts

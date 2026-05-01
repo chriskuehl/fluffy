@@ -230,6 +230,25 @@
             width: 100%;
         }
 
+        #detected-language {
+            display: inline-block;
+            visibility: hidden;
+            opacity: 0;
+            font-size: 11px;
+            color: #8a6d3b;
+            background-color: #fcf8e3;
+            border: 1px solid #f0e0b2;
+            border-radius: 10px;
+            padding: 2px 10px;
+            margin-top: 6px;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+
+            &.visible {
+                visibility: visible;
+                opacity: 1;
+            }
+        }
+
         .pasteButton {
             display: block;
             width: 100%;
