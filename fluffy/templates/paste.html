@@ -79,6 +79,50 @@
         }
     </script>
 
+    <div class="pill-buttons" id="paste-wrap-setting">
+        <div class="option selected" data-value="off">No wrap</div>
+        <div class="option not-selected" data-value="on">Wrap lines</div>
+    </div>
+    <script>
+        const PREFERRED_PASTE_WRAP = 'preferredPasteWrap';
+
+        const pasteWrapSetting = document.getElementById('paste-wrap-setting');
+        const updatePasteWrapSetting = (setting) => {
+            if (hasLocalStorage) {
+                localStorage.setItem(PREFERRED_PASTE_WRAP, setting);
+            }
+            for (const child of pasteWrapSetting.children) {
+                if (child.getAttribute('data-value') === setting) {
+                    child.classList.add('selected');
+                    child.classList.remove('not-selected');
+                } else {
+                    child.classList.remove('selected');
+                    child.classList.add('not-selected');
+                }
+            }
+
+            const html = document.documentElement;
+            if (setting === 'on') {
+                html.classList.add('paste-wrap-lines');
+            } else {
+                html.classList.remove('paste-wrap-lines');
+            }
+            if (typeof window.syncPasteWrapLineHeights === 'function') {
+                window.syncPasteWrapLineHeights();
+            }
+        };
+
+        if (hasLocalStorage && localStorage.getItem(PREFERRED_PASTE_WRAP) === 'on') {
+            updatePasteWrapSetting('on');
+        } else {
+            updatePasteWrapSetting('off');
+        }
+
+        for (const child of pasteWrapSetting.children) {
+            child.onclick = () => updatePasteWrapSetting(child.getAttribute('data-value'));
+        }
+    </script>
+
     {% if highlighter.is_diff %}
         <div class="pill-buttons" id="diff-setting">
             <div class="option selected" data-value="side-by-side">Side-by-Side</div>

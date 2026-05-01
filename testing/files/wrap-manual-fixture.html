@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" class="page-paste">
+<head>
+  <meta charset="utf-8" />
+  <title>Manual wrap QA fixture (not automated)</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    .paste-toolbar { background: #e0e0e0; padding: 8px; }
+    .pill-buttons { display: flex; }
+    .pill-buttons .option { padding: 8px 10px; border: 1px solid #bbb; cursor: pointer; }
+    .pill-buttons .option.selected { background: #b8b8b8; color: #fff; }
+    #paste { display: flex; background: #fff; font-family: 'Source Code Pro', monospace; font-size: 14px; max-width: 100%; }
+    .text-container { flex: 1; min-width: 0; display: flex; border-left: 1px solid #333; }
+    .text-container:first-child { border-left: none; }
+    .line-numbers { float: left; border-right: 1px solid #333; text-align: right; line-height: 1.25em; padding: 2px 0; }
+    .line-numbers a { display: block; padding: 0 6px 0 8px; text-decoration: none; color: inherit; }
+    .text { flex: 1; padding: 2px 0; overflow-x: auto; min-width: 0; }
+    .highlight { display: inline-block; min-width: 100%; }
+    .highlight > pre { margin: 0; line-height: 125%; }
+    .highlight > pre > span { display: block; padding-left: 5px; }
+    html.page-paste.paste-wrap-lines #paste .text { overflow-x: hidden; }
+    html.page-paste.paste-wrap-lines #paste .text .highlight {
+      display: block; width: 100%; max-width: 100%; min-width: 0;
+    }
+    html.page-paste.paste-wrap-lines #paste .text .highlight > pre {
+      white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <p style="padding:8px;margin:0;background:#eee;font-size:13px;">
+    From repo root: <code>python3 -m http.server 8800 --bind 127.0.0.1</code> then open
+    <code>http://127.0.0.1:8800/testing/files/wrap-manual-fixture.html</code> (use another port if 8800 is taken). Narrow the window to force wrap.
+  </p>
+  <div class="paste-toolbar">
+    <div class="pill-buttons" id="paste-wrap-setting">
+      <div class="option selected" data-value="off" role="button">No wrap</div>
+      <div class="option not-selected" data-value="on" role="button">Wrap lines</div>
+    </div>
+  </div>
+  <div id="paste">
+    <div class="text-container">
+      <div class="line-numbers">
+        <a class="LL1">1</a>
+        <a class="LL2">2</a>
+      </div>
+      <div class="text" contenteditable="false">
+        <div class="highlight"><pre><span class="line-1"><span class="nb">FIRST</span><span class="o">=</span><span class="s2">&quot;</span><span id="longbit"></span><span class="s2">&quot;</span></span><span class="line-2"><span class="n">second</span> <span class="n">line</span></span></pre></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('longbit').textContent = 'word-'.repeat(160);
+    function lineIdsFromAnchorClassList(classList) {
+      return Array.prototype.filter.call(classList, function (c) { return c.indexOf('LL') === 0; })
+        .map(function (c) { return parseInt(c.substring(2), 10); })
+        .filter(function (n) { return !isNaN(n); });
+    }
+    function syncPasteWrapLineHeights() {
+      if (!document.documentElement.classList.contains('paste-wrap-lines')) {
+        $('.line-numbers > a').css('min-height', '');
+        return;
+      }
+      $('.text-container').each(function () {
+        var $container = $(this);
+        var lineElByNum = {};
+        $container.find('.text .highlight > pre > span').each(function () {
+          var m = (this.className || '').match(/\bline-(\d+)\b/);
+          if (m) { lineElByNum[parseInt(m[1], 10)] = this; }
+        });
+        $container.find('.line-numbers > a').each(function () {
+          var lineIds = lineIdsFromAnchorClassList(this.classList);
+          var total = 0;
+          for (var i = 0; i < lineIds.length; i++) {
+            var el = lineElByNum[lineIds[i]];
+            if (el) { total += el.getBoundingClientRect().height; }
+          }
+          this.style.minHeight = total > 0 ? total + 'px' : '';
+        });
+      });
+    }
+    function setWrap(on) {
+      var root = document.getElementById('paste-wrap-setting');
+      for (var i = 0; i < root.children.length; i++) {
+        var ch = root.children[i];
+        var v = ch.getAttribute('data-value');
+        ch.classList.toggle('selected', (on && v === 'on') || (!on && v === 'off'));
+        ch.classList.toggle('not-selected', !((on && v === 'on') || (!on && v === 'off')));
+      }
+      document.documentElement.classList.toggle('paste-wrap-lines', on);
+      syncPasteWrapLineHeights();
+    }
+    document.getElementById('paste-wrap-setting').onclick = function (e) {
+      var t = e.target.closest('[data-value]');
+      if (!t) return;
+      setWrap(t.getAttribute('data-value') === 'on');
+    };
+    window.addEventListener('resize', function () { if (document.documentElement.classList.contains('paste-wrap-lines')) syncPasteWrapLineHeights(); });
+  </script>
+</body>
+</html>

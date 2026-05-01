@@ -93,3 +93,23 @@
         }
     }
 }
+
+html.page-paste.paste-wrap-lines {
+    #paste {
+        .text {
+            overflow-x: hidden;
+
+            .highlight {
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+            }
+
+            .highlight > pre {
+                white-space: pre-wrap;
+                overflow-wrap: anywhere;
+            }
+        }
+    }
+}

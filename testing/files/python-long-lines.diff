@@ -1,0 +1,20 @@
+diff --git a/fluffy/example.py b/fluffy/example.py
+index 8c01234..b7d9876 100644
+--- a/fluffy/example.py
++++ b/fluffy/example.py
+@@ -1,10 +1,10 @@
+ import logging
+ 
+ 
+ LOGGER = logging.getLogger(__name__)
+ 
+ 
+ def emit_event(user_id, request_id):
+-    LOGGER.info('event=render_paste status=started user_id=%s request_id=%s path=/api/internal/paste/render source=fixture', user_id, request_id)
+-    payload = 'paste_id=abc123 line_count=42 language=python renderer=pygments theme=default wrap_mode=off'
++    LOGGER.info('event=render_paste status=completed user_id=%s request_id=%s path=/api/internal/paste/render/with/an/intentionally/very/long/path/segment/that/should/wrap/in/the/diff/view source=fixture elapsed_ms=1849 cache_status=miss correlation_id=01JY6KYPZV4AV4S4M3D7T0E1FA', user_id, request_id)
++    payload = 'paste_id=abc123 line_count=42 language=python renderer=pygments theme=default wrap_mode=on annotations=enabled,history,permissions,debug,related_objects,syntax_metadata,uploaded_file_context,viewer_preferences'
+     return payload
+ 
+ 
+ def main():

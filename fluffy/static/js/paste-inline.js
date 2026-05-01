@@ -104,6 +104,161 @@ const lineNumbersFromClassList = (classList) => (
         .map(c => parseInt(c.substring(5)))
 );
 
+function lineIdsFromAnchorClassList(classList) {
+    return [...classList]
+        .filter((c) => c.startsWith('LL'))
+        .map((c) => parseInt(c.substring(2), 10))
+        .filter((n) => !Number.isNaN(n));
+}
+
+var pasteWrapResizeObserver = null;
+var pasteWrapSyncTimer = null;
+
+function clearPasteWrapLineHeights() {
+    $('.line-numbers > a').css('min-height', '');
+    $('.text .highlight > pre > span').css('min-height', '');
+}
+
+function lineElementsByNum($container) {
+    var lineElByNum = {};
+    $container.find('.text .highlight > pre > span').each(function() {
+        var lineNumbers = lineNumbersFromClassList(this.classList);
+        for (var i = 0; i < lineNumbers.length; i++) {
+            lineElByNum[lineNumbers[i]] = this;
+        }
+    });
+    return lineElByNum;
+}
+
+function uniqueLineElements(lineElByNum, lineIds) {
+    var seen = new Set();
+    var elements = [];
+    for (var i = 0; i < lineIds.length; i++) {
+        var el = lineElByNum[lineIds[i]];
+        if (el && !seen.has(el)) {
+            seen.add(el);
+            elements.push(el);
+        }
+    }
+    return elements;
+}
+
+function totalLineElementHeight(elements) {
+    var total = 0;
+    for (var i = 0; i < elements.length; i++) {
+        total += elements[i].getBoundingClientRect().height;
+    }
+    return total;
+}
+
+function syncPasteWrapLineHeightsForContainer($container) {
+    var lineElByNum = lineElementsByNum($container);
+    $container.find('.line-numbers > a').each(function() {
+        var lineIds = lineIdsFromAnchorClassList(this.classList);
+        var elements = uniqueLineElements(lineElByNum, lineIds);
+        var total = totalLineElementHeight(elements);
+        if (total > 0) {
+            this.style.minHeight = total + 'px';
+        } else {
+            this.style.minHeight = '';
+        }
+    });
+}
+
+function syncPasteWrapLineHeightsForSideBySideDiff() {
+    var containers = $('#paste .text-container').slice(0, 2);
+    var paneRows = [];
+    containers.each(function() {
+        var $container = $(this);
+        var lineElByNum = lineElementsByNum($container);
+        var rows = [];
+        $container.find('.line-numbers > a').each(function(index) {
+            rows[index] = {
+                anchor: this,
+                elements: uniqueLineElements(
+                    lineElByNum,
+                    lineIdsFromAnchorClassList(this.classList),
+                ),
+            };
+        });
+        paneRows.push(rows);
+    });
+
+    var rowCount = Math.max(paneRows[0].length, paneRows[1].length);
+    for (var rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+        var height = 0;
+        for (var paneIndex = 0; paneIndex < paneRows.length; paneIndex++) {
+            var row = paneRows[paneIndex][rowIndex];
+            if (row) {
+                height = Math.max(height, totalLineElementHeight(row.elements));
+            }
+        }
+
+        var minHeight = height > 0 ? height + 'px' : '';
+        for (var paneIndex = 0; paneIndex < paneRows.length; paneIndex++) {
+            var row = paneRows[paneIndex][rowIndex];
+            if (row) {
+                row.anchor.style.minHeight = minHeight;
+                for (var elIndex = 0; elIndex < row.elements.length; elIndex++) {
+                    row.elements[elIndex].style.minHeight = minHeight;
+                }
+            }
+        }
+    }
+}
+
+function syncPasteWrapLineHeights() {
+    if (!document.documentElement.classList.contains('paste-wrap-lines')) {
+        clearPasteWrapLineHeights();
+        return;
+    }
+
+    clearPasteWrapLineHeights();
+    if (document.documentElement.classList.contains('diff-side-by-side')) {
+        syncPasteWrapLineHeightsForSideBySideDiff();
+        return;
+    }
+
+    $('.text-container').each(function() {
+        syncPasteWrapLineHeightsForContainer($(this));
+    });
+}
+
+function teardownPasteWrapResizeObserver() {
+    if (pasteWrapResizeObserver !== null) {
+        pasteWrapResizeObserver.disconnect();
+        pasteWrapResizeObserver = null;
+    }
+}
+
+function setupPasteWrapResizeObserver() {
+    teardownPasteWrapResizeObserver();
+    if (!document.documentElement.classList.contains('paste-wrap-lines')) {
+        return;
+    }
+    if (typeof ResizeObserver === 'undefined') {
+        return;
+    }
+    pasteWrapResizeObserver = new ResizeObserver(function() {
+        schedulePasteWrapSync();
+    });
+    document.querySelectorAll('#paste .text-container .text').forEach(function(el) {
+        pasteWrapResizeObserver.observe(el);
+    });
+}
+
+function schedulePasteWrapSync() {
+    if (pasteWrapSyncTimer !== null) {
+        clearTimeout(pasteWrapSyncTimer);
+    }
+    pasteWrapSyncTimer = setTimeout(function() {
+        pasteWrapSyncTimer = null;
+        syncPasteWrapLineHeights();
+    }, 50);
+}
+
+window.syncPasteWrapLineHeights = syncPasteWrapLineHeights;
+
 $(document).ready(function() {
     var numbers = $('.line-numbers > a');
     var setState = -1;
@@ -211,5 +366,33 @@ $(document).ready(function() {
 
     $('#style').change(function() {
         changeStyleTo($(this).val());
+        schedulePasteWrapSync();
+    });
+
+    if (document.documentElement.classList.contains('paste-wrap-lines')) {
+        syncPasteWrapLineHeights();
+        setupPasteWrapResizeObserver();
+    }
+
+    $(window).on('resize', schedulePasteWrapSync);
+
+    $(window).on('load', function() {
+        if (document.documentElement.classList.contains('paste-wrap-lines')) {
+            syncPasteWrapLineHeights();
+        }
+    });
+
+    var pasteWrapObserver = new MutationObserver(function() {
+        if (document.documentElement.classList.contains('paste-wrap-lines')) {
+            setupPasteWrapResizeObserver();
+            schedulePasteWrapSync();
+        } else {
+            teardownPasteWrapResizeObserver();
+            syncPasteWrapLineHeights();
+        }
+    });
+    pasteWrapObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
     });
 });

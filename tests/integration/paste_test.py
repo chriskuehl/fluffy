@@ -24,6 +24,21 @@ def test_simple_paste(content, running_server):
     )
 
 
+def test_paste_page_includes_soft_wrap_toggle(running_server):
+    req = requests.post(
+        running_server['home'] + '/paste',
+        data={
+            'text': 'hello\n',
+            'language': 'python',
+        },
+    )
+
+    assert req.status_code == 200
+    html = req.content.decode('utf8')
+    assert 'id="paste-wrap-setting"' in html
+    assert 'preferredPasteWrap' in html
+
+
 def test_simple_paste_diff_between_two_texts(running_server):
     req = requests.post(
         running_server['home'] + '/paste',
