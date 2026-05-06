@@ -48,9 +48,42 @@ def asset_url(path):
         )
 
 
+def s3_command(asset_path):
+    return 'aws s3 cp {} s3://{}/{}'.format(
+        asset_path,
+        app.config['STORAGE_BACKEND']['asset_bucket'],
+        app.config['STORAGE_BACKEND']['asset_s3path'].format(
+            name=name_for_asset(
+                os.path.relpath(asset_path, str(STATIC_ROOT)),
+            ),
+        ),
+    )
+
+
+def file_command(asset_path):
+    return 'cp {} {}'.format(
+        asset_path,
+        app.config['STORAGE_BACKEND']['asset_path'].format(
+            name=name_for_asset(
+                os.path.relpath(asset_path, str(STATIC_ROOT)),
+            ),
+        ),
+    )
+
+
 def upload_assets():
-    """Upload assets. Currently supports only S3."""
+    """Upload assets. Currently supports S3 and file backends."""
     commands = []
+
+    builders = {'s3': s3_command, 'file': file_command}
+
+    backend_name = app.config['STORAGE_BACKEND']['name']
+    if backend_name not in builders.keys():
+        print(f"backend type '{backend_name}' not supported.")
+        return
+
+    build_command = builders[backend_name]
+
     for root, dirs, files in os.walk(str(STATIC_ROOT)):
         for fname in files:
             if not fname.endswith('.hash'):
@@ -62,17 +95,7 @@ def upload_assets():
             asset_path = asset_hash_path[:-5]
 
             if os.path.isfile(asset_path):
-                commands.append(
-                    'aws s3 cp {} s3://{}/{}'.format(
-                        asset_path,
-                        app.config['STORAGE_BACKEND']['asset_bucket'],
-                        app.config['STORAGE_BACKEND']['asset_s3path'].format(
-                            name=name_for_asset(
-                                os.path.relpath(asset_path, str(STATIC_ROOT)),
-                            ),
-                        ),
-                    ),
-                )
+                commands.append(build_command(asset_path))
 
     print('=' * 50)
     print('\n'.join(commands))
