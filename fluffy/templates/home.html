@@ -93,7 +93,7 @@
         var maxUploadSize = {{max_upload_size | tojson | safe}};
     </script>
     {{inline_js('home-inline.js')}}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="{{asset_url('vendor/js/jquery.min.js')}}"></script>
     <script src="{{asset_url('js/home.js')}}"></script>
 {% endblock %}
 
