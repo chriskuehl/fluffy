@@ -1,7 +1,7 @@
 {% extends 'layouts/base.html' %}
 
 {% block head_extra %}
-    <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:500,700' rel='stylesheet' type='text/css'>
+    {% if external_fonts %}<link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:500,700' rel='stylesheet' type='text/css'>{% endif %}
 {% endblock %}
 
 {% block content %}

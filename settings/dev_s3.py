@@ -10,6 +10,9 @@ STORAGE_BACKEND = {
     'asset_s3path': 'assets/{name}',
 }
 
+# load external fonts from fonts.googleapis.com
+EXTERNAL_FONTS = True
+
 # branding
 BRANDING = 'fluffy'
 CUSTOM_FOOTER_HTML = None
