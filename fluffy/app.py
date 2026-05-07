@@ -48,6 +48,7 @@ def defaults():
         'fluffy_version': version,
         'home_url': app.config['HOME_URL'],
         'custom_footer_html': app.config.get('CUSTOM_FOOTER_HTML'),
+        'external_fonts': app.config.get('EXTERNAL_FONTS', True),
         'num_lines': lambda text: len(text.split('\n')),
         'inline_js': _inline_js,
     }

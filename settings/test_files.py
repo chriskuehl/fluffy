@@ -6,6 +6,9 @@ STORAGE_BACKEND = {{
     'html_path': '{html_path}',
 }}
 
+# load external fonts from fonts.googleapis.com
+EXTERNAL_FONTS = True
+
 # branding
 BRANDING = 'fluffy'
 CUSTOM_FOOTER_HTML = None
