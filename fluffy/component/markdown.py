@@ -37,6 +37,9 @@ class CodeRendererMixin:
     """Render highlighted code."""
 
     def block_code(self, code, lang):
+        if lang == 'mermaid':
+            # Rendered into a diagram in the browser by mermaid.js.
+            return f'<pre class="mermaid">{mistune.escape(code)}</pre>\n'
         return PygmentsHighlighter(
             guess_lexer(code, lang, None, opts={'stripnl': True}),
         ).highlight(code)
